@@ -1,0 +1,347 @@
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+{%- liquid
+  assign sectionType         = 'header'
+  assign sectionID           = '.section-' | append: section.id
+  assign headerStyle         = section.settings.styles | times: 1
+  assign headerSticky        = section.settings.sticky
+  assign headerAbsolute      = section.settings.absolute
+  assign mainMenu            = section.settings.main_menu
+  assign showCustomInfo      = section.settings.show_custom_content
+  assign customInfor         = section.settings.information
+  assign enableMegaMenu      = settings.enable_mega_menu
+  assign enableMegaMenuTab   = settings.enable_mega_menu_tab
+-%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|header-{{headerStyle}}
+{% if headerAbsolute and request.page_type == 'index' %}|header-overlay pa l0 t0 w100{% endif %}
+{%- endcapture -%}
+
+{%- capture DESKCLASS -%}none lg-inline-flex{%- endcapture -%}
+
+{%- if settings.enable_mobilebar -%}
+   {%- render 'navigation-mobile' -%}
+{%- endif -%}
+
+{% if headerSticky %}<sticky-header class="{% if section.settings['sticky_hide_icons'] %}hide-icon-list{% endif %}"{% if section.settings['header_sticky_style'] == 'up' %}data-sticky="up"{% endif %}>{% endif %}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="header-container{% if layout == 'boxed' %} container{% endif %}">
+    <div class="header-row flex">
+
+      {%- comment -%}
+      -------------------------------
+      LOGO
+      -------------------------------
+      {%- endcomment-%}
+      <div class="header-logo">
+        {%- render 'logo' -%}
+      </div>
+
+      {%- comment -%}
+      -------------------------------
+      VERTICAL MENU
+      -------------------------------
+      {%- endcomment-%}
+      {%- liquid
+        assign verticalMenu        = section.settings.vertical_menu
+        assign verticalMenuTitle = section.settings.vertical_menu_title
+      -%}
+      {%- unless verticalMenuTitle == blank and verticalMenu == blank -%}
+        <div class="header-vertical-menu n-select {{DESKCLASS}}">
+          <details class="vertical-menu">
+            <summary>
+              {%- capture tag -%}{% if enableMegaMenu %}mega-dropdown data-id="{{verticalMenuTitle | escape | sha1 }}"{% else %}div{% endif %}{%- endcapture -%}
+              <{{tag}} class="vertical-menu-link">
+                <span class="icon-on-show">{%- render 'svg', type: 'hamburger', fillColor: true -%}</span>
+                <span class="icon-on-close">{%- render 'svg', type: 'close', fillColor: true -%}</span>
+                <span class="text" title="{{ verticalMenuTitle | escape }}">{{verticalMenuTitle}}</span>
+              </{{tag}}>
+            </summary>
+
+            {%- unless verticalMenu == blank -%}
+               {%- capture verticalMenu -%}
+                  <div>
+                     <div class="vertical-menu-wrapper">
+                        <ul class="vertical-menu-list">
+                           {%- for link in linklists[verticalMenu].links -%}
+                           {%- render 'link', link: link -%}
+                           {%- endfor -%}
+                        </ul>
+                     </div>
+                  </div>
+               {%- endcapture -%}
+
+
+               {%- if request.design_mode or enableMegaMenu != true -%}
+                  {{- verticalMenu -}}
+               {%- else -%}
+                  <template>{{- verticalMenu -}}</template>
+               {%- endif -%}
+            {%- endunless -%}
+          </details>
+        </div>
+      {%- endunless -%}
+
+      {%- comment -%}
+      -------------------------------
+      FORM SEARCH
+      -------------------------------
+      {%- endcomment-%}
+      {%- if headerStyle == 1 and section.settings.show_search -%}
+        <div class="header-form-search {{DESKCLASS}}">
+          {%- render 'form' type: 'search' -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%}
+      -------------------------------
+      MAIN MENU
+      -------------------------------
+      {%- endcomment-%}
+      {%- unless mainMenu == blank and showCustomInfo -%}
+        <div class="header-group {{DESKCLASS}}">
+          <div class="flex">
+            {%- unless mainMenu == blank -%}
+              <div class="header-navigation">
+                <ul class="main-navigation" role="navigation" aria-label="Main">
+                  {%- for link in linklists[mainMenu].links -%}
+                    {%- render 'link', link: link, showMegaMenu: enableMegaMenu -%}
+                  {%- endfor -%}
+                </ul>
+              </div>
+            {%- endunless -%}
+
+            {%- if showCustomInfo and customInfor != blank -%}
+              <div class="header-information">{{customInfor}}</div>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endunless -%}
+
+      <div class="header-multi-shop {{DESKCLASS}}">
+        {%- render 'header-snippet', type: 'multi_shop' -%}
+      </div>
+
+
+      {%- comment -%}
+      -------------------------------
+      HEADER ICONS LIST
+      -------------------------------
+      {%- endcomment-%}
+      <div class="header-icons">
+        {%- render 'header-snippet', type: 'icon_list', class: DESKCLASS, headerStyle: headerStyle -%}
+      </div>
+    </div>
+  </div>
+</div>
+{% if headerSticky %}</sticky-header>{% endif %}
+
+
+{% schema %}
+{
+   "name": "Header",
+   "tag": "section",
+   "settings": [
+      {
+         "type": "select",
+         "id": "styles",
+         "label": "Header style",
+         "options": [
+            {
+               "value": "1",
+               "label": "1"
+            },
+            {
+               "value": "2",
+               "label": "2"
+            }
+         ],
+         "default": "1"
+      },
+      {
+         "type": "checkbox",
+         "id": "boxed_layout",
+         "label": "Boxed layout",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "absolute",
+         "label": "Show Header Overlay"
+      },
+      {
+        "type": "header",
+        "content": "Header Sticky"
+      },
+      {
+         "type": "checkbox",
+         "id": "sticky",
+         "label": "Show Header Sticky"
+      },
+      {
+        "type": "select",
+        "id": "header_sticky_style",
+        "label": "Header Sticky style:",
+        "options": [
+          {
+            "value": "down",
+            "label": "Scroll down to show"
+          },
+          {
+            "value": "up",
+            "label": "Scroll up to show"
+          }
+        ],
+        "default": "down"
+      },
+      {
+         "type": "checkbox",
+         "id": "sticky_hide_icons",
+         "label": "Hide icon list on header sticky"
+      },
+      {
+         "type": "header",
+         "content": "Logo"
+      },
+      {
+         "type": "text",
+         "id": "logo_svg",
+         "label": "Logo SVG",
+         "info": "Blank to Logo image"
+      },
+      {
+         "type": "image_picker",
+         "id": "logo",
+         "label": "Logo image"
+      },
+      {
+         "type": "text",
+         "id": "logo_width",
+         "label": "Logo width",
+         "default": "153px",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type": "header",
+         "content": "Main menu"
+      },
+      {
+         "type": "link_list",
+         "id": "main_menu",
+         "label": "Select a menu",
+         "default": "main-menu"
+      },
+      {
+         "type": "header",
+         "content": "Vertical menu"
+      },
+      {
+         "type": "link_list",
+         "id": "vertical_menu",
+         "label": "Select a menu"
+      },
+      {
+         "type": "text",
+         "id": "vertical_menu_title",
+         "label": "Vertical menu title",
+         "default": "Products"
+      },
+      {
+         "type": "header",
+         "content": "List icons"
+      },
+      {
+         "type": "checkbox",
+         "id": "show_search",
+         "label": "Show Search",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "show_account",
+         "label": "Show Account",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "show_wishlist",
+         "label": "Show Wishlist",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "show_compare",
+         "label": "Show Compare",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "show_cart",
+         "label": "Show Cart",
+         "default": true
+      },
+      {
+         "type": "header",
+         "content": "Custom information"
+      },
+      {
+         "type": "checkbox",
+         "id": "show_custom_content",
+         "label": "Show information",
+         "default": true
+      },
+      {
+         "type": "richtext",
+         "id": "information",
+         "label": "Write your information",
+         "default": "<p>Need help? <a href=\"https://support.arenacommerce.com/\">contact@example.com</a></p>"
+      }
+   ]
+}
+{% endschema %}
+{%- assign logo = section.settings.logo -%}
+
+{%- capture sameAs -%}
+  {%- unless settings.social_twitter_link == blank -%}|{{ settings.social_twitter_link | json }}{%- endunless -%}
+  {%- unless settings.social_facebook_link == blank -%}|{{ settings.social_facebook_link | json }}{%- endunless -%}
+  {%- unless settings.social_pinterest_link == blank -%}|{{ settings.social_pinterest_link | json }}{%- endunless -%}
+  {%- unless settings.social_instagram_link == blank -%}|{{ settings.social_instagram_link | json }}{%- endunless -%}
+  {%- unless settings.social_tiktok_link == blank -%}|{{ settings.social_tiktok_link | json }}{%- endunless -%}
+  {%- unless settings.social_tumblr_link == blank -%}|{{ settings.social_tumblr_link | json }}{%- endunless -%}
+  {%- unless settings.social_snapchat_link == blank -%}|{{ settings.social_snapchat_link | json }}{%- endunless -%}
+  {%- unless settings.social_youtube_link == blank -%}|{{ settings.social_youtube_link | json }}{%- endunless -%}
+  {%- unless settings.social_vimeo_link == blank -%}|{{ settings.social_vimeo_link | json }}{%- endunless -%}
+{%- endcapture -%}
+
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "Organization",
+    "name": {{ shop.name | json }},
+    {%- if logo -%}
+      {%- assign image_size = logo.width | append: 'x' -%}
+      "logo": {{ logo | img_url: image_size | prepend: "https:" | json }},
+    {%- endif -%}
+    "sameAs": [{{sameAs | remove_first: '|' | split: '|' | join: ','}}],
+    "url": {{ shop.url | append: page.url | json }}
+  }
+</script>
+
+{%- if request.page_type == 'index' -%}
+  {% assign potential_action_target = shop.url | append: routes.search_url | append: "?q={search_term_string}" %}
+  <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "WebSite",
+      "name": {{ shop.name | json }},
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {{ potential_action_target | json }},
+        "query-input": "required name=search_term_string"
+      },
+      "url": {{ shop.url | append: page.url | json }}
+    }
+  </script>
+{%- endif -%}

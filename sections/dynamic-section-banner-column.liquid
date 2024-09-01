@@ -1,0 +1,450 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-banner-column' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType        = 'banner-column'
+  assign sectionID          = '.section-' | append: section.id
+  assign bannerDesktop      = section.settings.banner_desktop
+  assign bannerMobile       = section.settings.banner_mobile | default: bannerDesktop
+  assign position           = section.settings.position
+  assign imageFirstOnMobile = section.settings.image_first_on_mobile
+  assign disableLazy       = section.settings.disable_lazyload
+-%}
+
+{%- assign heightStyle = section.settings.height_style -%}
+{%- assign cropPosition = section.settings.image_crop -%}
+{%- capture IMGCLASS %} object-fit--{% if cropPosition != blank %}cover{% else %}contain{% endif %}{%- endcapture -%}
+{%- capture section_css -%}{{section_css}}
+  {%- case heightStyle -%}
+    {%- when 'auto'  -%}{%- assign IMGCLASS = nil -%}
+    {%- else -%}
+      {%- capture heightValue -%}{%- if heightStyle == 'manually' -%}{{section.settings.manual_height}}{%- else -%}{{heightStyle}}{%- endif -%}{%- endcapture -%}
+      {%- render 'css-resp', class: sectionID, nextClass: ' .image__style', css: 'padding-top', important: true, value: heightValue -%}
+      {%- render 'css-resp', class: sectionID, nextClass: ' .image__style img', css: 'object-position', important: true, value: cropPosition -%}
+  {%- endcase -%}
+{%- endcapture -%}
+
+{%- comment -%}Reposition block{%- endcomment-%}
+{%- capture bannerMobilePosition  -%}order-{% if imageFirstOnMobile %}0{% else %}1{% endif %} order-lg-{% if position == 'right' %}1{% else %}0{% endif %}{%- endcapture -%}
+{%- capture contentMobilePosition -%}order-{% if imageFirstOnMobile %}1{% else %}0{% endif %} order-lg-{% if position == 'right' %}0{% else %}1{% endif %}{%- endcapture -%}
+
+{%- capture CLASS -%}
+|section-{{sectionType}}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+      <div class="section-content-inner flex flex-1 flex-lg-2 {% render 'snippet-section', type: 'spacing' -%}">
+        <div class="banner-column {{bannerMobilePosition}}">
+          {%- if bannerDesktop == blank and bannerMobile == blank -%}
+            {%- render 'empty-content', type: 'once_image' -%}
+          {%- else -%}
+            {%- unless bannerMobile == bannerDesktop -%}
+              {%- render 'image-style', image: bannerMobile, class: 'lg-none', imgClass: IMGCLASS, disableLazy: disableLazy -%}
+              {%- capture desktopClass -%}none lg-block{%- endcapture -%}
+            {%- endunless -%}
+
+            {%- render 'image-style', image: bannerDesktop, class: desktopClass, imgClass: IMGCLASS, disableLazy: disableLazy -%}
+          {%- endif -%}
+        </div>
+
+
+        {%- comment -%}
+        -------------------------------
+        RENDER BLOCK CONTENT
+        -------------------------------
+        {%- endcomment-%}
+        <div class="content-column {{contentMobilePosition}}"{% if section.blocks.size == 0 %} style="align-self: center;"{% endif %}>
+          <div class="banner-content">
+            {%- if section.blocks.size > 0 -%}
+              {%- for block in section.blocks -%}
+
+                {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+                {%- capture blockClass -%}block-item block-{{block.type}} block-{{block.id}}{%- endcapture -%}
+                {%- case block.type -%}
+                  {%- when 'html' -%}<div class="{{blockClass}}">{{block.settings.html}}</div>
+                  
+                  {%- comment -%}-------------------------------TEXT{%- endcomment-%}
+                  {%- when 'text' -%}
+                    {%- liquid
+                      assign hTag = block.settings.use_heading_tag | remove: 'normal'
+                      assign textColor = block.settings.text_cl | remove: 'rgba(0,0,0,0)'
+                    -%}
+
+                    {%- capture section_css -%}{{section_css}}
+                      {%- unless textColor == blank -%}.block-{{block.id}}{color: {{textColor}};}{%- endunless -%}
+                      {%- render 'css-resp', class: blockID, nextClass: ' > *' css: 'font-size', value: block.settings.text_fs -%}
+                    {%- endcapture -%}
+
+                    <div class="{{blockClass}} fw{{block.settings.text_fw}}">
+                      {%- unless hTag == blank -%}<{{hTag}} class="heading-content">{%- endunless -%}
+                      {{block.settings.text | default: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit</p>'}}
+                      {%- unless hTag == blank -%}</{{hTag}}>{%- endunless -%}
+                    </div>
+
+                  {%- comment -%}-------------------------------SVG + CONTENT{%- endcomment-%}
+                  {%- when 'svg_content' -%}
+                    <div class="{{blockClass}}">
+                      <div class="flex align-items-center">
+                        {%- for i in (1..2) -%}
+                          {%- liquid
+                            assign text  = 'text_' | append: i
+                            assign svg   = 'svg_' | append: i
+                            assign text  = block.settings[text]
+                            assign svg   = block.settings[svg]
+                          -%}
+
+                          {%- if text == blank -%}{%- continue -%}{%- endif -%}
+
+                          <div class="inline-flex">
+                            {%- unless svg == blank -%}<span class="icon inline-flex">{{svg}}</span>{%- endunless -%}
+                            <span class="text fw{{block.settings.text_fw}}">{{text}}</span>
+                          </div>
+                        {%- endfor -%}
+                      </div>
+                    </div>
+
+                    {%- capture section_css -%}{{section_css}}
+                      {%- render 'css-resp', class: blockID, nextClass: ' .text' css: 'font-size', value: block.settings.text_fs -%}
+                    {%- endcapture -%}
+
+                  {%- comment -%}-------------------------------BUTTON{%- endcomment-%}
+                  {%- when 'button' -%}
+                    <div class="{{blockClass}}">
+                      <a href="{{- block.settings.url | default: 'javascript:void(0);' -}}" class="btn btn-{{ block.settings.styles }}">
+                        {{- block.settings.text | default: 'Button' -}}
+                      </a>
+                    </div>
+                {%- endcase -%}
+              {%- endfor -%}
+
+            {%- else -%}
+
+              <div class="custom-block-text">
+                <h2>Talk about your brand</h2>
+                <p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .banner-content', css: 'color', value: section.settings['content_color'], splitBy: ';' -%}
+
+  {%- assign flexAlign = section.settings['content_align'] | replace: 'left', 'flex-start' | replace: 'right', 'flex-end' -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .banner-content', css: 'text-align', value: section.settings['content_align'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .banner-content .block-item .flex', css: 'justify-content', value: flexAlign -%}
+
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+
+{% schema %}
+{
+  "name": "Banner column",
+  "tag": "section",
+  "templates": ["index", "404", "page"],
+  "presets": [
+    {
+      "name": "Banner column"
+    }
+  ],
+  "settings": [
+    {
+      "type":"image_picker",
+      "id":"banner_desktop",
+      "label":"Select a banner for desktop"
+    },
+    {
+      "type":"image_picker",
+      "id":"banner_mobile",
+      "label":"Select a banner for mobile"
+    },
+    {
+      "type":"checkbox",
+      "id":"disable_lazyload",
+      "label":"Disable Lazyload"
+    },
+    {
+      "type":"radio",
+      "id":"position",
+      "label":"Banner position",
+      "options":[
+        {
+          "value":"left",
+          "label": "Left"
+        },
+        {
+          "value":"right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type":"checkbox",
+      "id":"image_first_on_mobile",
+      "label":"Show Image first on mobile",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "height_style",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Auto"
+        },
+        {
+          "value":"manually",
+          "label": "Manually"
+        },
+        {
+          "value": "100%",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "150%",
+          "label": "Portrait (2:3)"
+        },
+        {
+          "value": "75%",
+          "label": "Landscape (4:3)"
+        },
+        {
+          "value": "56.25%",
+          "label": "Wide (16:9)"
+        }
+      ],
+      "default": "auto",
+      "label": "Select height styles"
+    },
+    {
+      "type":"text",
+      "id":"manual_height",
+      "label":"Manually height",
+      "info": "E.g: 300px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"image_crop",
+      "label":"Crop position?",
+      "default": "center",
+      "info": "E.g: center left. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+       "type":"header",
+       "content":"Content settings"
+    },
+    {
+      "type":"color",
+      "id":"content_color",
+      "label":"Text color",
+      "default": "#191919"
+    },
+    {
+      "type":"text",
+      "id":"content_align",
+      "label":"Content alignment",
+      "info": "E.g: center, left. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"section_margin",
+      "label":"Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_padding",
+      "label":"Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"select",
+      "id":"section_visible",
+      "label":"Visibility",
+      "options":[
+        {
+          "value":"hide_mobile",
+          "label": "Hide on Mobile"
+        },
+        {
+          "value":"hide_desktop",
+          "label": "Hide on Desktop"
+        },
+        {
+          "value":"all",
+          "label": "Show all"
+        }
+      ],
+      "default": "all"
+    }
+  ],
+  "blocks": [
+    {
+      "type":"text",
+      "name":"Text",
+      "limit": 3,
+      "settings": [
+        {
+          "type":"richtext",
+          "id":"text",
+          "label":"Write your content here"
+        },
+        {
+          "type":"select",
+          "id":"use_heading_tag",
+          "label":"Use Heading tag",
+          "options":[
+            {
+              "value":"normal",
+              "label": "Normal"
+            }
+            ,{"value":"h1","label": "Heading 1"}
+            ,{"value":"h2","label": "Heading 2"}
+            ,{"value":"h3","label": "Heading 3"}
+            ,{"value":"h4","label": "Heading 4"}
+            ,{"value":"h5","label": "Heading 5"}
+            ,{"value":"h6","label": "Heading 6"}
+          ],
+          "default": "normal"
+        },
+        {
+          "type":"text",
+          "id":"text_fs",
+          "label":"Adjust font size",
+          "info": "E.g: 14px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"range",
+          "id":"text_fw",
+          "label":"Adjust font weight",
+          "min":100,
+          "max":900,
+          "step":100,
+          "default": 300
+        },
+        {
+          "type":"color",
+          "id":"text_cl",
+          "label":"Text color"
+        }
+      ]
+    },
+    {
+      "type":"svg_content",
+      "name":"SVG + Content",
+      "settings": [
+        {
+           "type":"header",
+           "content":"Group 1"
+        },
+        {
+          "type":"textarea",
+          "id":"text_1",
+          "label":"Write your content here",
+          "default": "Lorem ipsum dolor sit amet"
+        },
+        {
+          "type":"html",
+          "id":"svg_1",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        },
+        {
+           "type":"header",
+           "content":"Group 2"
+        },
+        {
+          "type":"textarea",
+          "id":"text_2",
+          "label":"Write your content here"
+        },
+        {
+          "type":"html",
+          "id":"svg_2",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        },
+        {
+           "type":"header",
+           "content":"Adjust text font style"
+        },
+        {
+          "type":"text",
+          "id":"text_fs",
+          "label":"Adjust font size",
+          "info": "E.g: 14px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"range",
+          "id":"text_fw",
+          "label":"Adjust font weight",
+          "min":100,
+          "max":900,
+          "step":100,
+          "default": 300
+        }
+      ]
+    },
+    {
+      "type":"button",
+      "name":"Button",
+      "limit": 1,
+      "settings": [
+        {
+          "type":"text",
+          "id":"text",
+          "label":"Button label"
+        },
+        {
+          "type":"url",
+          "id":"url",
+          "label":"Button URL",
+          "info": "http:// is required for external links"
+        },
+        {
+          "type":"number",
+          "id":"styles",
+          "label":"Button style",
+          "default": 1,
+          "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000255832#1.-Default-Button)"
+        }
+      ]
+    },
+    {
+      "type":"html",
+      "name":"Custom HTML",
+      "settings": [
+        {
+          "type":"html",
+          "id":"html",
+          "label":"HTML"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

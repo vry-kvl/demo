@@ -1,0 +1,221 @@
+{%- case type -%}
+	{%- when 'search' -%}
+
+		{%- liquid
+			assign enablePredictive 			= settings.enable_predictive_search
+			assign search_type 					= settings.search_type
+			assign search_unavailable_result 	= settings.search_unavailable_result
+
+		 	assign search_type = search_type | default: 'all' | replace: 'all', '*'
+		 	assign search_unavailable_result = search_unavailable_result | default: 'last'
+		-%}
+
+		{%- capture placeholder -%}{{- 'search.general.placeholder' | t -}}{%- endcapture -%}
+		{%- capture searchTag -%}{%- if enablePredictive -%}predictive-search{%- else -%}div{%- endif -%}{%- endcapture -%}
+
+		<{{searchTag}} class="form-container form-search-container pr{% if enablePredictive %} block w100 h100{% endif %}">
+			<form action="{{ routes.search_url }}" class="form-inline form-search">
+				<input type="hidden" name="type" value="{{search_type}}"/>
+				<input type="hidden" name="options[unavailable_products]" value="{{search_unavailable_result}}"/>
+				<input type="hidden" name="options[prefix]" value="last"/>
+
+				<input name="q" type="text" placeholder="{{placeholder}}" class="form-input js-search-input" autocomplete="off"{% if focus %} tabindex="-1" autofocus{% endif %}/>
+
+				<button type="submit" class="btn btn-search form-submit-btn" title="{{- 'search.general.submit' | t -}}">
+					{%- render 'svg', type: 'search' -%}
+					{%- render 'svg', type: 'loading' -%}
+				</button>
+			</form>
+
+			{%- if enablePredictive -%}
+				<div class="search-result-container layer-dropdown result-dropdown pa t100 l0 js-search-result"></div>
+			{%- endif -%}
+		</{{searchTag}}>
+
+	{%- when 'newsletter' -%}
+		{%- capture id -%}newsletter{{section.id}}{%- endcapture -%}
+		{%- capture class -%}form-inline{%- endcapture -%}
+
+		{%- liquid
+			assign subscription = settings.subscription_from
+			assign formURL = settings.subscription_url
+		-%}
+
+
+		{%- case subscription -%}
+			{%- when 'klaviyo' -%}
+    			{%- assign klaviyoId  = formURL | split: 'g=' | last -%}
+
+			{%- when 'mailchimp' -%}
+			    {%- unless formURL == blank -%}
+			      {%- unless formURL contains '-json' -%}{%- assign formURL = formURL | replace: '?', '-json?' -%}{%- endunless -%}
+			      {%- unless formURL contains '&c=mailchimpCallback' -%}{%- assign formURL = formURL | append: '&c=mailchimpCallback' -%}{%- endunless -%}
+			    {%- endunless -%}
+		{%- endcase -%}
+
+
+		{%- capture formContent -%}
+			<div class="form-row-control flex flex-fill">
+				<input
+					type="email"
+					id="{{ id }}-email"
+					class="form-input{% if form.errors %} input--error{% endif %}"
+					placeholder="{{- 'form.contact.email_placehoder' | t -}}"
+					aria-required="true"
+					autocorrect="off"
+					autocapitalize="off"
+					name="{% if subscription == 'shopify' %}contact[email]{% elsif subscription == 'mailchimp' %}EMAIL{% else %}email{% endif %}"
+					required
+				>
+
+				<button type="submit" class="{% if buttonStyle == '0' %}n-link{% else %}btn btn-{{btnStyle | default: 1 }}{% endif %}" name="subscribe">
+					{%- if flyIcon -%}
+						<span class="icon icon-flight">
+							<svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M25.9981 1.12382C25.9976 1.11775 25.997 1.11174 25.9963 1.10573C25.9939 1.08444 25.9906 1.06332 25.9857 1.04241C25.9855 1.04143 25.9854 1.04046 25.9852 1.03948C25.9798 1.01727 25.9727 0.995498 25.9645 0.974048C25.9628 0.969552 25.961 0.965219 25.9591 0.960777C25.9514 0.941981 25.9426 0.923564 25.9328 0.905581C25.9314 0.903089 25.9303 0.900543 25.9289 0.898106C25.9176 0.878226 25.9048 0.858943 25.8908 0.840472C25.8879 0.836734 25.8849 0.833268 25.882 0.829638C25.8706 0.815284 25.8583 0.801526 25.8452 0.788146C25.8408 0.783596 25.8364 0.779046 25.8318 0.774659C25.8286 0.771679 25.826 0.768538 25.8228 0.765613C25.8086 0.752775 25.7939 0.740804 25.7787 0.7297C25.7786 0.729646 25.7786 0.729537 25.7785 0.729483C25.778 0.729158 25.7775 0.728941 25.7771 0.728616C25.7584 0.714966 25.7389 0.70305 25.7189 0.692108C25.7144 0.68967 25.71 0.687287 25.7055 0.685012C25.6859 0.674991 25.666 0.665945 25.6456 0.658416C25.6445 0.657982 25.6433 0.657387 25.6421 0.657007C25.6202 0.649153 25.5979 0.642978 25.5753 0.638049C25.5707 0.636966 25.5661 0.636261 25.5615 0.63534C25.5424 0.631711 25.5232 0.629003 25.5039 0.627324C25.4998 0.626999 25.4958 0.626403 25.4916 0.626186C25.4693 0.624886 25.4469 0.62494 25.4246 0.626295C25.4199 0.62662 25.4152 0.627215 25.4104 0.627649C25.3917 0.629328 25.373 0.631982 25.3546 0.635557C25.3496 0.636532 25.3447 0.637291 25.3398 0.638428C25.3176 0.643411 25.2956 0.649695 25.274 0.657495C25.2712 0.65847 25.2686 0.659716 25.2659 0.660745C25.2463 0.66822 25.2271 0.676995 25.2083 0.686745C25.2059 0.688045 25.2033 0.688749 25.2009 0.690104L0.283951 14.1698C0.094203 14.2725 -0.0165148 14.4778 0.00201038 14.6928C0.0205356 14.9076 0.164837 15.0911 0.369264 15.1597L9.83824 18.3383L10.1367 24.8577C10.1473 25.0909 10.3062 25.291 10.5308 25.3543C10.5795 25.368 10.6289 25.3747 10.6778 25.3747C10.8544 25.3747 11.0238 25.288 11.1263 25.1366L14.6384 19.9496L21.3698 22.2093C21.426 22.2281 21.4842 22.2374 21.5423 22.2374C21.6373 22.2374 21.7318 22.2124 21.8158 22.1633C21.9507 22.0844 22.045 21.9509 22.0743 21.7973L25.9907 1.26807C25.9912 1.26558 25.9911 1.26303 25.9916 1.26054C25.9956 1.23779 25.9987 1.21482 25.9997 1.19169C25.9997 1.1905 25.9996 1.18925 25.9997 1.18801C26.0005 1.16656 25.9997 1.14516 25.9981 1.12382ZM10.0947 17.2817L1.89591 14.5295L22.9215 3.15498L10.0947 17.2817ZM11.1442 23.178L10.9396 18.7081L13.5724 19.5919L11.1442 23.178ZM21.1264 20.9849L11.2161 17.6581L24.5659 2.95565L21.1264 20.9849Z" fill="black"/>
+							</svg>
+						</span>
+					{%- else -%}
+
+						{%- if form.posted_successfully? -%}
+							{{- 'form.contact.subscribed' | t -}}
+						{%- else -%}
+							{{- 'form.contact.subscribe' | t -}}
+						{%- endif -%}
+
+					{%- endif -%}
+				</button>
+			</div>
+
+			{%- if showCondition -%}
+				<div class="form-row-control flex">
+					<input type="checkbox" name="termAndCondition" id="{{ id }}-condition" required>
+					<label for="{{ id }}-condition">{{- 'form.newsletter.term_and_condition' | t -}}</label>
+				</div>
+			{%- endif -%}
+		{%- endcapture -%}
+
+
+		<div class="form-container form-newsletter-container">
+			{%- if subscription == 'shopify' -%}
+				{%- unless section.id contains 'static-newsletter-popup' -%}
+					<style>
+						#{{id}} .form-subscribe-notify{display: none;}
+						#{{id}}:target .form-subscribe-notify{display: block;}
+					</style>
+				{%- endunless -%}
+
+				{% form 'customer', id: id, class: class, data-type: subscription %}
+					<input type="hidden" name="contact[tags]" value="newsletter">
+
+					{%- if form.posted_successfully? -%}
+						<div class="form-subscribe-notify">
+							<p class="form-message form-message--success" tabindex="-1" data-form-status>
+								{%- render 'svg', type: 'tick' -%}
+								<span class="text">{{- 'form.contact.subscribe_success' | t -}}</span>
+							</p>
+						</div>
+					{%- endif -%}
+
+					{%- if form.errors contains 'email' -%}
+						<div class="form-subscribe-notify">
+							<p class="form-message form-message--error">
+								{%- render 'svg', type: 'error' -%}
+								<span>{{ form.errors.translated_fields['email'] | capitalize }} {{ form.errors.messages['email'] }}.</span>
+							</p>
+						</div>
+					{%- endif -%}
+
+					{{formContent}}
+
+				{% endform %}
+
+			{%- else -%}
+
+				<form action="{{formURL}}" id="{{id}}" class="{{class}}" data-type="{{subscription}}">
+					{%- if subscription == 'klaviyo' -%}
+						<input type="hidden" name="g" value="{{klaviyoId}}">
+					{%- endif -%}
+					<div class="form-subscribe-notify hide">
+						<p class="form-message form-message--success">
+							{%- render 'svg', type: 'tick' -%}
+							<span class="text">{{- 'form.contact.subscribe_success' | t -}}</span>
+						</p>
+						<p class="form-message form-message--error">
+							{%- render 'svg', type: 'error' -%}
+							<span class="text"></span>
+						</p>
+					</div>
+
+					{{formContent}}
+				</form>
+			{%- endif -%}
+		</div>
+
+	{%- when 'search_by_vendor' -%}
+
+		{%- liquid
+			assign enablePredictive = settings.enable_predictive_search
+		-%}
+
+		{%- capture placeholder -%}{{- 'search.general.vendor_placeholder' | t -}}{%- endcapture -%}
+		{%- capture searchTag -%}{%- if enablePredictive -%}predictive-search{%- else -%}div{%- endif -%}{%- endcapture -%}
+
+		<{{searchTag}} class="form-container form-search-container pr{% if enablePredictive %} block w100 h100{% endif %}">
+			<form action="{{ '' | url_for_vendor | split: '?' | first }}" class="form-inline form-search">
+				<input name="q" type="text" placeholder="{{placeholder}}" class="form-input js-search-input" autocomplete="off"{% if focus %} tabindex="-1" autofocus{% endif %}/>
+				<script type="application/json">{{ shop.vendors | json }}</script>
+
+				<button type="submit" class="btn btn-search form-submit-btn" title="{{- 'search.general.submit' | t -}}">
+					{%- render 'svg', type: 'search' -%}
+					{%- render 'svg', type: 'loading' -%}
+				</button>
+			</form>
+
+			{%- if enablePredictive -%}
+				<div class="search-result-container layer-dropdown result-dropdown pa t100 l0 js-search-result"></div>
+			{%- endif -%}
+		</{{searchTag}}>
+
+	{%- when 'contact' -%}
+		{%- liquid
+			assign name = 'form.contact.name' | t
+			assign mail = 'form.contact.mail' | t
+			assign phone = 'form.contact.phone' | t
+			assign message = 'form.contact.message' | t
+			assign btnSubmit = 'form.contact.submit' | t
+		-%}
+
+		{%- form 'contact', id: 'ContactForm' -%}
+			{%- if form.posted_successfully? -%}
+				<div class="form-status form-success" tabindex="-1" autofocus>
+					{% render 'svg', type: 'tick' %} {{ 'form.contact.post_success' | t }}
+				</div>
+			{%- elsif form.errors -%}
+				<div class="form-status form-errors">
+					<h2 class="h6" role="alert" tabindex="-1" autofocus>{% render 'svg', type: 'error' %} {{ 'form.general.error_title' | t}}</h2>
+				</div>
+				{{ form.errors | default_errors }}
+			{%- endif -%}
+
+			<div class="lg-flex flex-3 {% render 'snippet-section', type: 'spacing' %}">
+				<div class="form-field">
+					<input type="text" class="input-filed" autocomplete="name" name="contact[{{name}}]" value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}" placeholder="{{ name }}">
+				</div>
+				<div class="form-field">
+					<input type="email" class="input-filed" autocomplete="email" name="contact[email]" spellcheck="false" autocapitalize="off" value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" aria-required="true" {% if form.errors contains 'email' %} aria-invalid="true" aria-describedby="ContactForm-email-error" {% endif %} placeholder="{{ mail }}">
+				</div>
+				<div class="form-field">
+					<input type="tel" class="input-filed" autocomplete="tel" name="contact[{{phone}}]" pattern="[0-9\-]*" value="{% if form.phone %}{{ form.phone }}{% elsif customer %}{{ customer.phone }}{% endif %}" placeholder="{{ phone }}">
+				</div>
+			</div>
+
+			<div class="form-field">
+				<textarea rows="10" class="text-area input-filed" name="contact[{{message}}]" placeholder="{{ message }}">{{- form.body -}}</textarea>
+			</div>
+
+			<div class="form-field form-button-group">
+				<button type="submit" class="btn btn-1">{{btnSubmit}}</button>
+			</div>
+		{%- endform -%}
+{%- endcase -%}

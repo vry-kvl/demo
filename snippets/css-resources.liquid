@@ -1,0 +1,26 @@
+{%- for i in (1..2) -%}
+
+  {%- capture attributes -%}{%- if forloop.first -%}rel="preload"  as="style"{%- else -%} rel="stylesheet" type="text/css" media="all"{%- endif -%}{%- endcapture -%}
+
+  <link href="{{ 'base.min.css' | asset_url }}" {{attributes}}>
+  <link href="{{ 'header.min.css' | asset_url }}" {{attributes}}>
+  
+  {%- case request.page_type -%}
+      
+      {%- when '404' -%}<link href="{{ '404.min.css'   | asset_url }}" {{attributes}}>
+
+      {%- when 'product' -%}
+        <link href="{{ 'tiny-slider.min.css'   | asset_url }}" {{attributes}}>
+        <link href="{{ 'product-page.min.css'   | asset_url }}" {{attributes}}>
+
+  {%- endcase -%}
+
+  {%- unless request.page_type == 'index' -%}
+    <link href="{{ 'component-breadcrumb.min.css'   | asset_url }}" {{attributes}}>
+  {%- endunless -%}
+{%- endfor -%}
+
+{%- assign themeLayout = settings.theme_layout | downcase -%}
+{%- if themeLayout == 'rtl' -%}
+  <link href="{{ 'theme-rtl.min.css' | asset_url }}" {{attributes}}>
+{%- endif -%}

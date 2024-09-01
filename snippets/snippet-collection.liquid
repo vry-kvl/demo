@@ -1,0 +1,381 @@
+{%- liquid
+  assign sectionID 	= '.section-' | append: section.id
+  assign maxView 		= maxView | default: section.settings.item_per_row
+  assign filterStyle = section.settings.filter_style
+-%}
+
+{%- capture pageURL -%}{%- render 'page-url' -%}{%- endcapture -%}
+
+{%- case type -%}
+
+	{%- when 'view' -%}
+		{%- assign templateLayout = template | downcase -%}
+		{%- capture content -%}
+			{%- if maxView < 3 -%}{{maxView}} flex-list-{{maxView}}
+			{%- else -%}
+				{%- case maxView -%}
+					{%- when 3 -%}flex-2 flex-md-{{- maxView -}}
+					{%- when 4 -%}flex-2 flex-md-3 flex-lg-{{- maxView -}}
+					{%- when 5 -%}flex-2 flex-md-3 flex-lg-{{- maxView -}}
+					{%- else 	 -%}flex-2 flex-md-{% if templateLayout contains 'sidebar' %}3{% else %}4{% endif %} flex-lg-{{- maxView -}}
+				{%- endcase -%}
+
+			{%- endif -%}
+		{%- endcapture -%}
+		{{- content | strip_newlines -}}
+
+	{%- when 'blocks' -%}
+		{%- for block in section.blocks -%}
+			{%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+			{%- capture blockClass -%}block-item block-{{block.type}} block-{{block.id}}{%- endcapture -%}
+
+			{%- case block.type -%}
+				{%- comment -%}
+				-------------------------------
+				MENU
+				-------------------------------
+				{%- endcomment-%}
+				{%- when 'menu' -%}
+					<div class="{{blockClass}}"{{block.shopify_attributes}}>
+						<div class="block-inner">
+							{%- assign menuList = linklists[block.settings.menu] -%}
+
+							<ul class="menu-list">
+								{%- if menuList.links.size > 0 -%}
+									{%- for l in menuList.links -%}
+										{%- render 'link', link: l -%}
+									{%- endfor -%}
+								{%- else -%}
+									{%- for i in (1..5) -%}
+										<li><a href="javascript:void(0);">Sample menu item</a></li>
+									{%- endfor -%}
+								{%- endif -%}
+							</ul>
+						</div>
+					</div>
+
+				{%- comment -%}
+				-------------------------------
+				FILTER BY PRODUCT TAGS
+				-------------------------------
+				{%- endcomment-%}
+				{%- when 'filter_tags' -%}
+					{%- if section.settings.filter_type != 'tag' -%}{%- continue -%}{%- endif -%}
+
+					{%- assign filterTags = block.settings.filter_options | strip_newlines | split: ',' -%}
+					{%- assign blockIndex = forloop.index0 -%}
+
+					{%- capture content -%}
+						{%- for t in filterTags -%}
+							{%- assign tag = t | strip -%}
+							{%- unless collection.all_tags contains tag -%}{%- continue -%}{%- endunless -%}
+
+							{%- capture filterID -%}{{ block.id }}{{ tag | md5 }}{%- endcapture -%}
+
+							<li>
+								<input type="checkbox" name="tagGroup{{blockIndex}}" value="{{tag | handle}}" id="{{filterID}}" form="collectionFilter" class="js-filter js-filter-facet none"{% if current_tags contains tag %} checked{% endif %}>
+								<label for="{{filterID}}">{{tag}}</label>
+							</li>
+						{%- endfor -%}
+					{%- endcapture -%}
+
+					{%- if content == blank -%}{%- continue -%}{%- endif -%}
+
+					<div class="filter-block filter-group-tag">
+						<h4>{{block.settings.title}}</h4>
+
+						<ul class="filter-list n-select">{{- content -}}</ul>
+					</div>
+				{%- comment -%}
+				-------------------------------
+				FILTER BY VARIANT OPTION
+				-------------------------------
+				{%- endcomment-%}
+				{%- when 'filter_attributes' -%}
+					{%- if section.settings.filter_type != 'attribute' -%}{%- continue -%}{%- endif -%}
+					{%- for filter in collection.filters -%}
+
+						<div class="filter-block">
+							{%- case filter.type -%}
+								{%- when 'price_range' -%}
+									{%- liquid
+
+										if filter == blank
+											continue
+										endif
+
+										assign rangeMin = 0
+										assign rangeMax = filter.range_max
+
+										assign minValue = rangeMin
+										assign maxValue = rangeMax
+
+										if filter.min_value.value != blank
+											assign minValue = filter.min_value.value
+										endif
+
+										if filter.max_value.value != blank and filter.max_value.value > 0
+											assign maxValue = filter.max_value.value
+										endif
+
+										assign rangeMin = rangeMin | money_without_currency | floor
+										assign rangeMax = rangeMax | money_without_currency | ceil
+										assign minValue = minValue | money_without_currency | floor
+										assign maxValue = maxValue | money_without_currency | ceil
+									-%}
+
+									{%- render 'snippet-section', type: 'css-file', minify: true, name: 'price-range-slider' -%}
+
+									<price-range-slider data-min="{{ rangeMin }}"
+																			data-max="{{ rangeMax }}"
+																			data-min-value="{{ minValue }}"
+																			data-max-value="{{ maxValue }}"
+									>
+										<h4>{{- 'collection.filter.price_range' | t -}}</h4>
+
+										<div class="range-price-slider">
+											<div class="range-price-slider js-range-slider"></div>
+										</div>
+										<div class="range-price-textbox">
+											<div class="price-min inline-block">
+												<span class="field-currency js-currency-symbol">{{ cart.currency.symbol }}</span>
+												<input type="number"
+															name="{{ filter.min_value.param_name }}"
+															form="collectionFilter"
+															min="{{ rangeMin }}"
+															max="{{ rangeMax }}"
+															class="field-price js-price-min js-filter-facet js-filter"
+															value="{{minValue}}">
+											</div>
+
+											<div class="price-dash inline-block">&nbsp;&ndash;&nbsp;</div>
+
+											<div class="price-max inline-block">
+												<span class="field-currency js-currency-symbol">{{ cart.currency.symbol }}</span>
+												<input type="number"
+															name="{{ filter.max_value.param_name }}"
+															form="collectionFilter"
+															min="{{ rangeMin }}"
+															max="{{ rangeMax }}"
+															class="field-price js-price-max js-filter-facet js-filter"
+															value="{{maxValue}}">
+											</div>
+										</div>
+									</price-range-slider>
+
+								{%- else -%}
+									<h4>{{filter.label}}</h4>
+
+									<ul class="filter-list n-select">
+										{%- for filter in filter.values -%}
+										{%- capture filterID -%}{{filter.param_name | append: filter.value | append: block.id | md5}}{%- endcapture -%}
+										<li>
+											<input
+														type="checkbox"
+														name="{{filter.param_name}}"
+														value="{{filter.value}}"
+														id="{{filterID}}"
+														form="collectionFilter"
+														class="js-filter js-filter-facet none"
+														{% if filter.active %} checked{% endif %}
+											>
+											<label for="{{filterID}}">{{filter.label}}</label>
+										</li>
+										{%- endfor -%}
+									</ul>
+							{%- endcase -%}
+						</div>
+					{%- endfor -%}
+
+					<noscript>
+						<button type="submit" class="btn btn-1" form="collectionFilter">{{- 'collection.filter.apply' | t -}}</button>
+					</noscript>
+
+			{%- endcase -%}
+		{%- endfor -%}
+
+	{%- when 'toolbar' -%}
+		{%- comment -%}
+		-------------------------------
+		TOOLBAR
+		-------------------------------
+		{%- endcomment-%}
+
+		<div class="collection-toolbar">
+		  <div class="flex justify-content-between">
+		    <div class="toolbar-group flex align-items-center">
+		      {%- comment -%}
+		      -------------------------------
+		      Dropdown filter
+		      -------------------------------
+		      {%- endcomment-%}
+
+	        <div class="collection-filter-button filter-button-{{filterStyle}}{% if filterStyle == 'sidebar' %} lg-none{% endif %}">
+	          <button class="btn btn-filter js-filter-btn border border-rd" type="button">
+	            <span class="flex align-items-center">
+	              {%- render 'svg', type: 'filter' -%}
+	              <span class="text">{{- 'collection.general.filter' | t -}}</span>
+	            </span>
+	          </button>
+	        </div>
+
+		      {%- comment -%}
+		      -------------------------------
+		      VIEW
+		      -------------------------------
+		      {%- endcomment-%}
+		      {%- if section.settings.view_mode -%}
+
+		      	{%- unless request.design_mode -%}
+			      	{%- assign view = cart.attributes['collectionView'] -%}
+		      	{%- endunless -%}
+
+			      <collection-view class="collection-view-list">
+			        <nav class="list flex {% render 'snippet-section', type: 'spacing' %}">
+
+			        	{%- for i in (1..4) -%}
+				        	{%- capture svgName -%}view{{forloop.index}}{%- endcapture -%}
+				        	{%- capture viewClass -%}
+				        		{%- case i -%}
+				        			{%- when 1 -%}{{- 'flex-1 flex-list-1' -}}
+				        			{%- when 2 -%}{{- 'flex-2 flex-list-2' -}}
+				        			{%- when 3 -%}{%- render 'snippet-collection', type: 'view', maxView: 3 %}
+				        			{%- else 	 -%}{%- render 'snippet-collection', type: 'view' %}
+				        		{%- endcase -%}
+				        	{%- endcapture -%}
+				        	{%- assign viewClass = viewClass | strip -%}
+
+				        	{%- capture class -%}
+				        		{%- case i -%}
+				        			{%- when 1 -%}
+				        			{%- when 2 -%}
+				        			{%- when 3 -%}d-none d-md-flex
+				        			{%- else 	 -%}d-none d-md-flex
+				        		{%- endcase -%}
+				        	{%- endcapture -%}
+
+				        	{%- assign isActive = false -%}
+				        	{%- if viewClass == view or view == blank and forloop.last -%}
+				        		{%- assign isActive = true -%}
+				        	{%- endif -%}
+
+				            <button class="collection-view c-pointer js-collection-view js-collection-index-{{forloop.index0}}{% if isActive %} active{% endif %} {{class}}" type="button" data-class="{{viewClass}}">
+				              {%- render 'svg', type: svgName -%}
+				            </button>
+				            {%- comment -%}
+				          <li class=""></li>
+				            {%- endcomment-%}
+			        	{%- endfor -%}
+			        </nav>
+			      </collection-view>
+		      {%- endif -%}
+		    </div>
+
+		    <div class="toolbar-group flex align-items-center">
+		      {%- comment -%}
+		      -------------------------------
+		      SORT
+		      -------------------------------
+		      {%- endcomment-%}
+		      <div class="collection-sort pr js-collection-sort">
+		        {%- liquid
+		          assign currentSort = collection.sort_by | default: collection.default_sort_by
+		        -%}
+
+		        <details class="">
+		          <summary class="c-pointer">
+		          	<div class="flex align-items-center">
+		              <span class="sort-title">{{- 'collection.general.sort_by' | t -}}</span>
+		              <span class="sort-label fw600 js-sort-label">
+		                {%- capture sortLabel -%}collection.sorting.{{currentSort}}{%- endcapture -%}
+		                {{ sortLabel | t }}
+		              </span>
+		              {%- render 'svg', type: 'caret', class: 'expand' -%}
+		             </div>
+		          </summary>
+
+		          <div class="pa r0 l0 t100 slideUp">
+		            <ul class="sort-list">
+		              {%- for option in collection.sort_options -%}
+		                {%- assign sortValue = option.value -%}
+		                {%- capture label -%}collection.sorting.{{sortValue}}{%- endcapture -%}
+
+		                <li class="{{sortValue}}">
+		                  <input type="radio" name="sort_by" value="{{sortValue | escape}}" id="sort{{sortValue | md5}}" form="collectionFilter" class="none js-filter js-filter-facet"{% if currentSort == sortValue %} checked{% endif %}>
+		                  <label for="sort{{sortValue | md5}}" class="c-pointer">{{- label | t -}}</label>
+		                </li>
+		              {%- endfor -%}
+		            </ul>
+		          </div>
+		        </details>
+
+            <select id="collection-sort-list-select" class="lg-none js-select-sort js-filter-facet" form="collectionFilter">
+              {%- for option in collection.sort_options -%}
+                {%- assign sortValue = option.value -%}
+                {%- capture label -%}collection.sorting.{{sortValue}}{%- endcapture -%}
+
+                <option value="{{sortValue | escape}}"{% if currentSort == sortValue %} selected{% endif %}>{{label | t}}</option>
+              {%- endfor -%}
+            </select>
+		      </div>
+
+		      {%- comment -%}
+		      -------------------------------
+		      TOTAL VIEW
+		      -------------------------------
+		      {%- endcomment-%}
+		      {%- assign showingList = section.settings.total_viewlist | split: ',' -%}
+		      {%- if showingList.size > 0 -%}
+		      	{%- liquid
+		      		assign total = cart.attributes['collectionPaginate'] | default: section.settings.total_items | default: 20 | times: 1
+		      	-%}
+
+			      <div class="collection-paginate pr js-collection-paginate" data-base="{{collection.url}}">
+			        <details>
+			          <summary class="c-pointer">
+			          	<div class="flex align-items-center">
+			          		<span class="show-title">{{- 'collection.general.show' | t -}}</span>
+			          		<span class="show-label fw600 js-collection-paginate-value">{{total}}</span>
+			          		{%- render 'svg', type: 'caret', class: 'expand' -%}
+			          	</div>
+			          </summary>
+
+			          <div class="pa l0 t100 slideUp">
+			            <ul class="collection-paginate-list">
+			              {%- for i in showingList -%}
+			              	{%- assign view = i | strip | times: 1 -%}
+			                <li>
+			                	<button type="button" class="c-pointer js-paginate{% if view == total %} active{% endif %}">{{view}}</button>
+			                </li>
+			              {%- endfor -%}
+			            </ul>
+			          </div>
+			        </details>
+	            <select id="collection-paginate-list-select" class="lg-none">
+	            	{%- for i in showingList -%}
+	              	{%- assign view = i | strip | times: 1 -%}
+	                	<option {% if view == total %} selected {% endif %}value="{{view}}">{{view}}</option>
+	              {%- endfor -%}
+	            </select>
+			      </div>
+		      {%- endif -%}
+		    </div>
+		  </div>
+
+		  {%- if filterStyle == 'dropdown' -%}
+		  	{%- capture filterColumn -%}{%- render 'config-grid', value: section.settings.filter_item_resp %}{%- endcapture -%}
+
+		  	{%- unless pageURL contains 'section_id' -%}<template id="collectionFilter">{%- endunless -%}
+
+			    <collection-filter class="block trans02s" data-type="{{section.settings.filter_type}}" data-and-logic="{{section.settings.filter_and}}" style="max-height: 0; overflow: hidden;">
+			      <form action="{{collection.url}}" id="collectionFilter"></form>
+				      <div class="flex {{filterColumn}}">
+				      	{%- render 'snippet-collection', type: 'blocks' -%}
+				      </div>
+			    </collection-filter>
+
+		  	{%- unless pageURL contains 'section_id' -%}</template>{%- endunless -%}
+		  {%- endif -%}
+		</div>
+
+{%- endcase -%}

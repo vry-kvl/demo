@@ -1,0 +1,317 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'footer' -%}
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- liquid
+  assign sectionType  = 'footer'
+  assign sectionID    = '.section-' | append: section.id
+  assign titleFw      = settings.footer_title_fw
+-%}
+
+
+{%- capture content -%}
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="footer" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    <div class="flex flex-fill">
+      {%- for block in section.blocks -%}
+         {%- liquid
+            assign width = block.settings.width
+            unless width == blank
+               assign width = width | replace: ',', ',0 0 ' | prepend: '0 0 '
+            endunless
+         -%}
+         {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+         {%- capture blockClass -%}block-item block-type-{{block.type}} block-{{block.id}}{%- endcapture -%}
+
+
+         {%- capture section_css -%}{{- section_css -}}
+            {%- render 'css-resp', class: blockID, css: 'flex', value: width -%}
+         {%- endcapture -%}
+
+
+         {%- case block.type -%}
+            {%- comment -%}
+            -------------------------------
+            ADDRESS
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'address' -%}
+               {%- liquid
+                  assign blockTitle    = block.settings['title']
+                  assign blockAddress  = block.settings['address']
+                  assign blockContent  = block.settings['content']
+               -%}
+
+               <div class="{{blockClass}}{% if block.settings.show_border %} has-border{% endif %}"{{block.shopify_attributes}}>
+                  <div class="block-inner">
+                     <div class="block-title fw{{titleFw}}">
+                        <p>{{blockTitle}}</p>
+                     </div>
+
+                     {%- unless blockAddress == blank -%}
+                        <div class="block-address">
+                           <div class="block-address-inner flex align-items-center">
+                              {%- if block.settings.show_icon -%}
+                                 {%- render 'svg', type: 'address' -%}
+                              {%- endif -%}
+                              <div class="address">{{blockAddress}}</div>
+                           </div>
+                        </div>
+                        {%- capture section_css -%}{{- section_css -}}
+                           {%- render 'css-resp', class: blockID, nextClass: ' .block-address', css: 'font-size', value: block.settings['address_fs'] -%}
+                        {%- endcapture -%}
+                     {%- endunless -%}
+
+                     {%- unless blockContent == blank -%}
+                        <div class="block-information">{{blockContent}}</div>
+                     {%- endunless -%}
+                  </div>
+               </div>
+
+            {%- comment -%}
+            -------------------------------
+            CONTACT
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'contact' -%}
+               {%- liquid
+                  assign blockTitle    = block.settings['title']
+                  assign blockContact  = block.settings['contact']
+                  assign blockContent  = block.settings['content']
+               -%}
+
+               <div class="{{blockClass}}"{{block.shopify_attributes}}>
+                  <div class="block-inner">
+                     <div class="block-title fw{{titleFw}}">
+                        <p>{{blockTitle}}</p>
+                     </div>
+
+                     {%- unless blockContact == blank -%}
+                        <h4 class="block-contact">{{blockContact}}</h4>
+                        {%- capture section_css -%}{{- section_css -}}
+                           {%- render 'css-resp', class: blockID, nextClass: ' .block-contact', css: 'font-size', value: block.settings['contact_fs'] -%}
+                        {%- endcapture -%}
+                     {%- endunless -%}
+
+                     {%- unless blockContent == blank -%}
+                        <div class="block-information">{{blockContent}}</div>
+                     {%- endunless -%}
+
+                     {%- if block.settings.show_social -%}
+                        <div class="block-social">
+                           {%- render 'social-media-icons' -%}
+                        </div>
+                     {%- endif -%}
+                  </div>
+               </div>
+
+
+            {%- comment -%}
+            -------------------------------
+            MENU
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'menu' -%}
+               {%- capture menuBlock -%}
+                  {%- assign menuList = linklists[block.settings.menu] -%}
+                  <div class="{{blockClass}}"{{block.shopify_attributes}}>
+                     <div class="block-inner">
+                        {%- unless block.settings.hide_title -%}
+                           <div class="block-title fw{{titleFw}}">
+                              <p>{{menuList.title}}</p>
+                           </div>
+                        {%- endunless -%}
+
+                        <ul class="menu-list">
+                           {%- if menuList.links.size > 0 -%}
+                              {%- for l in menuList.links -%}
+                                 {%- render 'link', link: l -%}
+                              {%- endfor -%}
+                           {%- else -%}
+                              {%- for i in (1..5) -%}
+                                 <li class="list-item"><a href="javascript:void(0);" class="list-item-link link">Sample menu item</a></li>
+                              {%- endfor -%}
+                           {%- endif -%}
+                        </ul>
+                     </div>
+                  </div>
+               {%- endcapture -%}
+               {{menuBlock}}
+               {%- capture menuSection -%}{{menuSection}}{{menuBlock}}{%- endcapture -%}
+         {%- endcase -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{%- unless menuSection == blank -%}
+   <template id="footerMenu">{{menuSection}}</template>
+{%- endunless -%}
+
+{% schema %}
+{
+   "name": "Footer Widget",
+   "tag": "section",
+   "settings": [
+      {
+         "type": "checkbox",
+         "id": "boxed_layout",
+         "label": "Boxed layout",
+         "default": true
+      },
+      {
+         "type":"text",
+         "id":"section_margin",
+         "label":"Section margin",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type":"text",
+         "id":"section_padding",
+         "label":"Section padding",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      }
+   ],
+   "blocks": [
+
+      {
+         "type": "address",
+         "name": "Store address",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"title",
+               "label":"Title",
+               "default": "Your store"
+            },
+            {
+               "type":"checkbox",
+               "id":"show_icon",
+               "label":"Show Address icon",
+               "default": true
+            },
+            {
+               "type":"textarea",
+               "id":"address",
+               "label":"Store address"
+            },
+            {
+              "type": "text",
+              "id": "address_fs",
+              "label": "Adjust Address text font size",
+              "default": "14px",
+               "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+            },
+            {
+               "type":"richtext",
+               "id":"content",
+               "label":"Information"
+            },
+            {
+                "type":"header",
+                "content":"General settings"
+             },
+             {
+              "type":"text",
+              "id":"width",
+              "label":"Block width",
+              "info": "E.g: 500px or 50%. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+            },
+            {
+               "type":"checkbox",
+               "id":"show_border",
+               "label":"Show Right border",
+               "default": true
+            }
+         ]
+      },
+      {
+         "type": "contact",
+         "name": "Contact",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"title",
+               "label":"Title",
+               "default": "Need help"
+            },
+            {
+               "type":"textarea",
+               "id":"contact",
+               "label":"Store contact"
+            },
+            {
+              "type": "text",
+              "id": "contact_fs",
+              "label": "Adjust Contact text font size",
+              "default": "25px",
+               "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+            },
+            {
+               "type":"richtext",
+               "id":"content",
+               "label":"Information"
+            },
+            {
+               "type":"checkbox",
+               "id":"show_social",
+               "label":"Show Social icons",
+               "default": true
+            },
+            {
+                "type":"header",
+                "content":"General settings"
+             },
+             {
+              "type":"text",
+              "id":"width",
+              "label":"Block width",
+              "info": "E.g: 500px or 50%. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+            }
+         ]
+      },
+      {
+         "type": "menu",
+         "name": "Menu list",
+         "settings": [
+            {
+               "type":"link_list",
+               "id":"menu",
+               "label":"Select a menu"
+            },
+            {
+               "type":"checkbox",
+               "id":"hide_title",
+               "label":"Hide Menu title",
+               "default": true
+            },
+            {
+                "type":"header",
+                "content":"General settings"
+             },
+             {
+              "type":"text",
+              "id":"width",
+              "label":"Block width",
+              "info": "E.g: 500px or 50%. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+           }
+         ]
+      }
+   ]
+}
+{% endschema %}

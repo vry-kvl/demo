@@ -1,0 +1,20 @@
+
+{%- capture sublink -%}
+	{%- if link.links.size > 0 -%}
+        {%- capture menuClass -%}{% if dropdown %}dropdown dropdown{% else %}submenu submenu-{% endif %}{%- endcapture -%}
+        <div class="{{menuClass}}-link-{{link.levels | replace: '2', 'parent' | replace: '1', 'child' }}">
+            <ul>
+                {% for item in link.links %}
+                    {%- render 'support-menu', link: item -%}
+                {% endfor %}
+            </ul>
+        </div>
+    {%- endif -%}
+{%- endcapture -%}
+
+<li class="list-item">
+    <a href="{{link.url}}" target="_blank">{{link.title}}</a>
+    {%- if sublink -%}
+        {{ sublink }}
+    {%- endif -%}
+</li>

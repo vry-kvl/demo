@@ -1,0 +1,13 @@
+{
+  "sections": {
+    "header": {
+      "search": "بحث",
+      "account": "الحساب الخاص بك",
+      "search_placeholder": "البحث عن المنتجات ...",
+      "cart": "عربتك"
+    },
+    "breadcrumb": {
+      "shopping_cart": ""
+    }
+  }
+}

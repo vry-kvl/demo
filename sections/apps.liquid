@@ -1,0 +1,131 @@
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- capture CLASS -%}
+|section-{{section.id}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    {%- comment -%}
+    -------------------------------
+    Section heading
+    -------------------------------
+    {%- endcomment-%}
+    {%- assign sectionHeading = section.settings.section_heading -%}
+    {%- unless sectionHeading == blank -%}
+      <div class="section-heading-wrapper">
+         <h3 class="section-heading{% if section.settings['section_heading_fw'] > 0 %} fw{{section.settings['section_heading_fw']}}{% endif %}">{{sectionHeading}}</h3>
+      </div>
+      {%- capture section_css -%}{{- section_css -}}
+        {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+      {%- endcapture -%}
+    {%- endunless -%}
+
+    <div class="section-content">
+      {%- for block in section.blocks -%}
+        {%- render block -%}
+      {%- endfor -%}
+    </div>
+
+  </div>
+</div>
+
+{%- capture section_css -%}{{- section_css -}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+{%- endcapture -%}
+{%- endcapture -%}
+
+
+{%- unless section.blocks.size == 0 -%}
+  {%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+{%- endunless -%}
+
+{%- schema -%}
+{
+   "name": "App",
+   "tag": "section",
+   "class": "shopify-section-apps",
+   "settings": [
+      {
+         "type":"header",
+         "content":"Section heading"
+      },
+      {
+         "type":"text",
+         "id":"section_heading",
+         "label":"Heading"
+      },
+      {
+         "type":"paragraph",
+         "content":"**Heading styles"
+      },
+      {
+         "type":"text",
+         "id":"section_heading_align",
+         "label":"Heading text alignment",
+         "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type":"text",
+         "id":"section_heading_margin",
+         "label":"Margin",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type":"text",
+         "id":"section_heading_fs",
+         "label":"Adjust font size",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type":"range",
+         "id":"section_heading_fw",
+         "label":"Adjust font weight",
+         "min":0,
+         "max":900,
+         "step":100,
+         "default": 0,
+         "info": "0 is auto"
+      },
+      {
+         "type":"color",
+         "id":"section_heading_color",
+         "label":"Heading color"
+      },
+      {
+         "type": "header",
+         "content": "Section styles"
+      },
+      {
+         "type": "checkbox",
+         "id": "boxed_layout",
+         "label": "Boxed layout",
+         "default": true
+      },
+      {
+         "type": "text",
+         "id": "section_margin",
+         "label": "Section margin",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type": "text",
+         "id": "section_padding",
+         "label": "Section padding",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      }
+   ],
+   "blocks": [
+      {
+         "type": "@app"
+      }
+   ],
+   "presets": [
+      {
+         "name": "App"
+      }
+   ]
+}
+{%- endschema -%}

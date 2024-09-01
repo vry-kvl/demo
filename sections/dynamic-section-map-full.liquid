@@ -1,0 +1,85 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'map-section' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType = 'map-section'
+  assign sectionID = '.section-' | append: section.id
+-%}
+
+{%- capture CLASS -%}
+|section-{{sectionType}}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    <map-section id="map{{section.id}}" class="block map-block">
+      <script type="application/json" data-map-config>
+        {
+          "accessToken": "{{section.settings.key}}",
+          "startPoint" : [{{section.settings.latlong}}],
+          "zoom": "{{section.settings.zoom}}"
+        }
+      </script>
+    </map-section>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .map-block', css: 'min-height', value: section.settings['map_height'] -%}
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+
+{% schema %}
+{
+  "name": "Map full width",
+  "tag": "section",
+  "presets": [
+    {
+      "name": "Map full width"
+    }
+  ],
+  "settings": [
+    {
+       "type":"header",
+       "content":"Map settings"
+    },
+    {
+      "type":"text",
+      "id":"key",
+      "label":"Mapbox key",
+      "info": "[How to fill here?](https://support.arenacommerce.com/)"
+    },
+    {
+      "type":"range",
+      "id":"zoom",
+      "label":"Zoom range",
+      "min":8,
+      "max":18,
+      "step":1,
+      "default": 13
+    },
+    {
+      "type":"text",
+      "id":"map_height",
+      "label":"Map height",
+      "default": "529px",
+      "info": "E.g: 300px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"latlong",
+      "label":"Start location Long, Lat",
+      "info": "[How to fill here?](https://support.arenacommerce.com/)"
+    }
+  ]
+}
+{% endschema %}

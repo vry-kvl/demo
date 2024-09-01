@@ -1,0 +1,42 @@
+{%- case type -%}
+	{%- when 'check' -%}
+		{%- comment -%}-------------------------------
+		{%- endcomment-%}
+		{%- liquid
+		  assign currencies_using_comma_decimals = 'ANG,ARS,BRL,BYN,BYR,CLF,CLP,COP,CRC,CZK,DKK,EUR,HRK,HUF,IDR,ISK,MZN,NOK,PLN,RON,RUB,SEK,TRY,UYU,VES' | split: ','
+		  if currencies_using_comma_decimals contains cart.currency.iso_code
+		  	echo "TRUE"
+		  endif
+		-%}
+	{%- else -%}
+
+		{%- capture checkCurrencies -%}{%- render 'money', type: 'check' -%}{%- endcapture -%}
+
+		{%- if checkCurrencies != blank -%}
+			{%- assign uses_comma_decimals = true -%}
+		{%- else -%}
+			{%- assign uses_comma_decimals = false -%}
+		{%- endif -%}
+
+		{%- assign format = format | default: settings.currency_format -%}
+
+		{%- capture content -%}
+			{%- if format == 'money_with_currency_format' -%}
+				{%- if uses_comma_decimals -%}
+					{{- value | money_with_currency | replace: '.', '' | replace: ',', '.' -}}
+				{%- else -%}
+					{{- value | money_with_currency | replace: ',', '' -}}
+				{%- endif -%}
+			{%- else -%}
+				{%- if uses_comma_decimals -%}
+					{{- value | money | replace: '.', '' | replace: ',', '.' -}}
+				{%- else -%}
+					{{- value | money | replace: ',', '' -}}
+				{%- endif -%}
+			{%- endif -%}
+		{%- endcapture -%}
+
+		<price-item class="{{class}}" data-format="{{format}}">
+			{{- content -}}
+		</price-item>
+{%- endcase -%}

@@ -1,0 +1,457 @@
+{%- liquid
+    assign blocks = section.blocks | where: 'type', 'content'
+    assign rdNumbers = section.blocks | where: 'type', 'random_number'
+    assign rdStrings = section.blocks | where: 'type', 'random_string'
+    assign rdProducts = section.blocks | where: 'type', 'random_product'
+-%}
+{%- capture fomoTag -%}{%- if request.design_mode -%}div{%- else -%}template{%- endif -%}{%- endcapture -%}
+
+{%- comment -%}Random number{%- endcomment-%}
+{%- capture randomNumber -%}
+    {%- for block in rdNumbers -%}
+        {{- '[number_' | append: forloop.index -}}]|<span class="fomo-random-number js-fomo-number"
+                data-index="{{forloop.index}}"
+                data-deviation="{{block.settings.deviation_value}}"
+                data-random-min="{{block.settings.min}}"
+                data-random-max="{{block.settings.max}}"
+                ></span>
+        {%- unless forloop.last -%};{%- endunless -%}
+    {%- endfor -%}
+{%- endcapture -%}
+{%- assign randomNumber = randomNumber | split: ';' -%}
+
+{%- comment -%}Random string{%- endcomment-%}
+{%- capture randomString -%}
+    {%- for block in rdStrings -%}
+        {%- assign text = block.settings.content | escape | strip_newlines -%}
+        {{- '[string_' | append: forloop.index -}}]|<span class="fomo-random-string js-fomo-string"
+                data-string="{{text}}"
+                ></span>
+        {%- unless forloop.last -%};{%- endunless -%}
+    {%- endfor -%}
+{%- endcapture -%}
+{%- assign randomString = randomString | split: ';' -%}
+
+{%- comment -%}Random product{%- endcomment-%}
+{%- capture randomProducts -%}
+    {%- for block in rdProducts -%}
+        {%- liquid
+            assign collection = collections[block.settings.collection]
+        -%}
+        {{- '[product_' | append: forloop.index -}}]|<a href="" class="fomo-random-product js-fomo-product" target="_blank" 
+                data-index="{{forloop.index}}"
+                ></a>
+        <script data-random-product="{{forloop.index}}" type="application/json">
+            [
+            {%- for product in collection.products limit: block.settings.limit -%}
+                {
+                    "index": {{forloop.index0}},
+                    "image": {{product.featured_image.src | img_url: 'master' | json }},
+                    "title": {{product.title | json}},
+                    "url": {{product.url | json}}
+                }{%- unless forloop.last -%},{%- endunless -%}
+            {%- endfor -%}
+            ]
+        </script>{%- unless forloop.last -%};{%- endunless -%}
+    {%- endfor -%}
+{%- endcapture -%}
+{%- assign randomProducts = randomProducts | split: ';' -%}
+
+{%- capture content -%}
+    {%- for block in blocks -%}
+
+        {%- comment -%}Check visibility{%- endcomment-%}
+        {%- unless block.settings.show_all -%}
+            {%- case request.page_type -%}
+                {%- when 'index' -%}{%- unless block.settings['show_homepage'] -%}{%- continue -%}{%- endunless -%}
+                {%- when 'collection' or 'list-collections' -%}{%- unless block.settings['show_collection'] -%}{%- continue -%}{%- endunless -%}
+                {%- when 'product' -%}{%- unless block.settings['show_product'] -%}{%- continue -%}{%- endunless -%}
+                {%- else -%}{%- continue -%}
+            {%- endcase -%}
+        {%- endunless -%}
+
+        {%- liquid
+            assign image    = block.settings['image']
+            assign content  = block.settings['content']
+        -%}
+        {%- comment -%}Replace with random value{%- endcomment-%}
+        {%- for i in (1..3) -%}
+            {%- case i -%}
+                {%- when 1 -%}{%- assign randomObject = randomNumber -%}
+                {%- when 2 -%}{%- assign randomObject = randomString -%}
+                {%- when 3 -%}{%- assign randomObject = randomProducts -%}
+            {%- endcase -%}
+            {%- if randomObject.size > 0 -%}
+                {%- for item in randomObject -%}
+                    {%- assign randomValue = item | split: '|' -%}
+                    {%- assign content = content | replace: randomValue.first, randomValue.last -%}
+                {%- endfor -%}
+            {%- endif -%}
+        {%- endfor -%}
+
+
+        {%- capture blockID -%}.block-{{block.id}}{%- endcapture -%}
+        {%- capture blockItem -%}
+            <fomo-item
+                class="fomo-block block border {{blockID | remove: '.'}} js-fomo"
+                data-id="fomo_{{block.id}}"
+                data-cookie="{{block.settings.cookie_history}}"
+                data-first-show="{{block.settings.first_show_time}}"
+                data-loop="{{block.settings.loop_time}}"
+                data-show="{{block.settings.show_time}}"
+                {{block.shopify_attributes}}>
+
+                <{{fomoTag}} class="fomo-inner">
+                    <div class="flex flex-fill align-items-center">
+                        {%- unless image == blank -%}
+                            <div class="fomo-image">
+                                {%- render 'image-style', image: image, width: '360,480', imgClass: 'object-fit--cover' -%}
+                            </div>
+                        {%- endunless -%}
+
+                        {%- unless content == blank -%}
+                            <div class="fomo-content js-fomo-content">{{content}}</div>
+                        {%- endunless -%}
+                    </div>
+                </{{fomoTag}}>
+            </fomo-item>
+        {%- endcapture -%}
+
+        {%- case block.settings.position -%}
+            {%- when 'top_left'     -%}{%- assign TopLeft     = TopLeft | append: blockItem -%}
+            {%- when 'top_right'    -%}{%- assign TopRight    = TopRight | append: blockItem -%}
+            {%- when 'bottom_left'  -%}{%- assign BottomLeft  = BottomLeft | append: blockItem -%}
+            {%- when 'bottom_right' -%}{%- assign BottomRight = BottomRight | append: blockItem -%}
+        {%- endcase -%}
+
+        {%- comment -%}Fomo styles{%- endcomment-%}
+        {%- liquid
+            assign bgOpacity = block.settings['fomo_bg_opacity'] | times: 0.01
+            assign blockBgColor = block.settings['fomo_bg_color'] | color_modify: 'alpha', bgOpacity
+            assign borderColor = block.settings['fomo_border_color'] | remove: 'rgba(0,0,0,0)'
+            assign borderWidth = block.settings['fomo_border_width']
+        -%}
+
+        {%- capture section_css -%}{{section_css}}
+            {%- render 'css-resp', class: blockID, css: 'background-color', value: blockBgColor, splitBy: ';' -%}
+            {%- render 'css-resp', class: blockID, css: 'color', value: block.settings['fomo_text_color'], splitBy: ';' -%}
+            {%- render 'css-resp', class: blockID, css: 'padding', value: block.settings['fomo_padding'] -%}
+            {%- render 'css-resp', class: blockID, css: 'margin', value: block.settings['fomo_margin'] -%}
+            {%- render 'css-resp', class: blockID, nextClass: ' .image__style', css: 'width', value: block.settings['image_width'] -%}
+            {%- render 'css-resp', class: blockID, nextClass: ' .image__style', css: 'height', value: block.settings['image_height'] -%}
+            {%- render 'css-resp', class: blockID, css: 'border-radius', value: block.settings['fomo_radius'] -%}
+            {%- if borderWidth > 0 and borderColor != blank -%}{{- blockID }}{border: {{borderWidth}}px solid {{borderColor}};}{%- endif -%}
+        {%- endcapture -%}
+
+    {%- endfor -%}
+
+
+    {%- comment -%}
+    -------------------------------
+    Fomo wrapper
+    -------------------------------
+    {%- endcomment-%}
+
+    <div data-section-type="fomo-section" data-section-id="{{section.id}}">
+        {%- unless TopLeft == blank -%}<div class="fomo-wrapper fomo-top-left pf t0 l0 js-fomo-container">{{TopLeft}}</div>{%- endunless -%}
+        {%- unless TopRight == blank -%}<div class="fomo-wrapper fomo-top-right pf t0 r0 js-fomo-container">{{TopRight}}</div>{%- endunless -%}
+        {%- unless BottomLeft == blank -%}<div class="fomo-wrapper fomo-bottom-left pf b0 l0 js-fomo-container">{{BottomLeft}}</div>{%- endunless -%}
+        {%- unless BottomRight == blank -%}<div class="fomo-wrapper fomo-bottom-right pf b0 r0 js-fomo-container">{{BottomRight}}</div>{%- endunless -%}
+    </div>
+
+{%- endcapture -%}
+
+
+{%- if blocks.size > 0 -%}
+    {%- render 'snippet-section', type: 'css-file', minify: true, name: 'fomo-popup' -%}
+    {%- render 'snippet-section', type: 'css', value: section_css -%}
+    {{content}}
+{%- endif -%}
+
+{% schema %}
+{
+    "name": "Fomo popup",
+    "tag": "section",
+    "class": "fomo-section",
+    "settings": [
+
+    ],
+    "blocks": [
+        {
+            "type": "content",
+            "name": "Fomo block item",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                   "type":"header",
+                   "content":"Image"
+                },
+                {
+                    "type":"image_picker",
+                    "id":"image",
+                    "label":"Select an image"
+                },
+                {
+                    "type":"text",
+                    "id":"image_width",
+                    "label":"Image width",
+                    "default": "100px"
+                },
+                {
+                    "type":"text",
+                    "id":"image_height",
+                    "label":"Image height",
+                    "default": "100px"
+                },
+                {
+                   "type":"header",
+                   "content":"Text content"
+                },
+                {
+                    "type":"richtext",
+                    "id":"content",
+                    "label":"Content"
+                },
+                {
+                   "type":"paragraph",
+                   "content":"[number_{{index}}]: Random number"
+                },
+                {
+                   "type":"paragraph",
+                   "content":"[string_{{index}}]: Random string"
+                },
+                {
+                   "type":"paragraph",
+                   "content":"[product_{{index}}]: Random product"
+                },
+                {
+                   "type":"header",
+                   "content":"Time Settings"
+                },
+                {
+                    "type":"range",
+                    "id":"cookie_history",
+                    "label":"Remove cookie every",
+                    "min":10,
+                    "max":60,
+                    "step":5,
+                    "default":30,
+                    "unit":"s"
+                },
+                {
+                    "type":"number",
+                    "id":"first_show_time",
+                    "label":"Delay to show content after (s)",
+                    "default":0,
+                    "info": "E.g: 5"
+                },
+                {
+                    "type":"number",
+                    "id":"loop_time",
+                    "label":"Loop timer (s)",
+                    "default":15,
+                    "info": "E.g: 15"
+                },
+                {
+                    "type":"number",
+                    "id":"show_time",
+                    "label":"How long will fomo content show (s)",
+                    "default":5,
+                    "info": "E.g: 5"
+                },
+                {
+                   "type":"header",
+                   "content":"General settings"
+                },
+                {
+                    "type":"select",
+                    "id":"position",
+                    "label":"Block position",
+                    "options":[
+                        {
+                            "value":"top_left",
+                            "label": "Top Left"
+                        },
+                        {
+                            "value":"top_right",
+                            "label": "Top Right"
+                        },
+                        {
+                            "value":"bottom_left",
+                            "label": "Bottom Left"
+                        },
+                        {
+                            "value":"bottom_right",
+                            "label": "Bottom Right"
+                        }
+                    ],
+                    "default": "bottom_right"
+                },
+                {
+                   "type":"paragraph",
+                   "content":"1. Visibility"
+                },
+                {
+                    "type":"checkbox",
+                    "id":"show_all",
+                    "label":"Show all the pages",
+                    "default": true
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_homepage",
+                   "label":"Show on Homepage"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_collection",
+                   "label":"Show on Collection page"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_product",
+                   "label":"Show on Product page"
+                },
+                {
+                   "type":"paragraph",
+                   "content":"2. Fomo styles & colors"
+                },
+                {
+                    "type":"color",
+                    "id":"fomo_text_color",
+                    "label":"Popup text color",
+                    "default":"#1A1A1A"
+                },
+                {
+                    "type":"color",
+                    "id":"fomo_bg_color",
+                    "label":"Popup background color",
+                    "default":"#FFFFFF"
+                },
+                {
+                    "type":"range",
+                    "id":"fomo_bg_opacity",
+                    "label":"Popup background transparent",
+                    "min":0,
+                    "max":100,
+                    "step":10,
+                    "unit":"%",
+                    "default":80
+                },
+                {
+                    "type":"color",
+                    "id":"fomo_border_color",
+                    "label":"Popup border color",
+                    "default":"#FFFFFF"
+                },
+                {
+                    "type":"range",
+                    "id":"fomo_border_width",
+                    "label":"Popup border width",
+                    "min":0,
+                    "max":20,
+                    "unit": "px",
+                    "default": 0
+                },
+                {
+                    "type":"text",
+                    "id":"fomo_padding",
+                    "label":"Popup Padding",
+                    "placeholder":"E.g: 5px 20px 5px 20px",
+                    "info":"Order: Top Right Bottom Left"
+                },
+                {
+                    "type":"text",
+                    "id":"fomo_margin",
+                    "label":"Popup Margin",
+                    "placeholder":"E.g: 5px 20px 5px 20px",
+                    "info":"Order: Top Right Bottom Left"
+                },
+                {
+                    "type":"text",
+                    "id":"fomo_radius",
+                    "label":"Popup rounded corners",
+                    "default": "4px"
+                }
+            ]
+        },
+        {
+            "type": "random_number",
+            "name": "Random [number]",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                    "type":"number",
+                    "id":"min",
+                    "label":"Min value",
+                    "default": 60
+                },
+                {
+                    "type":"number",
+                    "id":"max",
+                    "label":"Max value",
+                    "default": 100
+                },
+                {
+                    "type":"range",
+                    "id":"deviation_value",
+                    "label":"Standard Deviation",
+                    "info":"Value range of counter after reload page (Percent * The previous value)",
+                    "min":10,
+                    "max":90,
+                    "step":10,
+                    "default":20,
+                    "unit":"%"
+                }
+            ]
+        },
+        {
+            "type": "random_string",
+            "name": "Random [string]",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                    "type":"textarea",
+                    "id":"content",
+                    "label":"String",
+                    "info": "Each value separate by comma"
+                }
+            ]
+        },
+        {
+            "type": "random_product",
+            "name": "Random [product]",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                    "type":"collection",
+                    "id":"collection",
+                    "label":"Select a collection"
+                },
+                {
+                    "type":"number",
+                    "id":"limit",
+                    "label":"Limit items",
+                    "default": 20
+                }
+            ]
+        }
+    ]
+}
+{% endschema %}

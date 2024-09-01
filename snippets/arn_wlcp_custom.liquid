@@ -1,0 +1,167 @@
+{%- capture filetocheck -%}{%- render 'arn_wl_cp_buttons' -%}{%- endcapture -%}
+{%- if filetocheck contains 'Liquid error' -%}
+{%- break -%}
+{%- endif -%}
+
+
+{%- assign namespace = shop.metafields.arena.wl_cp_settings -%}
+
+{%- case type -%}
+  {%- comment -%}
+  -------------------------------
+  WISHLIST TO SHOW
+  -------------------------------
+  {%- endcomment-%}
+  {%- when 'wishlist_show' -%}
+    {%- assign btn_settings = namespace.wishlist_settings -%}
+    {%- if btn_settings.wishlist_enable == true -%}
+      {%- capture CLASS -%}
+        |{{- btn_settings.wishlist_show_class -}}
+        |{{- btn_settings.show_class_icon.icon_id -}}
+        |{%- if btn_settings.wishlist_enable == false -%}disabled{%- endif -%}
+      {%- endcapture -%}{%- assign CLASS = CLASS | strip_newlines | split: '|' | join: ' ' | replace: '  ', ' ' | strip  -%}
+      <a
+        href="javascript:void(0);"
+        class="{{CLASS}}"
+        data-arn-action="show"
+        title="{{- 'sections.header.wishlist' | t -}}"
+        >
+        <div>
+          {%- if AppIcons -%}
+            <svg width="{{ btn_settings.show_class_icon.width }}" height="{{ btn_settings.show_class_icon.height }}" class="arn_icon arn_icon-show-wishlist"><use xlink:href="#arn_icon-show-wishlist"></use></svg>
+            <svg width="{{ btn_settings.show_class_icon.width }}" height="{{ btn_settings.show_class_icon.height }}" class="arn_icon arn_icon-preloader"><use xlink:href="#arn_icon-preloader"></use></svg>
+          {%- else -%}
+            {%- render 'svg', type: 'wishlist' -%}
+          {%- endif -%}
+
+          {% if namespace.general_settings.show_number_status %}<span class="number bubble-count"><span class="n-item">0</span></span>{% endif %}
+        </div>
+      </a>
+    {%- endif -%}
+
+  {%- comment -%}
+  -------------------------------
+  COMPARE TO SHOW
+  -------------------------------
+  {%- endcomment-%}
+  {%- when 'compare_show' -%}
+    {%- assign btn_settings = namespace.compare_settings -%}
+    {%- if btn_settings.compare_enable == true -%}
+      {%- capture CLASS -%}
+        |{{- btn_settings.compare_show_class -}}
+        |{{- btn_settings.show_class_icon.icon_id -}}
+        |{%- if btn_settings.compare_enable == false -%}disabled{%- endif -%}
+      {%- endcapture -%}{%- assign CLASS = CLASS | strip_newlines | split: '|' | join: ' ' | replace: '  ', ' ' | strip  -%}
+
+      <a
+          href="javascript:void(0);"
+          class="{{CLASS}}"
+          data-arn-action="show"
+          >
+          <div>
+            {%- if text -%}
+
+            {%- else -%}
+
+            {%- endif -%}
+          {%- if AppIcons -%}
+            <svg width="{{ btn_settings.show_class_icon.width }}" height="{{ btn_settings.show_class_icon.height }}" class="arn_icon arn_icon-show-compare"><use xlink:href="#arn_icon-show-compare"></use></svg>
+            <svg width="{{ btn_settings.show_class_icon.width }}" height="{{ btn_settings.show_class_icon.height }}" class="arn_icon arn_icon-preloader"><use xlink:href="#arn_icon-preloader"></use></svg>
+          {%- else -%}
+            {%- render 'svg', type: 'compare' -%}
+          {%- endif -%}
+
+          {% if namespace.general_settings.show_number_status %}<span class="number bubble-count"><span class="n-item">0</span></span>{% endif %}
+          </div>
+      </a>
+    {%- endif -%}
+
+
+
+  {%- comment -%}
+  -------------------------------
+  WISHLIST TO ADD
+  -------------------------------
+  {%- endcomment-%}
+  {%- when 'wishlist_add' -%}
+    {%- assign btn_settings = namespace.wishlist_settings -%}
+
+    {%- if btn_settings.launch_add.check_add_variant == true -%}
+      {%- assign handle = product.selected_or_first_available_variant.id | default: product.handle -%}
+    {%- else -%}
+      {%- assign handle = product.handle -%}
+    {%- endif -%}
+
+    {%- if btn_settings.wishlist_enable == true -%}
+      {%- capture CLASS -%}
+        |btn-wishlist
+        |{{- btn_settings.wishlist_add_class -}}
+        |{{- btn_settings.add_class_icon.icon_id -}}
+        |btn-show-{% if showText %}text{% else %}icon{% endif %}
+        |{%- if btn_settings.wishlist_enable == false -%}disabled{%- endif -%}
+      {%- endcapture -%}{%- assign CLASS = CLASS | strip_newlines | split: '|' | join: ' ' | replace: '  ', ' ' | strip  -%}
+      <a
+      href="javascript:void(0);"
+      class="{{CLASS}}"
+      data-arn-action="add"
+      data-handle="{{ handle }}"
+      title="{{- 'products.product.add_to_wishlist' | t -}}"
+      >
+      {%- if showText -%}
+        {{- 'products.product.add_to_wishlist' | t -}}
+      {%- else -%}
+        <div>
+          {%- if AppIcons -%}
+            <svg width="{{ btn_settings.add_class_icon.width }}" height="{{ btn_settings.add_class_icon.height }}" class="arn_icon arn_icon-add-wishlist"><use xlink:href="#arn_icon-add-wishlist"></use></svg>
+            <svg width="{{ btn_settings.add_class_icon.width }}" height="{{ btn_settings.add_class_icon.height }}" class="arn_icon arn_icon-preloader"><use xlink:href="#arn_icon-preloader"></use></svg>
+          {%- else -%}
+            {%- render 'svg', type: 'wishlist' -%}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      </a>
+    {%- endif -%}
+
+  {%- comment -%}
+  -------------------------------
+  COMPARE TO ADD
+  -------------------------------
+  {%- endcomment-%}
+  {%- when 'compare_add' -%}
+    {%- assign btn_settings = namespace.compare_settings -%}
+
+    {%- if btn_settings.compare_enable == true -%}
+      {%- capture CLASS -%}
+        |btn-compare
+        |{{- btn_settings.compare_add_class -}}
+        |{{- btn_settings.add_class_icon.icon_id -}}
+        |btn-show-{% if showText %}text{% else %}icon{% endif %}
+        |{%- if btn_settings.compare_enable == false -%}disabled{%- endif -%}
+      {%- endcapture -%}{%- assign CLASS = CLASS | strip_newlines | split: '|' | join: ' ' | replace: '  ', ' ' | strip  -%}
+
+      <a
+      href="javascript:void(0);"
+      class="{{CLASS}}"
+      data-arn-action="add"
+      data-handle="{{ product.handle }}"
+      title="{{- 'products.product.add_to_compare' | t -}}"
+      >
+
+          {%- if showText -%}
+            {{- 'products.product.add_to_compare' | t -}}
+          {%- else -%}
+            <div>
+              {%- if AppIcons -%}
+                <svg width="{{ btn_settings.add_class_icon.width }}" height="{{ btn_settings.add_class_icon.height }}" class="arn_icon arn_icon-add-wishlist"><use xlink:href="#arn_icon-add-wishlist"></use></svg>
+                <svg width="{{ btn_settings.add_class_icon.width }}" height="{{ btn_settings.add_class_icon.height }}" class="arn_icon arn_icon-preloader"><use xlink:href="#arn_icon-preloader"></use></svg>
+              {%- else -%}
+                {%- render 'svg', type: 'compare' -%}
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
+      </a>
+    {%- endif -%}
+
+
+{%- endcase -%}

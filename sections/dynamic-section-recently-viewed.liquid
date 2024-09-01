@@ -1,0 +1,210 @@
+{%- capture pageURL -%}{%- render 'page-url' -%}{%- endcapture -%}
+{%- if pageURL contains 'q=product-item' -%}
+  {%- render 'product-item', product: product, recentView: true -%}
+
+{%- else -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'tiny-slider' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-card' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-featured-collections' -%}
+
+{%- capture content -%}
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- liquid
+  assign sectionType = 'recently-viewed'
+  assign sectionID = '.section-' | append: section.id
+  assign itemStyle = section.settings.item_style
+-%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+|section-featured-collections
+|no-js-hidden
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    {%- comment -%}
+    -------------------------------
+    Section heading
+    -------------------------------
+    {%- endcomment-%}
+    {%- assign sectionHeading = section.settings.section_heading -%}
+    {%- unless sectionHeading == blank -%}
+      <div class="section-heading-wrapper">
+        <h3 class="section-heading">{{sectionHeading}}</h3>
+      </div>
+      {%- capture section_css -%}{{- section_css -}}
+        {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+      {%- endcapture -%}
+    {%- endunless -%}
+
+
+
+    {%- comment -%}
+    -------------------------------
+    Collection product list
+    -------------------------------
+    {%- endcomment-%}
+
+    <div class="featured-collections featured-collections--{{itemStyle}}">
+      {%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+      {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+
+      {%- if section.settings.enable_slide -%}
+
+        {%- assign slideID = '#slide-' | append: section.id-%}
+
+        <slider-component id="{{ slideID | remove: '#' }}">
+
+          <div id="{{ slideID | remove: '#' }}el" class="main-collection slider-list js-slider flex{{gridClass}} js-product-content"></div>
+
+          {%- render 'config-slide', id: slideID,
+                                      items: section.settings['items_resp'],
+                                      controls: section.settings['navs'],
+                                      loop: section.settings['loop'],
+                                      dots: section.settings['dots'],
+                                      lazyload: true,
+                                      autoPlay: section.settings['autoplay']
+          -%}
+        </slider-component>
+
+      {%- else -%}
+        <div class="flex{{gridClass}} js-product-content">{{productContent}}</div>
+      {%- endif -%}
+
+    </div>
+  </div>
+</div>
+
+{%- capture section_css -%}{{- section_css -}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+{%- endcapture -%}
+{%- endcapture -%}
+
+  <recently-viewed class="recently-viewed" data-url="?section_id={{ section.id }}&q=product-item">
+    {%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+  </recently-viewed>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Recently viewed",
+  "tag": "section",
+  "class": "shopify-section-recently-reviewed",
+  "presets": [
+    {
+      "name": "Recently viewed"
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": "Max number of item per row",
+      "default": "3,6",
+      "info": "E.g: 2,3,4,5. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "number",
+      "id": "limit",
+      "label": "Limit",
+      "default": 10
+    },
+    {
+       "type":"header",
+       "content":"Slider settings"
+    },
+    {
+      "type":"checkbox",
+      "id":"enable_slide",
+      "label":"Enable Slider"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Loop"
+    },
+    {
+      "type": "checkbox",
+      "id": "navs",
+      "label": "Show next/prev arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "dots",
+      "label": "Show dots",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "autoplay",
+      "label": "Auto play slide (in second)",
+      "info": "E.g: 5"
+    },
+    {
+      "type": "header",
+      "content": "Section heading"
+    },
+    {
+      "type": "text",
+      "id": "section_heading",
+      "label": "Heading",
+      "default": "Recently viewed"
+    },
+    {
+      "type": "paragraph",
+      "content": "**Heading styles"
+    },
+    {
+      "type": "text",
+      "id": "section_heading_align",
+      "label": "Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_heading_margin",
+      "label": "Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_heading_fs",
+      "label": "Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "color",
+      "id": "section_heading_color",
+      "label": "Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": "Boxed layout",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_margin",
+      "label": "Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,46 @@
+{%- case type -%}
+
+	{%- when 'media' -%}
+
+		{%- capture v -%}{{ value | remove: 'null' | strip }}{%- endcapture -%}
+		{%- if v.size > 0 -%}
+			{{- class -}}{%- if mediaScreen != blank -%}-{{mediaScreen}}{%- endif -%}: {{v}};
+		{%- endif -%}
+
+	{%- else -%}
+
+		{%- unless value == blank -%}
+
+			{%- liquid
+				assign css_split = css_split | default: ','
+				assign arr_value = value | split: css_split
+				assign mediaScreen = '0|md|lg|xl' | split: '|'
+			-%}
+
+			{%- capture arr_value -%}
+				{%- case arr_value.size -%}
+					{%- when 1 	-%}{{arr_value[0]}},{{arr_value[0]}},{{arr_value[0]}},{{arr_value[0]}}
+					{%- when 2 	-%}{{arr_value[0]}},{{arr_value[1]}},{{arr_value[1]}},{{arr_value[1]}}
+					{%- when 3 	-%}{{arr_value[0]}},{{arr_value[1]}},{{arr_value[2]}},{{arr_value[2]}}
+					{%- else 	-%}{{arr_value[0]}},{{arr_value[1]}},{{arr_value[2]}},{{arr_value[3]}}
+				{%- endcase -%}
+			{%- endcapture -%}
+			{%- assign arr_value = arr_value | split: ',' -%}
+
+			{%- for i in (1..arr_value.size) limit: mediaScreen.size -%}
+
+				{%- capture mediaValue -%}
+					{%- unless mediaScreen[forloop.index0] == '0' -%}{{- mediaScreen[forloop.index0] -}}{%- endunless -%}
+				{%- endcapture -%}
+
+				{%- render 'root-resp', type: 'media'
+										,root: root
+										,class: class
+										,value: arr_value[forloop.index0]
+										,css: css
+										,mediaScreen: mediaValue
+				-%}
+			{%- endfor -%}
+		{%- endunless -%}
+
+{%- endcase -%}

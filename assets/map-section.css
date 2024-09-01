@@ -1,0 +1,115 @@
+.section-map-section p {
+  margin: 0; }
+
+.section-map-section .banner-content {
+  margin-bottom: 40px; }
+
+.section-map-section .block-item {
+  margin: 20px 0; }
+
+.section-map-section .block-item h2 {
+  line-height: 1.2em; }
+
+.section-map-section .block-store_info .phone-number {
+  line-height: 1.2em;
+  margin-bottom: 17px; }
+
+.section-map-section .block-store_info .working-day {
+  font-size: 13px;
+  margin-bottom: 17px;
+  color: var(--subtext-color); }
+
+.section-map-section .block-store_info .working-day > * {
+  line-height: 1.47em; }
+
+.section-map-section .block-store_info .mail-contact {
+  margin-bottom: 20px; }
+
+.section-map-section .block-social {
+  margin-top: 25px; }
+
+.section-map-section .block-social ul {
+  margin: 0 -8.5px;
+  display: flex;
+  flex-wrap: wrap; }
+
+.section-map-section .block-social ul li {
+  padding: 0 8.5px; }
+
+.section-map-section .block-social ul a {
+  display: flex; }
+
+.section-map-section .block-social ul svg {
+  width: 20px;
+  height: 20px; }
+
+.section-map-section .field-border {
+  border: 0;
+  border-bottom: 1px solid var(--miscellaneous-color);
+  margin: 20px 0; }
+
+.section-map-section .map-information {
+  left: 20px;
+  right: 20px;
+  top: 20px;
+  background: var(--background-color);
+  padding: 20px;
+  z-index: 11;
+  max-width: 375px;
+  border-radius: 4px; }
+
+.section-map-section .store-address {
+  align-items: center;
+  padding: 10px 20px;
+  border: 1px solid var(--miscellaneous-color);
+  border-radius: var(--border-radius);
+  margin-bottom: 22px;
+  font-weight: 500; }
+
+.section-map-section .store-address > svg {
+  -webkit-margin-end: 15px;
+  margin-inline-end: 15px; }
+
+.section-map-section .store-address .text {
+  flex: 1;
+  line-height: 1.45em; }
+
+.section-map-section .store-working-day {
+  font-size: 13px;
+  color: var(--subtext-color); }
+
+.section-map-section .store-working-day > * {
+  line-height: 1.47em; }
+
+.section-map-section .mapboxgl-control-container {
+  display: none; }
+
+.section-map-section .mapboxgl-canvas-container {
+  display: flex; }
+
+@media (min-width: 750px) {
+  .section-map-section .block-item {
+    margin: 30px 0; }
+  .section-map-section .block-item h2 {
+    font-size: 45px; }
+  .section-map-section .field-border {
+    margin: 30px 0; }
+  .section-map-section .block-store_info .phone-number {
+    font-size: 25px; }
+  .section-map-section .mail-contact {
+    margin-bottom: 30px; }
+  .section-map-section .map-information {
+    left: 40px;
+    right: 40px;
+    top: 40px;
+    padding: 40px; } }
+
+@media (min-width: 1000px) {
+  .section-map-section .content-column {
+    flex: 0 0 35%;
+    max-width: 35%; }
+  .section-map-section .map-column {
+    flex: 0 0 65%;
+    max-width: 65%; }
+  .section-map-section .banner-content {
+    max-width: 365px; } }

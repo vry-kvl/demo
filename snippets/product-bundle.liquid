@@ -1,0 +1,73 @@
+{%- assign bundleList = section.settings.bundle | append: '' | remove: '[' | remove: ']' | remove: '"' | strip | split: '|' -%}
+{%- if request.design_mode -%}
+  {%- assign bundleAvailable = true -%}
+{%- endif -%}
+
+{%- for i in (-1..bundleList.size) -%}
+  {%- if i < 0 -%}
+    {%- assign bundleProduct = product -%}
+  {%- else -%}
+    {%- assign bundleProduct = all_products[bundleList[i]] -%}
+    {%- if bundleProduct != blank -%}
+    	{%- assign bundleAvailable = true -%}
+    {%- endif -%}
+  {%- endif -%}
+
+
+  {%- if bundleProduct == blank or bundleProduct.available != true -%}{%- continue -%}{%- endif -%}
+
+  {%- liquid
+    assign bundleSelected = bundleProduct.selected_or_first_available_variant
+    assign totalBundlePrice = totalBundlePrice | plus: bundleSelected.price
+  -%}
+
+  {%- capture checkboxID -%}bundle{{section.id | append: bundleProduct.id | md5}}{%- endcapture -%}
+
+  {%- capture listCheckbox -%}{{- listCheckbox -}}
+  
+    <li>
+      <input type="checkbox" name="bundleItem" class="none" id="{{checkboxID}}" value="{{bundleSelected.id}}" data-price="{{bundleSelected.price}}" checked>
+      <label for="{{checkboxID}}" class="{% if forloop.first %}no-event{% endif %}">
+        <span class="bundle-product-title">{{bundleProduct.title}}
+          {%- unless bundleProduct.has_only_default_variant -%}
+            <span class="bundle-variant-title js-variant-title">{{bundleSelected.title}}</span>
+          {%- endunless -%}
+        </span>
+        {%- render 'snippet-product-item', type: 'price', product: bundleProduct, selectFirstVariant: true -%}
+      </label>
+    </li>
+  {%- endcapture -%}
+
+  {%- capture listItem -%}{{- listItem -}}
+    <div class="bundle-item available" data-control="{{checkboxID}}">
+      {%- render 'product-item', product: bundleProduct, imageRatio: 1, hideCart: true, selectFirstVariant: true, bundleItem: true, control: checkboxID -%}
+    </div>
+  {%- endcapture -%}
+{%- endfor -%}
+
+{%- if bundleAvailable -%}
+  <bundle-cart class="block">
+    {%- unless hideTitle -%}
+    	<h3 class="bundle-title h4">{{- 'products.product.bundle_title' | t -}}</h3>
+    {%- endunless -%}
+
+    <div class="bundle-content">
+      <div class="bundle-list-item flex {{class | default: 'flex-1 flex-list-1'}}">{{listItem}}</div>
+
+      <div class="bundle-cart">
+        <ul class="bundle-checklist">{{listCheckbox}}</ul>
+        <div class="bundle-submit">
+          <p class="bundle-total-label">{{- 'products.product.bundle_total' | t -}}</p>
+
+          {%- render 'money', value: totalBundlePrice, class: 'js-bundle-total bundle-total' -%}
+
+          <button type="button" class="btn btn-1 add-to-cart js-bundle-add" title="{{- 'products.product.add_all_to_cart' | t -}}">
+            <span class="icon">{%- render 'svg', type: 'cart', useLink: false, fillColor: true -%}</span>
+            <span class="text">{{- 'products.product.add_all_to_cart' | t -}}</span>
+          </button>
+
+        </div>
+    	</div>
+    </div>
+  </bundle-cart>
+{%- endif -%}

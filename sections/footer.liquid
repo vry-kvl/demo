@@ -1,0 +1,258 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'footer' -%}
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType  = 'footer'
+  assign sectionID    = '.section-' | append: section.id
+  assign footerMenu = linklists[section.settings.menu]
+-%}
+
+{%- comment -%}
+-------------------------------
+Payment method
+-------------------------------
+{%- endcomment-%}
+
+{%- capture payment -%}
+  {%- assign defaultPayment = 'visa,mastercard,maestro,paypal,skrill,wepay,moneygram,bluepay' | split: ',' -%}
+  {%- for payment in defaultPayment -%}
+    {%- unless section.settings[payment] -%}{%- continue -%}{%- endunless -%}
+    <li>{%- render 'svg', type: payment -%}</li>
+  {%- endfor -%}
+
+  {%- for block in section.blocks -%}
+    <li>
+     {%- case block.settings.type -%}
+       {%- when 'image' -%}{%- render 'image-style', image: block.settings.image -%}
+       {%- else -%}
+       {%- capture svg -%}{{ block.settings.svg | replace: '<svg', '<svg class="w100"' }}{%- endcapture -%}
+       {%- render 'snippet-section', type: 'svg', svg: svg, id: block.id -%}
+     {%- endcase -%}
+    </li>
+  {%- endfor -%}
+{%- endcapture -%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+{%- endcapture -%}
+
+
+
+<div class="{{sectionID | remove: '.'}} lg-none">
+   <div class="footer-mobile-menu{% if layout == 'boxed' %} container{% endif %}">
+      <button type="button" class="js-tload js-popup-toggle" data-control="f-navigation" data-tload="#mobileNavFooter">
+         <span class="icon-on-show">{%- render 'svg', type: 'hamburger' -%}</span>
+         <span class="icon-on-close">{%- render 'svg', type: 'close' -%}</span>
+         <span class="text">{{- 'sections.footer.menu' | t -}}</span>
+     </button>
+  </div>
+</div>
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="footer" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    <div class="lg-flex flex-fill{% if payment != blank %} flex-1 flex-lg-2{% endif %}">
+      <div class="footer-row {% if payment == blank %} flex flex-1 flex-lg-2 no-payment{% endif %}">
+        {%- unless footerMenu == blank -%}
+          <div class="footer-menu none lg-block">
+            <ul class="footer-menu-list">
+              {%- for link in footerMenu.links -%}
+                <li class="inline-block">
+                  <a href="{{link.url}}" class="link">{{ link.title }}</a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+        {%- endunless -%}
+        <div class="copyright">{{section.settings.copyright}}</div>
+      </div>
+
+
+      {%- if payment != blank -%}
+        <div class="footer-row">
+          <div class="footer-payment-method">
+            <ul class="footer-payment-list flex align-items-center">{{payment}}</ul>
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+
+{%- endcapture -%}
+
+{%- comment -%}
+-------------------------------
+MOBILE MENU
+-------------------------------
+{%- endcomment-%}
+<template id="mobileNavFooter">
+   <footer-mobile-navigation class="menu-mobile lg-none js-popup" data-control="f-navigation">
+     <button class="popup-close js-popup-close" type="button">{%- render 'svg', type: 'close' -%}</button>
+      {%- unless footerMenu == blank -%}
+         <div class="block-item block-type-menu block-{{section.id | md5 }}">
+            <div class="block-inner">
+               <div class="block-title">
+                  <p>{{footerMenu.title}}</p>
+               </div>
+               <ul class="menu-list">
+                  {%- if footerMenu.links.size > 0 -%}
+                     {%- for l in footerMenu.links -%}
+                        {%- render 'link', link: l -%}
+                     {%- endfor -%}
+                  {%- else -%}
+                     {%- for i in (1..5) -%}
+                        <li><a href="javascript:void(0);">Sample menu item</a></li>
+                     {%- endfor -%}
+                  {%- endif -%}
+               </ul>
+            </div>
+         </div>
+      {%- endunless -%}
+   </footer-mobile-navigation>
+</template>
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+
+
+{% schema %}
+{
+   "name": "Footer",
+   "tag": "section",
+   "settings": [
+      {
+         "type": "link_list",
+         "id": "menu",
+         "label": "Footer menu"
+      },
+      {
+         "type": "liquid",
+         "id": "copyright",
+         "label": "Copyright",
+         "default": "Copyright © {{ 'now' | date: '%Y' }} Arenacommerce. All Rights Reserved"
+      },
+      {
+         "type": "header",
+         "content": "Payment method"
+      },
+      {
+         "type": "checkbox",
+         "id": "visa",
+         "label": "Visa",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "mastercard",
+         "label": "Mastercard",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "maestro",
+         "label": "Maestro",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "paypal",
+         "label": "Paypal",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "skrill",
+         "label": "Skrill",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "wepay",
+         "label": "Wepay",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "moneygram",
+         "label": "Moneygram",
+         "default": true
+      },
+      {
+         "type": "checkbox",
+         "id": "bluepay",
+         "label": "Bluepay",
+         "default": true
+      },
+      {
+         "type":"header",
+         "content":"Section style"
+      },
+      {
+         "type": "checkbox",
+         "id": "boxed_layout",
+         "label": "Boxed layout",
+         "default": true
+      },
+      {
+         "type":"text",
+         "id":"section_margin",
+         "label":"Section margin",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type":"text",
+         "id":"section_padding",
+         "label":"Section padding",
+         "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      }
+   ],
+   "blocks": [
+      {
+         "type": "block",
+         "name": "Payment method",
+         "settings": [
+            {
+              "type":"text",
+              "id":"title",
+              "label":"Payment title"
+            },
+            {
+               "type": "radio",
+               "id": "type",
+               "label": "Type",
+               "options": [
+                  {
+                     "value": "svg",
+                     "label": "SVG"
+                  },
+                  {
+                     "value": "image",
+                     "label": "Image"
+                  }
+               ],
+               "default": "svg"
+            },
+            {
+               "type": "html",
+               "id": "svg",
+               "label": "SVG code",
+               "info": "Something like <svg....</svg>"
+            },
+            {
+               "type": "image_picker",
+               "id": "image",
+               "label": "Image"
+            }
+         ]
+      }
+   ]
+}
+{% endschema %}

@@ -1,0 +1,203 @@
+{%- case type -%}
+
+	{%- when 'image' -%}
+		<div class="item-media">
+			<a href="{{ item.url }}" class="cart-item__link" aria-hidden="true" tabindex="-1">
+				{%- capture imageClass -%}object-fit--{%- if settings.cart_item_image_crop -%}cover{%- else -%}contain{%- endif -%}{%- endcapture -%}
+
+				{%- capture imageHeight -%}{{settings.cart_item_image_ratio | remove: 'auto'}}{%- endcapture -%}
+				{%- render 'image-style', image: item.image, height: imageHeight, imgClass: imageClass, isProduct: true -%}
+			</a>
+		</div>
+
+	{%- when 'name' -%}
+	  	<div class="item-detail">
+	  		<div class="product-title">
+	      		<a href="{{ item.url }}" class="{{className}}">{{ item.product.title | escape }}</a>
+	  		</div>
+
+	      	{%- if section.settings.show_vendor -%}
+	      		<div class="product-vendor">
+	      			<small>{{- 'cart.general.vendor' | t: name: item.product.vendor -}}</small>
+	      		</div>
+	      	{%- endif -%}
+
+			{%- if item.product.has_only_default_variant == false or item.properties.size != 0 or item.selling_plan_allocation != nil -%}
+
+				{%- if item.product.has_only_default_variant == false -%}
+				  {%- for option in item.options_with_values -%}
+				    <div class="product-option">
+				    	<small>{{ option.name }}: {{ option.value }}</small>
+				    </div>
+				  {%- endfor -%}
+				{%- endif -%}
+
+				{%- for property in item.properties -%}
+				  {%- assign property_first_char = property.first | slice: 0 -%}
+				  {%- if property.last != blank and property_first_char != '_' -%}
+				    <div class="product-option">
+				    	{{ property.first }}:&nbsp;
+				    	{%- if property.last contains '/uploads/' -%}
+					    	<a href="{{ property.last }}" class="link" target="_blank">{{- property.last | split: '/' | last -}}</a>
+				    	{%- else -%}
+				    		{{- property.last -}}
+				    	{%- endif -%}
+				    </div>
+				  {%- endif -%}
+				{%- endfor -%}
+
+				{%- if item.selling_plan_allocation != nil -%}
+					<div class="product-option">{{ item.selling_plan_allocation.selling_plan.name }}</div>
+				{%- endif -%}
+			{%- endif -%}
+
+			{%- if item.discounts != nil and request.page_type == 'cart' -%}
+				<ul class="discounts list-unstyled" role="list" aria-label="{{ 'customer.order.discount' | t }}">
+					{%- for discount in item.discounts -%}
+						<li class="discounts__discount">
+							<span class="icon">{%- render 'svg', type: 'discount' -%}</span>
+							<span class="text">{{ discount.title }}</span>
+						</li>
+					{%- endfor -%}
+				</ul>
+			{%- endif -%}
+
+		</div>
+
+	{%- when 'price' -%}
+		<div class="item-line-price">
+			{%- if item.original_price != item.final_price -%}
+				<div class="item-has-sale">
+					{%- render 'money', value: item.final_price, class: 'price' -%}
+					{%- render 'money', value: item.original_price,class: 'price-compare' -%}
+				</div>
+
+			{%- elsif item.variant.compare_at_price and item.final_price > item.variant.compare_at_price -%}
+				<div class="item-has-sale">
+					{%- render 'money', value: item.final_price, class: 'price' -%}
+					{%- render 'money', value: item.variant.compare_at_price,class: 'price-compare' -%}
+				</div>
+
+			{%- else -%}
+				{%- render 'money', value: item.original_price, class: 'price' -%}
+			{%- endif -%}
+
+			{%- if item.variant.available and item.unit_price_measurement -%}
+				<div class="unit-price">
+
+					{%- render 'money', value: item.variant.unit_price, class:'price' -%}
+
+					<span aria-hidden="true">/</span>
+					{%- if item.variant.unit_price_measurement.reference_value != 1 -%}
+						{{- item.variant.unit_price_measurement.reference_value -}}
+					{%- endif -%}
+					{{ item.variant.unit_price_measurement.reference_unit }}
+				</div>
+			{%- endif -%}
+		</div>
+
+	{%- when 'quantity' -%}
+	  	<div class="item-qty cart-item__quantity js-item-content">
+	        <div class="cart-item__quantity-wrapper">
+	        	<quantity-input class="quantity-select">
+	        		<button class="qty-minus c-pointer no-js-hidden" type="button" name="minus">
+	        			{% render 'svg', type: 'minus', useLink: true %}
+	        		</button>
+
+	        		<input class="quantity__input"
+			        		type="number"
+			        		name="updates[]"
+			        		value="{{ item.quantity }}"
+			        		min="0"
+			        		aria-label="{{ 'products.product.input_label' | t: product: item.product.title | escape }}"
+			        		id="Quantity-{{ item.index | plus: 1 }}"
+			        		data-index="{{ item.index | plus: 1 }}"
+			        		data-url="{{item.url}}"
+	        		>
+	        		<button class="qty-plus c-pointer no-js-hidden" type="button" name="plus">
+	        			{% render 'svg', type: 'plus', useLink: true %}
+	        		</button>
+	        	</quantity-input>
+	        </div>
+	  	</div>
+
+	{%- when 'remove' -%}
+		<cart-remove-button>
+			<a href="{{ item.url_to_remove }}" aria-label="{{ 'cart.general.remove_title' | t: title: item.title }}" data-index="{{ item.index | plus: 1 }}" data-url="{{item.url}}">
+				{% render 'svg', type: 'remove', useLink: true %}
+			</a>
+		</cart-remove-button>
+
+	{%- when 'total' -%}
+	  	<div class="item-total-price js-item-content">
+	  		{%- if item.original_line_price != item.final_line_price -%}
+		  		<div class="item-has-discounted">
+		  			{%- render 'money', value: item.final_line_price, class:'price' -%}
+		  			{%- render 'money', value: item.original_line_price, class:'price-compare' -%}
+		  		</div>
+		  	{%- else -%}
+		  		{%- render 'money', value: item.original_line_price, class:'price' -%}
+		  	{%- endif -%}
+
+		  	{%- if item.variant.available and item.unit_price_measurement -%}
+			  	<div class="unit-price caption">
+			  		{%- render 'money', value: item.variant.unit_price, class:'price' -%}
+			  		<span aria-hidden="true">/</span>
+			  		{%- if item.variant.unit_price_measurement.reference_value != 1 -%}
+			  			{{- item.variant.unit_price_measurement.reference_value -}}
+			  		{%- endif -%}
+			  			{{ item.variant.unit_price_measurement.reference_unit }}
+			  	</div>
+		  	{%- endif -%}
+		</div>
+
+	{%- else -%}
+
+		<div class="cart-item flex flex-fill js-cart-line" data-index="{{ item.index | plus: 1 }}">
+
+			{%- comment -%}
+			-------------------------------
+			FLYOUT
+			-------------------------------
+			{%- endcomment-%}
+			{%- if style == 'flyout' -%}
+
+				<div class="item-infor flex">
+					{%- render 'cart-item', type: 'remove', item: item -%}
+					{%- render 'cart-item', type: 'image', item: item -%}
+					<div class="item-detail">
+						{%- render 'cart-item', type: 'name', item: item, className: 'h4' -%}
+						{%- render 'cart-item', type: 'total', item: item -%}
+					</div>
+				</div>
+
+				<div class="item-total">
+ 					{%- render 'cart-item', type: 'quantity', item: item -%}
+				</div>
+
+
+			{%- else -%}
+				{%- comment -%}
+				-------------------------------
+				CART PAGE
+				-------------------------------
+				{%- endcomment-%}
+				<div class="item-mobile-image md-none">
+					{%- render 'cart-item', type: 'remove', item: item -%}
+					{%- render 'cart-item', type: 'image', item: item -%}
+				</div>
+				<div class="item-inner">
+
+					<div class="item-header">
+						{%- render 'cart-item', type: 'remove', item: item -%}
+						{%- render 'cart-item', type: 'image', item: item -%}
+						{%- render 'cart-item', type: 'name', item: item, className: 'h4' -%}
+					</div>
+
+					{%- render 'cart-item', type: 'price', item: item -%}
+					{%- render 'cart-item', type: 'quantity', item: item -%}
+					{%- render 'cart-item', type: 'total', item: item -%}
+				</div>
+			{%- endif -%}
+		</div>
+{%- endcase -%}

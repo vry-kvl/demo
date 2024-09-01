@@ -1,0 +1,168 @@
+{%- if product == blank -%}{%- break -%}{%- endif -%}
+
+{%- liquid
+	assign btnStyle = settings.cart_btn_style
+    assign productSelect = product.selected_or_first_available_variant
+-%}
+{%- capture formID -%}f{{productSelect.id | append: section.id}}{%- endcapture -%}
+
+{%- capture productLink -%}{{product.url | within: collection }}{%- endcapture -%}
+{%- if removeParams -%}
+	{%- assign productLink = productLink | split: '?' | first -%}
+{%- endif -%}
+
+{%- case type -%}
+	{%- when 'price' -%}
+		{%- capture priceClass -%}price{% if productSelect.compare_at_price > productSelect.price %} sale-price{% endif %}{%- endcapture -%}
+		{%- capture mainPrice -%}{%- render 'money', value: productSelect.price, class: priceClass -%}{%- endcapture -%}
+
+		<div class="product-price">
+			<div class="flex">
+				{%- if product.available -%}
+					{%- if product.price_varies and selectFirstVariant != true -%}
+						<div class="price-range">{{ 'products.product.price_html' | t: price: mainPrice}}</div>
+
+					{%- else -%}
+						{{mainPrice}}
+						{%- if productSelect.compare_at_price > productSelect.price -%}
+							{%- render 'money', value: productSelect.compare_at_price, class: 'price-compare' -%}
+						{%- endif -%}
+					{%- endif -%}
+				{%- else -%}
+					<span class="price-sold-out">{{- 'products.product.sold_out' | t -}}</span>
+				{%- endif -%}
+			</div>
+		</div>
+
+	{%- when 'weight' -%}
+
+		{%- if productSelect.metafields.c_f.pack != blank or productSelect.weight > 0 -%}
+			<div class="product-weight">
+				{%- if productSelect.metafields.c_f.pack -%}
+					{{- productSelect.metafields.c_f.pack -}}
+				{%- else -%}
+					{{- productSelect.weight | weight_with_unit  -}}
+				{%- endif -%}
+			</div>
+		{%- endif -%}
+
+	{%- when 'label' -%}
+		{%- capture labelItems -%}
+			{%- for tag in product.tags -%}
+				{%- unless tag contains '_label:' -%}{%- continue -%}{%- endunless -%}
+				<span class="label {{ tag | remove_first: '_' | strip | handle }}">{{tag | split: '_label:' | last }}</span>
+			{%- endfor -%}
+
+			{%- if productSelect.compare_at_price > productSelect.price -%}
+				<span class="label label-sale">
+					{%- if settings.sale_with_percent -%}
+						{%- assign saving = productSelect.compare_at_price | minus: productSelect.price | times: 100.0 | divided_by: productSelect.compare_at_price | round: 0 -%}
+						{{- 'products.label.sale_with_percent' | t: count: saving -}}
+					{%- else -%}
+						{{- 'products.label.sale' | t -}}
+					{%- endif -%}
+				</span>
+			{%- endif -%}
+		{%- endcapture -%}
+		{%- if labelItems == blank -%}{%- break -%}{%- endif -%}
+
+		<div class="label-group absolute-item pa t0 l0 uppercase">{{labelItems}}</div>
+
+	{%- when 'cart' -%}
+		{%- liquid
+			assign changeQty = settings.enable_quantity
+			assign cartItem = cart.items | where: 'variant_id', productSelect.id
+		-%}
+
+		<cart-form class="product-card-form cardForm{{productSelect.id}}{% if changeQty %} js-cart-change{% endif %}" data-card-id="{{productSelect.id}}" data-url="{{productSelect.url}}">
+
+			{%- if changeQty and cartItem.size > 0 -%}
+				{%- assign cartItem = cartItem.first -%}
+
+				<form action="{{ routes.cart_url }}" class="" method="post" id="{{formID}}">
+					<quantity-input class="quantity-select">
+		        		<button class="qty-minus c-pointer no-js-hidden" type="button" name="minus">
+		        			{% render 'svg', type: 'minus', useLink: true %}
+		        		</button>
+
+		        		<input class="quantity__input"
+				        		type="number"
+				        		name="quantity"
+				        		value="{{ cartItem.quantity }}"
+				        		min="0"
+				        		aria-label="{{ 'products.product.input_label' | t: product: cartItem.product.title | escape }}"
+				        		data-index="{{ cartItem.index | plus: 1 }}"
+		        		>
+		        		<button class="qty-plus c-pointer no-js-hidden" type="button" name="plus">
+		        			{% render 'svg', type: 'plus', useLink: true %}
+		        		</button>
+		        	</quantity-input>
+		        </form>
+			{%- else -%}
+
+				{%- form "product", product, id: formID -%}
+					<input type="hidden" name="id" value="{{productSelect.id}}">
+
+					{%- if quantity -%}
+		    			<div class="quantity-select">
+		    				<div class="quantity-inner">
+		    					<select name="quantity">
+		    						{%- for i in (1..10) -%}
+		    							<option value="{{i}}">{{i}}</option>
+		    						{%- endfor -%}
+		    					</select>
+		    					{%- render 'svg', type: 'caret' -%}
+		    				</div>
+		    			</div>
+
+		    			{%- if settings.show_weight -%}
+			    			<div class="product-weight-unit">
+			    				{{ productSelect.weight_unit }}
+			    			</div>
+		    			{%- endif -%}
+					{%- endif -%}
+
+					{%- if product.available -%}
+						{%- if product.has_only_default_variant or quantity -%}
+							<button type="submit" class="btn btn-{{btnStyle}} btn-add-cart js-add-cart" form="{{formID}}" title="{{'products.product.add_to_cart' | t }}">
+								{%- render 'svg', type: 'cart', useLink: false, fillColor: true -%}
+
+								{%- if cartBtnPosition contains 'bottom' -%}
+									<span class="text">{{- 'products.product.add_to_cart' | t -}}</span>
+								{%- endif -%}
+							</button>
+						{%- else -%}
+							<a datatest href="{{productLink}}" class="btn btn-{{btnStyle}}" title="{{'products.product.select_options' | t }}">
+								{%- render 'svg', type: 'option', useLink: false, fillColor: true -%}
+
+								{%- if cartBtnPosition contains 'bottom' -%}
+									<span class="text">{{- 'products.product.select_options' | t -}}</span>
+								{%- endif -%}
+							</a>
+
+						{%- endif -%}
+
+					{%- elsif cartBtnPosition contains 'bottom' -%}
+						<button type="submit" name="add" class="btn add-to-cart btn-{{btnStyle}}" disabled title="{{'products.product.sold_out' | t }}">
+							<span>{{- 'products.product.sold_out' | t -}}</span>
+						</button>
+					{%- endif -%}
+				{%- endform -%}
+
+			{%- endif -%}
+		</cart-form>
+
+	{%- when 'variants' -%}
+
+		{%- if product.has_only_default_variant -%}{%- break -%}{%- endif -%}
+
+		<div class="select-wrapper select-variants">
+			<select name="variants" data-control="{{control}}">
+				{%- for variant in product.variants -%}
+				<option value="{{variant.id}}" data-price="{{variant.price}}"{% if variant.selected %} selected{% endif %}{% unless variant.available %}disabled{% endunless %}>{{variant.title}}</option>
+				{%- endfor -%}
+			</select>
+			{%- render 'svg', type: 'caret' -%}
+		</div>
+
+{%- endcase -%}

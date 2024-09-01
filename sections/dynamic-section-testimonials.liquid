@@ -1,0 +1,325 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'tiny-slider' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-testimonials' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType = 'testimonials'
+  assign sectionID = '.section-' | append: section.id
+-%}
+
+
+{%- capture star -%}<span class="star">{%- render 'svg', type: 'star' -%}</span>{%- endcapture -%}
+{%- capture starEmpty -%}<span class="empty-star">{%- render 'svg', type: 'empty_star' -%}</span>{%- endcapture -%}
+
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+{%- endcapture -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    <div class="section-content-inner">
+      {%- comment -%}
+      -------------------------------
+      Section heading
+      -------------------------------
+      {%- endcomment-%}
+      {%- assign sectionHeading = section.settings.section_heading -%}
+      {%- unless sectionHeading == blank -%}
+        <div class="section-heading-wrapper">
+          <h3 class="section-heading">{{sectionHeading}}</h3>
+        </div>
+        {%- capture section_css -%}{{- section_css -}}
+          {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+        {%- endcapture -%}
+      {%- endunless -%}
+
+      {%- comment -%}
+      -------------------------------
+      SLIDE ELEMENT
+      -------------------------------
+      {%- endcomment-%}
+      {%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+      {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+
+      {%- assign slideID = '#slide-' | append: section.id -%}
+      <slider-component id="{{ slideID | remove: '#' }}">
+        <div class="slider-container">
+          <div id="{{ slideID | remove: '#' }}el" class="slider-list js-slider flex{{gridClass}}">
+            {%- if section.blocks.size == 0 -%}
+              {%- for i in (1..6) -%}
+                <div class="block block-{{i}}">
+                  <div class="block-inner">
+                    <div class="reviews"><p>There was a small mistake in the order. In return, I got the correct order and I could keep the wrong one for myself.</p></div>
+                    <div class="author">Mark J.</div>
+                    <div class="rating">{%- for j in (1..4) -%}{{star}}{%- endfor -%}{{starEmpty}}</div>
+                  </div>
+                </div>
+              {%- endfor -%}
+
+            {%- else -%}
+
+              {%- for block in section.blocks -%}
+
+                <div class="block block-{{block.id}}"{{block.shopify_attributes}}>
+                  <div class="block-inner">
+                     {%- liquid
+                       assign _review     = block.settings.review
+                       assign _title      = block.settings.title
+                       assign _star       = block.settings.rating
+                       assign _starEmpty  = 5 | minus: _star
+                     -%}
+                     <div class="reviews">{{_review}}</div>
+                     <div class="author">{{_title}}</div>
+                     <div class="rating">
+                       {%- for i in (1.._star) -%}{{star}}{%- endfor -%}
+                       {%- if _star < 5 -%}{%- for i in (1.._starEmpty) -%}{{starEmpty}}{%- endfor -%}{%- endif -%}
+                     </div>
+                  </div>
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+          </div>
+
+          {%- render 'config-slide', id: slideID,
+                                    items: section.settings.items_resp,
+                                    controls: section.settings.navs,
+                                    loop: section.settings.loop,
+                                    dots: section.settings.dots,
+                                    autoPlay: section.settings.autoplay,
+                                    center: section.settings.center
+          -%}
+
+        </div>
+      </slider-component>
+
+      {%- comment -%}
+      -------------------------------
+      BUTTON BOTTOM
+      -------------------------------
+      {%- endcomment-%}
+      {%- assign sectionButton = section.settings.section_button -%}
+      {%- unless sectionButton == blank -%}
+        <div class="section-bottom-button text-center">
+          <a href="{{section.settings.section_button_link}}" class="btn btn-{{section.settings.section_button_style}}">{{sectionButton}}</a>
+        </div>
+        {%- capture section_css -%}{{- section_css -}}
+          {%- render 'css-resp', class: sectionID, nextClass: ' .section-bottom-button' css: 'text-align', value: section.settings['section_heading_align'] -%}          
+        {%- endcapture -%}
+      {%- endunless -%}
+    </div>
+
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .block-inner' css: 'text-align', value: section.settings['content_align'] -%}
+  {%- assign sectionBgColor = section.settings.section_background_color | remove: 'rgba(0,0,0,0)' -%}
+  {%- render 'css-resp', class: sectionID, css: 'background-color', value: sectionBgColor, splitBy: ';' -%}
+
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+
+{% schema %}
+{
+  "name": "Testimonials",
+  "tag": "section",
+  "presets": [
+    {
+      "name": "Testimonials",
+      "blocks": [
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type":"text",
+      "id":"items_resp",
+      "label":"Max number of item per row",
+      "default": "1,5",
+      "info": "E.g: 3,4,5. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"content_align",
+      "label":"Text content alignment",
+      "info": "E.g: center, left[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+       "type": "checkbox",
+       "id": "loop",
+       "label": "Loop",
+       "default": true
+    },
+    {
+       "type": "checkbox",
+       "id": "navs",
+       "label": "Show next/prev arrows",
+       "default": true
+    },
+    {
+       "type": "checkbox",
+       "id": "dots",
+       "label": "Show dots",
+       "default": true
+    },
+    {
+       "type": "checkbox",
+       "id": "center",
+       "label": "Center mode",
+       "default": true
+    },
+    {
+       "type": "number",
+       "id": "autoplay",
+       "label": "Auto play slide (in second)",
+       "info": "E.g: 5"
+    },
+    {
+       "type":"header",
+       "content":"Section heading"
+    },
+    {
+      "type":"text",
+      "id":"section_heading",
+      "label":"Heading",
+      "info": "Blank to hide"
+    },
+    {
+       "type":"paragraph",
+       "content":"**Heading styles"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_align",
+      "label":"Heading & button alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_margin",
+      "label":"Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_heading_color",
+      "label":"Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Bottom button"
+    },
+    {
+      "type":"text",
+      "id":"section_button",
+      "label":"Button label"
+    },
+    {
+      "type":"url",
+      "id":"section_button_link",
+      "label":"Link",
+      "info": "http:// is required for external links"
+    },
+    {
+      "type":"number",
+      "id":"section_button_style",
+      "label":"Number of button style",
+      "default": 1,
+      "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000255832#1.-Default-Button)"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"section_margin",
+      "label":"Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_padding",
+      "label":"Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_background_color",
+      "label":"Background color"
+    },
+    {
+      "type":"select",
+      "id":"section_visible",
+      "label":"Visibility",
+      "options":[
+        {
+          "value":"hide_mobile",
+          "label": "Hide on Mobile"
+        },
+        {
+          "value":"hide_desktop",
+          "label": "Hide on Desktop"
+        },
+        {
+          "value":"all",
+          "label": "Show all"
+        }
+      ],
+      "default": "all"
+    }
+  ],
+  "blocks": [
+    {
+      "type":"content",
+      "name":"Block content",
+      "settings": [
+        {
+            "type": "text",
+            "id": "title",
+            "label": "Author",
+            "default": "Author"
+        },
+        {
+            "type": "richtext",
+            "id": "review",
+            "label": "Review",
+            "default": "<p>Add customer reviews and testimonials to showcase your store’s happy customers.</p>"
+        },
+        {
+            "type": "range",
+            "id": "rating",
+            "label": "Rating",
+            "min": 1,
+            "max": 5,
+            "step": 1,
+            "default": 4
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

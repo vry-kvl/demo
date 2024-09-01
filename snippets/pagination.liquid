@@ -1,0 +1,42 @@
+<div class="pagination-holder{% if request.page_type == 'collection' %} js-filter-facet{% endif %}">
+  {%- case type -%}
+    {%- when 'infinite' -%}
+      <infinite-loading class="block text-center" data-url="{% if paginate.next %}{{paginate.next.url}}{% endif %}" data-section-id="{{section.id}}">
+        {%- comment -%}
+          {%- render 'svg', type: 'loading' -%}
+        {%- endcomment-%}
+      </infinite-loading>
+    {%- else -%}
+      {%- if paginate.pages > 1 -%}
+        <ul class="pagination">
+          {%- if paginate.previous -%}
+            <li class="inline-block">
+              <a href="{{ paginate.previous.url }}" title="{{'general.pagination.previous' | t }}" class="inherit-color prev">
+                {%- render 'svg' type: 'page_arrow' -%}
+              </a>
+            </li>
+          {%- endif -%}
+
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <li class="inline-block"><a href="{{ part.url  }}" class="inherit-color">{{ part.title }}</a></li>
+            {%- else -%}
+              {%- if part.title == '&hellip;' -%}
+              <li class="inline-block ellipsis"><span>{{ part.title }}</span></li>
+              {%- else -%}
+              <li class="inline-block active"><a href="javascript:;" class="inherit-color">{{ part.title }}</a></li>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {%- if paginate.next -%}
+            <li class="inline-block">
+              <a href="{{ paginate.next.url }}" title="{{'general.pagination.next' | t }}" class="inherit-color next">
+                {%- render 'svg' type: 'page_arrow', class: 'flipY' -%}
+              </a>
+            </li>
+          {%- endif -%}
+        </ul>
+      {%- endif -%}
+  {%- endcase -%}
+</div>

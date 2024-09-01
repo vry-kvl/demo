@@ -1,0 +1,23 @@
+{%- if image == blank -%}{%- break -%}{%- endif -%}
+
+{%- if image == defaultImage -%}{%- assign imageWidth = 360 -%}
+{%- else -%}{%- assign imageWidth = image.width -%}
+{%- endif -%}
+
+{%- assign width = width | default: '165,360,535,750,1070,1500' | split: ',' -%}
+{%- capture dataBgSet -%}
+    {%- for w in width -%}
+        {%- assign number = w | strip | times: 1 -%}
+            {%- assign img_size = number | append: 'x' -%}            
+            {{- image | img_url: img_size }} {{w}}w,
+            {%- comment -%}-------------------------------
+        {%- if number <= imageWidth -%}
+        {%- else -%}
+            {%- break -%}
+        {%- endif -%}
+            {%- endcomment-%}
+    {%- endfor -%}
+    {{- image | img_url: 'master' }} {{image.width}}w
+{%- endcapture -%}
+
+{% unless class == blank %} {{class}}{% endunless %} bg__lazy lazyload" data-sizes="auto" style="background-image: url({{image | img_url: '50x'}});" data-bgset="{{- dataBgSet | strip_newlines -}}

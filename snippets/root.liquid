@@ -1,0 +1,197 @@
+{%- case type -%}
+  {%- when 'value' -%}
+    {%- unless settings[value] == blank -%}
+    --{{name | default: value | handle | replace: '_', '-' }}: {{settings[value] | strip }};
+    {%- endunless -%}
+
+  {%- when 'schema' -%}
+
+    {%- comment -%}
+    -------------------------------
+    STATIC VALUE (e.g: Color, Font weight, ..)
+    -------------------------------
+    {%- endcomment-%}
+    {%- capture array_root -%}
+      primary_color
+      ,secondary_color
+      ,miscellaneous_color
+      ,background_color
+      ,text_color
+      ,subtext_color
+      ,heading_1_fw
+      ,heading_2_fw
+      ,heading_3_fw
+      ,heading_4_fw
+      ,heading_5_fw
+      ,heading_6_fw
+      ,body_fw
+      ,header_text_color
+      ,header_text_fw
+      ,header_link_color
+      ,header_link_fw
+      ,header_form_bg_color
+      ,header_dropdown_bg_color
+      ,header_dropdown_text_color
+      ,header_dropdown_text_fw
+      ,footer_background_color
+      ,footer_border_color
+      ,footer_heading_color
+      ,footer_text_color
+      ,footer_text_second_color
+      ,footer_link_color
+      ,footer_link_second_color
+      ,price_color
+      ,price_sale_color
+      ,old_price_color
+    {%- endcapture -%}
+    {%- assign array_root = array_root | split: ',' -%}
+
+    {%- capture root -%}
+      {%- for i in array_root -%}
+        {%- capture value -%}{{ i | split: ':' | first | strip }}{%- endcapture -%}
+        {%- capture name  -%}{{ i | split: ':' | last  | strip }}{%- endcapture -%}
+        {%- render 'root', type: 'value', name: name, value: value -%}
+      {%- endfor -%}
+
+      {%- comment -%}
+      -------------------------------
+      HEADER COLOR
+      -------------------------------
+      {%- endcomment-%}
+      {%- liquid
+        assign header_overlay_opacity = settings['header_overlay_opacity'] | times: 0.01
+        assign header_overlay_color = settings['header_overlay_color'] | color_modify: 'alpha', header_overlay_opacity
+
+        assign header_background_color = settings['header_background_color']
+        assign header_background_color_opacity = settings['header_background_color_opacity'] | times: 0.01
+        assign header_absolute_bg_color = header_background_color | color_modify: 'alpha', header_background_color_opacity
+
+        assign formBgColor = settings['form_bg_color']
+      -%}
+      --form-bg-color: {{formBgColor}};
+      --form-text-color: {%- render 'adaptive-color', color: formBgColor -%};
+
+
+      --header-overlay-color: {{header_overlay_color}};
+      --header-background-color: {{header_background_color}};
+
+      --header-absolute-background-color: {{header_absolute_bg_color}};
+      --header-absolute-text-color: {{settings['header_absolute_text_color']}};
+
+      --header-form-color: {%- render 'adaptive-color', color: settings.header_form_bg_color -%};
+
+      --label-sale-bg-color: {{settings['sale_label_bg_color']}};
+      --label-hot-bg-color: {{settings['hot_label_bg_color']}};
+      --label-new-bg-color: {{settings['new_label_bg_color']}};
+
+      --label-sale-color: {{ settings['sale_label_text_color'] }};
+      --label-hot-color: {{ settings['hot_label_text_color'] }};
+      --label-new-color: {{ settings['new_label_text_color'] }};
+
+      --border-radius: {{ settings['border_radius'] }}px;
+      {%- comment -%}
+      -------------------------------
+      FLEXIBLE VALUE (e.g: Font size, spacing, ..)
+      -------------------------------
+      {%- endcomment-%}
+      {%- capture rootArray -%}
+        heading_1_fs,
+        heading_2_fs,
+        heading_3_fs,
+        heading_4_fs,
+        heading_5_fs,
+        heading_6_fs,
+        body_fs,
+        container,
+        flex_gap,
+        header_link_fs,
+      {%- endcapture -%}
+      {%- assign rootArray = rootArray | strip_newlines | strip | split: ',' -%}
+      {%- for item in rootArray -%}
+        {%- liquid
+          assign class = item | strip | prepend: '--' | replace: '_', '-'
+          assign value = item | split: ':' | last | strip
+        -%}
+        {%- render 'root-resp', class: class, value: settings[value] -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+
+    {%- unless root == blank -%}:root{ {{- root -}} }{%- endunless -%}
+
+    {%- render 'css-resp', class: 'footer', css: 'font-size', value: settings['footer_text_fs'] -%}
+    {%- render 'css-resp', class: 'footer a', css: 'font-size', value: settings['footer_link_fs'] -%}
+    {%- render 'css-resp', class: 'footer .block-title', css: 'font-size', value: settings['footer_title_fs'] -%}
+
+  {%- else -%}
+
+    <style data-shopify data-theme-root>
+      {%- render 'root', type: 'schema' -%}
+
+      {%- comment -%}
+      -------------------------------
+      HEADING TAG
+      -------------------------------
+      {%- endcomment-%}
+      {%- for i in (1..6) -%}
+        {%- liquid
+          assign id = '.h' | append: i
+          assign h_fs = 'heading_'  | append: i | append: '_fs'
+          assign h_fs = settings[h_fs]
+        -%}
+
+        {%- if h_fs == blank -%}{%- continue -%}{%- endif -%}
+        {%- capture HeadingFs -%}{{HeadingFs}}{%- render 'css-resp', class: id, value: h_fs, css: 'font-size' -%}{%- endcapture -%}
+      {%- endfor -%}
+
+      {%- comment -%}
+      -------------------------------
+      CUSTOM CSS
+      -------------------------------
+      {%- endcomment-%}
+      .border-rd{border-radius: {{settings.border_radius}}px;}
+
+      {%- if request.page_type == 'product' -%}
+        .wlcp-in-text .arn_added[data-arn-action],
+        .wlcp-in-text .arn_added[data-arn-action]{
+          text-indent: -99999px;
+          line-height: 0;
+          display: inherit;
+          overflow: hidden;
+        }
+
+        .wlcp-in-text .btn-wishlist.btn-show-text.arn_added[data-arn-action]:after{
+          content: "{{ 'products.product.added_to_wishlist' | t }}";
+          display: inherit;
+          text-indent: 0;
+          line-height: initial;
+        }
+        .wlcp-in-text .btn-compare.btn-show-text.arn_added[data-arn-action]:after{
+          content: "{{ 'products.product.added_to_compare' | t }}";
+          display: inherit;
+          text-indent: 0;
+          line-height: initial;
+        }
+
+      {%- endif -%}
+
+      {%- for i in (0..5) -%}
+        .order{{i}}{order: {{i}};}
+      {%- endfor -%}
+      {%- for i in (1..9) -%}
+        .fw{{i | times: 100}}{font-weight: {{i | times: 100}};}
+      {%- endfor -%}
+
+      {%- if request.design_mode -%}
+        .blink {
+          animation: blink_3822760354 .5s ease-in 2;
+        }
+        @keyframes blink_3822760354 {
+          0%      {background: inherit;}
+          50%      {background: var(--primary-color);}
+          100%      {background: inherit;}
+        }
+      {%- endif -%}
+      .variant-soldout .product-cart_button .btn.btn-preorder{pointer-events: all;}
+    </style>
+
+{%- endcase -%}

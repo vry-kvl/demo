@@ -1,0 +1,27 @@
+{%- liquid
+	assign msg = search.terms
+-%}
+
+<div id="cartErrorPopup" class="cart-popup-error popup-gl js-popup" data-control="cart-popup">
+	<div class="popup-layer js-popup-close"></div>
+
+	<div class="popup-inner">
+		<button type="button" class="btn btn-popup-close js-popup-close">
+			{%- render 'svg', type: 'close' -%}
+		</button>
+		<div class="popup-content-wrapper">
+			<h4 class="popup-title">
+                {%- render 'svg', type: 'error' -%}
+				{{- 'cart.notify.title' | t -}}
+			</h4>
+			<div class="popup-content">
+				{%- if msg contains '422qty' -%}
+					{%- capture count -%}{{ msg | split: 'qty' | last }}{%- endcapture -%}
+					{{- 'cart.notify.maximum_items' | t: count: count -}}
+				{%- else -%}
+					<div>{{- msg -}}</div>
+				{%- endif -%}
+			</div>
+		</div>
+	</div>
+</div>

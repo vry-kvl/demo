@@ -1,0 +1,59 @@
+{%- assign logoID = '#logo-' | append: section.id -%}
+
+<div class="logo-container" id="{{logoID | remove: '#'}}">
+  {%- if request.page_type == 'index' and section.id contains 'header' -%}
+    <h1 class="header__heading">
+  {%- endif -%}
+      <a href="{{ routes.root_url }}" class="">
+        {%- liquid
+          assign logoSVG        = section.settings.logo_svg
+          assign logo           = section.settings.logo
+          assign imagSizeArray  = section.settings.logo_width | split: ','
+          assign image_size     = section.settings.logo_width | remove: 'p'
+        -%}
+
+        {%- if logoSVG != blank -%}
+          {%- render 'snippet-section', type: 'svg', svg: logoSVG, id: section.id -%}
+        {%- elsif logo != blank -%}
+          {%- style  -%}
+            {%- render 'css-resp', class: logoID, css: 'max-width', value: section.settings.logo_width -%}
+          {%- endstyle -%}
+
+          <div class="pr" role="banner" style="padding-top: {{1 | divided_by:  logo.aspect_ratio | times: 100 }}%;">
+            {%- if imagSizeArray.size > 1 -%}
+              {%- liquid
+                assign mobileSize = imagSizeArray.first | remove: 'p'
+                assign image_size = imagSizeArray.last | remove: 'p'
+              -%}
+              <div class="md-none mobile-logo">
+                <img srcset="{{ logo | img_url: mobileSize }} 1x, {{ logo | img_url: mobileSize, scale: 2 }} 2x"
+                  loading="lazy"
+                  class="pa l0 t0 w100 h100 object-fit--contain lazyload"
+                  width="{{ logo.width }}"
+                  height="{{ logo.height }}"
+                  alt="{{ logo.alt | default: shop.name | escape }}"
+                >
+              </div>
+              <div class="none md-block desktop-logo">
+            {%- endif -%}
+
+            <img srcset="{{ logo | img_url: image_size }} 1x, {{ logo | img_url: image_size, scale: 2 }} 2x"
+              loading="lazy"
+              class="pa l0 t0 w100 h100 object-fit--contain lazyload"
+              width="{{ logo.width }}"
+              height="{{ logo.height }}"
+              alt="{{ logo.alt | default: shop.name | escape }}"
+            >
+
+            {%- if imagSizeArray.size > 1 -%}
+              </div>
+            {%- endif -%}
+          </div>
+        {%- else -%}
+          <span class="h2">{{ shop.name }}</span>
+        {%- endif -%}
+      </a>
+  {%- if request.page_type == 'index' and section.id contains 'header' -%}
+    </h1>
+  {%- endif -%}
+</div>

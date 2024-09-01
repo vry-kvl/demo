@@ -1,0 +1,535 @@
+{%- capture content -%}
+{%- liquid
+    assign primaryColor = settings.primary_color
+    assign secondaryColor = settings.secondary_color
+-%}
+
+{%- comment -%}
+-------------------------------
+CURRENCIES
+-------------------------------
+{%- endcomment-%}
+
+{%- assign flagCurrency = settings.flag_currency -%}
+{%- unless flagCurrency == 'none' -%}
+	<style>
+        .currency-flag {display: inline-block;background-size: cover;background-position: center center;width: 24px;
+            {%- case flagCurrency -%}
+                {%- when 'square' -%}height: 24px;
+                {%- when 'circle' -%}height: 24px;border-radius: 50%;
+                {%- else -%}height: 16px;
+            {%- endcase -%}
+        }
+	</style>
+
+    {%- capture currenciesArray -%}{%- render 'currencies', type: 'list' -%}{%- endcapture -%}
+    {%- assign currenciesArray = currenciesArray | split: ' ' -%}
+
+    {%- if currenciesArray.size > 0 -%}
+      {%- for currency in currenciesArray -%}
+        {%- render 'currency-icon', type: currency -%}
+      {%- endfor -%}
+    {%- else -%}
+        {%- render 'currency-icon', type: cart.currency.iso_code -%}
+    {%- endif -%}
+{%- endunless -%}
+
+{%- comment -%}
+-------------------------------
+BLOCK CUSTOM CSS
+-------------------------------
+{%- endcomment-%}
+{%- if section.blocks.size > 0 -%}
+    {%- assign defaultButton = 0 -%}
+	{%- for block in section.blocks -%}
+		{%- assign _content	= block.settings.content -%}
+
+		{%- case block.type -%}
+            {%- comment -%}
+            -------------------------------
+            DEFAULT SECTION HEADING
+            -------------------------------
+            {%- endcomment-%}
+    	  	{%- when 'default_heading' -%}
+                {%- render 'snippet-section', type: 'heading_style', object: block, sectionID: '' -%}
+
+            {%- comment -%}
+            -------------------------------
+            DEFAULT BUTTON
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'default_button' -%}
+                {%- assign defaultButton = defaultButton | plus: 1 -%}
+                {%- capture defaultBgColor -%}{%- if defaultButton == 1 -%}{{primaryColor}}{%- else -%}{{secondaryColor}}{%- endif -%}{%- endcapture -%}
+                {%- capture defaultTextColor -%}{%- render 'adaptive-color', color: defaultBgColor -%}{%- endcapture -%}
+
+                {%- capture blockID -%}.btn-{{defaultButton}}{%- endcapture -%}
+                {%- liquid
+                    assign btnFS                    = block.settings.btn_fs
+                    assign btnRadius                = block.settings.btn_radius
+                    assign btnPadding               = block.settings.btn_padding
+                    assign btn_fw                   = block.settings.btn_fw
+                    assign btn_bg_cl                = block.settings.btn_bg_cl
+                    assign btn_cl                   = block.settings.btn_cl
+                    assign btn_border_width         = block.settings.btn_border_width
+                    assign btn_border_cl            = block.settings.btn_border_cl
+                -%}
+
+                {%- capture values -%}
+                    font-size: {{ btnFS | split: ',' | first | strip }};
+                    border-radius: {{ btnRadius | split: ',' | first | strip }};
+                    padding: {{ btnPadding | split: ',' | first | strip }};
+                    font-weight: {{btn_fw}};
+                    color: {{btn_cl}};
+                    background-color: {{btn_bg_cl}};
+                    border-color: {{btn_border_cl}};
+                    border-width: {{btn_border_width}}px;
+                    border-style: solid;
+                {%- endcapture -%}
+
+                {%- render 'css-resp', class: blockID, values: values -%}
+                {%- render 'css-resp', class: blockID, css: 'padding', showLast: true, value: btnPadding -%}
+                {%- render 'css-resp', class: blockID, css: 'font-size', showLast: true, value: btnFS -%}
+                {%- render 'css-resp', class: blockID, css: 'border-radius', showLast: true, value: btnRadius -%}
+                {%- render 'css-resp', class: blockID, nextClass: ' .by-fill path' css: 'fill', value: btn_cl, split: ';' -%}
+                {%- render 'css-resp', class: blockID, nextClass: ' .by-stroke path' css: 'stroke', value: btn_cl, split: ';' -%}
+
+                {%- comment -%}
+                -------------------------------
+                BUTTON ON HOVER
+                -------------------------------
+                {%- endcomment-%}
+                {%- assign blockID = blockID | append: ':hover' -%}
+                {%- capture defaultBgColor -%}{%- if defaultButton == 1 -%}{{secondaryColor}}{%- else -%}{{primaryColor}}{%- endif -%}{%- endcapture -%}
+                {%- capture defaultTextColor -%}{%- render 'adaptive-color', color: defaultBgColor -%}{%- endcapture -%}
+                {%- liquid
+                    assign btn_hover_bg_cl          = block.settings.btn_hover_bg_cl
+                    assign btn_hover_cl             = block.settings.btn_hover_cl
+                    assign btn_hover_border_cl      = block.settings.btn_hover_border_cl
+                -%}
+                {%- capture values -%}
+                    {%- if btn_hover_cl != blank -%}color: {{btn_hover_cl}};{%- endif -%}
+                    {%- if btn_hover_bg_cl != blank -%}background-color: {{btn_hover_bg_cl}};{%- endif -%}
+                    {%- if btn_hover_border_cl != blank -%}border-color: {{btn_hover_border_cl}};{%- endif -%}
+                {%- endcapture -%}
+                {%- render 'css-resp', class: blockID, values: values -%}
+                {%- render 'css-resp', class: blockID, nextClass: ' .by-fill path' css: 'fill', value: btn_hover_cl, split: ';' -%}
+                {%- render 'css-resp', class: blockID, nextClass: ' .by-stroke path' css: 'stroke', value: btn_hover_cl, split: ';' -%}
+
+            {%- comment -%}
+            -------------------------------
+            STYLESHEET
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'stylesheet' -%}
+
+                {%- comment -%}Check visibility{%- endcomment-%}
+                {%- unless block.settings.show_all -%}
+                    {%- case request.page_type -%}
+                        {%- when 'index' -%}{%- unless block.settings['show_homepage'] -%}{%- continue -%}{%- endunless -%}
+                        {%- when 'collection' or 'list-collections' -%}{%- unless block.settings['show_collection'] -%}{%- continue -%}{%- endunless -%}
+                        {%- when 'product' -%}{%- unless block.settings['show_product'] -%}{%- continue -%}{%- endunless -%}
+                        {%- when 'page' -%}{%- unless block.settings['show_pages'] -%}{%- continue -%}{%- endunless -%}
+                        {%- else -%}{%- continue -%}
+                    {%- endcase -%}
+                {%- endunless -%}
+
+                {%- assign _class   = block.settings.title -%}
+                {%- assign _image   = block.settings.image -%}
+
+                {%- capture firstValues -%}
+                    {{- _content | strip_newlines -}}
+                    {%- unless _image == blank -%}background-image: url({{_image | img_url: 'master' }});{%- endunless -%}
+                {%- endcapture -%}
+                {%- render 'css-resp', classID: _class, values: firstValues -%}
+
+            {%- comment -%}
+            -------------------------------
+            STYLESHEET
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'stylesheet_large' -%}
+
+                {%- comment -%}Check visibility{%- endcomment-%}
+                {%- unless block.settings.show_all -%}
+                    {%- case request.page_type -%}
+                        {%- when 'index' -%}{%- unless block.settings['show_homepage'] -%}{%- continue -%}{%- endunless -%}
+                        {%- when 'collection' or 'list-collections' -%}{%- unless block.settings['show_collection'] -%}{%- continue -%}{%- endunless -%}
+                        {%- when 'product' -%}{%- unless block.settings['show_product'] -%}{%- continue -%}{%- endunless -%}
+                        {%- when 'page' -%}{%- unless block.settings['show_pages'] -%}{%- continue -%}{%- endunless -%}
+                        {%- else -%}{%- continue -%}
+                    {%- endcase -%}
+                {%- endunless -%}
+
+                {{ _content | strip_newlines  }}
+
+
+            {%- comment -%}
+            -------------------------------
+            SWATCH COLOR DEFINE
+            -------------------------------
+            {%- endcomment-%}
+            {%- when 'swatch_color' -%}
+                {%- assign colorList = _content | downcase | strip_newlines | split: ';' -%}
+
+                {%- for color in colorList -%}
+                    {%- assign c         = color | strip | split: ':' -%}
+                    {%- assign colorName = c.first | strip | handle -%}
+                    {%- assign colorCode = c.last | strip -%}
+
+                    {%- if colorName.size == 0 or colorCode.size == 0 -%}{%- continue -%}{%- endif -%}
+
+                    {%- capture colorClass -%}.c-{{colorName}}{%- endcapture -%}
+
+                    {{- colorClass -}}{background-color: {{colorCode | upcase }};}
+                {%- endfor -%}
+
+            {%- when 'swatch_image' -%}
+                {%- for i in (1..5) -%}
+                    {%- assign colorName = 'color_' | append: i -%}
+                    {%- assign image = 'image_' | append: i -%}
+
+                    {%- capture colorClass -%}.c-{{block.settings[colorName] | strip | handle}}{%- endcapture -%}
+                    {{- colorClass -}}{background-image: url({{ block.settings[image] | img_url: 'master' }}); background-size: cover;}
+                {%- endfor -%}
+
+
+		{%- endcase -%}
+	{%- endfor -%}
+{%- endif -%}
+{%- endcapture -%}
+
+<!--split:css[-->
+{%- render 'snippet-section', type: 'css', value: content -%}
+<!--split:css]-->
+
+<!--split:[-->
+<svg xmlnsXlink="http://www.w3.org/2000/svg" class="none" id="SVGDefine">
+    {%- render 'svg', type: 'loading', define: true, fillColor: true -%}
+    {%- render 'svg', type: 'plus', define: true -%}
+    {%- render 'svg', type: 'minus', define: true -%}
+    {%- render 'svg', type: 'remove', define: true -%}
+</svg>
+<!--split:]-->
+
+{% schema %}
+{
+    "name": "Theme Config",
+    "tag": "section",
+    "class": "hide",
+    "settings": [],
+    "blocks": [
+        {
+            "type": "default_button",
+            "name": "Default button",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                    "type": "text",
+                    "id": "btn_fs",
+                    "label": "Font size",
+                    "default": "18px",
+                    "info": "E.g: 18px"
+                },
+                {
+                    "type": "range",
+                    "id": "btn_fw",
+                    "label": "Font weight",
+                    "min": 100,
+                    "max": 900,
+                    "step": 100,
+                    "default": 600
+                },
+                {
+                    "type": "text",
+                    "id": "btn_padding",
+                    "label": "Padding",
+                    "default": "10px 40px",
+                    "info": "E.g: 13px 50px"
+                },
+                {
+                    "type": "color",
+                    "id": "btn_cl",
+                    "label": "Text color"
+                },
+                {
+                    "type": "color",
+                    "id": "btn_bg_cl",
+                    "label": "Background color"
+                },
+                {
+                    "type": "color",
+                    "id": "btn_hover_cl",
+                    "label": "Hover: Text color"
+                },
+                {
+                    "type": "color",
+                    "id": "btn_hover_bg_cl",
+                    "label": "Hover: Background color"
+                },
+                {
+                    "type": "range",
+                    "id": "btn_border_width",
+                    "label": "Border width",
+                    "min": 0,
+                    "max": 10,
+                    "step": 1,
+                    "unit": "px",
+                    "default": 0
+                },
+                {
+                    "type": "color",
+                    "id": "btn_border_cl",
+                    "label": "Border color"
+                },
+                {
+                    "type": "color",
+                    "id": "btn_hover_border_cl",
+                    "label": "Hover: Border color"
+                },
+                {
+                    "type": "text",
+                    "id": "btn_radius",
+                    "label": "Rounded corners",
+                    "default": "5px",
+                    "info": "E.g: 42px"
+                }
+            ]
+        },
+        {
+            "type": "default_heading",
+            "name": "Default Section Heading",
+            "limit": 1,
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "section_heading_align",
+                    "label": "Heading text alignment",
+                    "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+                },
+                {
+                    "type": "text",
+                    "id": "section_heading_margin",
+                    "label": "Margin",
+                    "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+                },
+                {
+                    "type": "text",
+                    "id": "section_heading_fs",
+                    "label": "Adjust font size",
+                    "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+                },
+                {
+                    "type": "color",
+                    "id": "section_heading_color",
+                    "label": "Heading color"
+                },
+                {
+                    "type": "range",
+                    "id": "section_heading_fw",
+                    "label": "Adjust font weight",
+                    "min": 100,
+                    "max": 900,
+                    "step": 100,
+                    "default": 600
+                }
+            ]
+        },
+        {
+            "type": "stylesheet_large",
+            "name": "CSS",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                    "type": "html",
+                    "id": "content",
+                    "label": "CSS",
+                    "info": ".selector{\nfont-size: 15px;\ncolor: #000000; ...\n}\n.selector{\nfont-size: 15px;\ncolor: #000000; ...\n}"
+                },
+                {
+                   "type":"header",
+                   "content":"Which pages will show this css?"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_all",
+                   "label":"Show all pages",
+                   "default": true
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_homepage",
+                   "label":"Show on Homepage"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_collection",
+                   "label":"Show on Collection page"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_product",
+                   "label":"Show on Product page"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_pages",
+                   "label":"Show on Pages"
+                }
+            ]
+        },
+        {
+            "type": "stylesheet",
+            "name": "CSS + Background",
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "title",
+                    "label": "Class Name",
+                    "info": ".selector"
+                },
+                {
+                    "type": "html",
+                    "id": "content",
+                    "label": "CSS",
+                    "info": "background-size: contain;"
+                },
+                {
+                    "type": "image_picker",
+                    "id": "image",
+                    "label": "Image"
+                },
+                {
+                    "type": "color_background",
+                    "id": "color_background",
+                    "label": "Background color"
+                },
+                {
+                   "type":"header",
+                   "content":"Which pages will show this css?"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_all",
+                   "label":"Show all pages",
+                   "default": true
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_homepage",
+                   "label":"Show on Homepage"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_collection",
+                   "label":"Show on Collection page"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_product",
+                   "label":"Show on Product page"
+                },
+                {
+                   "type":"checkbox",
+                   "id":"show_pages",
+                   "label":"Show on Pages"
+                }
+            ]
+        },
+        {
+            "type": "swatch_color",
+            "name": "Swatch color",
+            "settings": [
+                {
+                    "type":"text",
+                    "id":"title",
+                    "label":"Block label"
+                },
+                {
+                    "type": "html",
+                    "id": "content",
+                    "label": "Content",
+                    "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+                }
+            ]
+        },
+        {
+            "type": "swatch_image",
+            "name": "Swatch image",
+            "settings": [
+                {
+                    "type": "text",
+                    "id": "title",
+                    "label": "Block label"
+                },
+                {
+                    "type":"text",
+                    "id":"color_1",
+                    "label":"1. Color name"
+                },
+                {
+                    "type": "image_picker",
+                    "id": "image_1",
+                    "label": "1. Image"
+                },
+                {
+                    "type":"text",
+                    "id":"color_2",
+                    "label":"2. Color name"
+                },
+                {
+                    "type": "image_picker",
+                    "id": "image_2",
+                    "label": "2. Image"
+                },
+                {
+                    "type":"text",
+                    "id":"color_3",
+                    "label":"3. Color name"
+                },
+                {
+                    "type": "image_picker",
+                    "id": "image_3",
+                    "label": "3. Image"
+                },
+                {
+                    "type":"text",
+                    "id":"color_4",
+                    "label":"4. Color name"
+                },
+                {
+                    "type": "image_picker",
+                    "id": "image_4",
+                    "label": "4. Image"
+                },
+                {
+                    "type":"text",
+                    "id":"color_5",
+                    "label":"5. Color name"
+                },
+                {
+                    "type": "image_picker",
+                    "id": "image_5",
+                    "label": "5. Image"
+                }
+            ]
+        }
+    ],
+    "default": {
+        "blocks": [
+            {
+                "type": "default_button",
+                "settings": {}
+            }
+        ]
+    }
+}
+{% endschema %}

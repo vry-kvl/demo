@@ -1,0 +1,134 @@
+{%- case block.type -%}
+    {%- when 'html' -%}{{block.settings.html}}
+
+    {%- when 'paragraph' -%}
+
+        {%- capture section_css -%}{{- section_css -}}
+            {%- render 'css-resp', class: blockID, css: 'text-align', value: block.settings.content_align -%}
+        {%- endcapture -%}
+
+        {%- for i in (1..2) -%}
+            {%- liquid
+                assign text = 'text_' | append: i
+                assign textFs = 'text_fs_' | append: i
+                assign textFw = 'text_fw_' | append: i
+                assign textCl = 'text_cl_' | append: i
+                assign text = block.settings[text]
+                assign textCl = block.settings[textCl] | remove: 'rgba(0,0,0,0)'
+            -%}
+            {%- if text == blank -%}{%- continue -%}{%- endif -%}
+
+            {%- capture textID -%}{{blockID}} .text-{{i}}{%- endcapture -%}
+
+            <div class="text text-{{i}}{% if block.settings[textFw] > 0 %} fw{{block.settings[textFw]}}{% endif %}"{% unless textCl == blank %} style="color: {{textCl}};"{% endunless %}>{{text}}</div>
+
+            {%- capture section_css -%}{{- section_css -}}
+                {%- render 'css-resp', class: textID, css: 'font-size', value: block.settings[textFs] -%}
+            {%- endcapture -%}
+        {%- endfor -%}
+
+
+
+        {%- unless block.settings.btn_text == blank -%}
+          <div class="button-group">
+            <a href="{{block.settings.btn_link | default: 'javascript:void(0);' }}" class="btn btn-{{block.settings.btn_styles | default: 1 }}">
+                {{- block.settings.btn_text -}}
+            </a>
+          </div>
+        {%- endunless -%}
+
+    {%- when 'button' -%}
+        {%- liquid
+            assign text = block.settings.text | default: 'Button'
+            assign btnStyles = block.settings.btn_styles | default: 1
+        -%}
+        {%- capture link -%}
+            {%- case block.settings.quick_link -%}
+                {%- when 'custom' -%}{{block.settings.button_link | default: routes.root_url }}
+                {%- when 'list_collection' -%}{{routes.collections_url}}
+                {%- when 'sign_in' -%}{{routes.account_login_url}}
+                {%- when 'sign_up' -%}{{routes.account_register_url }}
+            {%- endcase -%}
+        {%- endcapture -%}
+
+        <a href="{{link | strip_newlines | strip }}" class="btn btn-{{btnStyles}}">{{text}}</a>
+
+
+        {%- capture section_css -%}{{- section_css -}}
+            {%- render 'css-resp', class: blockID, css: 'text-align', value: block.settings.content_align -%}
+        {%- endcapture -%}
+
+    {%- when 'image' -%}
+        {%- liquid
+            assign bannerDesktop  = block.settings.banner_desktop
+            assign bannerMobile   = block.settings.banner_mobile | default: bannerDesktop
+            assign cropPosition   = block.settings.image_crop
+            assign heightStyle    = block.settings.height_style
+        -%}
+        {%- if bannerDesktop == blank and bannerMobile == blank -%}
+            {%- render 'empty-content', type: 'once_image' -%}
+        {%- else -%}
+            {%- capture IMGCLASS %} object-fit--{% if cropPosition != blank %}cover{% else %}contain{% endif %}{%- endcapture -%}
+
+            <div class="banner">
+                {%- assign desktopClass = nil -%}
+                {%- unless bannerMobile == bannerDesktop -%}
+                    {%- render 'image-style', image: bannerMobile, class: 'lg-none', imgClass: IMGCLASS -%}
+                    {%- capture desktopClass -%}none lg-block{%- endcapture -%}
+                {%- endunless -%}
+
+                {%- render 'image-style', image: bannerDesktop, class: desktopClass, imgClass: IMGCLASS -%}
+            </div>
+
+            {%- capture section_css -%}{{- section_css -}}
+                {%- case heightStyle -%}
+                    {%- when 'auto'  -%}
+                    {%- else -%}
+                      {%- capture heightValue -%}
+                        {%- case heightStyle -%}
+                          {%- when 'manually' -%}{{- block.settings.manual_height -}}
+                          {%- when 'adapt' -%}{{- 1 | divided_by: firstImageRatio | times: 100 | append: '%' -}}
+                          {%- else -%}{{- heightStyle -}}
+                        {%- endcase -%}
+                      {%- endcapture -%}
+                      {%- render 'css-resp', class: blockID, nextClass: ' .image__style', css: 'padding-top', important: true, value: heightValue -%}
+                  {%- endcase -%}
+                {%- render 'css-resp', class: blockID, nextClass: ' .image__style img', css: 'object-position', important: nil, value: cropPosition -%}
+            {%- endcapture -%}
+        {%- endif -%}
+
+    {%- when 'form' -%}
+        {%- render 'form', type: 'newsletter', flyIcon: true, btnStyle: block.settings.btn_styles -%}
+
+    {%- when 'countdown' -%}
+        {%- render 'countdown', value: block.settings.expired, timerLabel: block.settings.show_date_label -%}
+
+        {%- capture section_css -%}{{- section_css -}}
+            {%- render 'css-resp', class: blockID, css: 'text-align', value: block.settings.content_align -%}
+            {%- render 'css-resp', class: blockID, css: 'font-size', value: block.settings.font_size -%}
+            {%- render 'css-resp', class: blockID, css: 'font-weight', value: block.settings.font_weight -%}
+        {%- endcapture -%}
+
+    {%- when 'menu' -%}
+
+        {%- assign menuList = linklists[block.settings.menu] -%}
+        {%- unless block.settings.text == blank -%}
+        <div class="heading-menu">
+            <h4>{{block.settings.text}}</h4>
+        </div>
+        {%- endunless -%}
+
+        <ul class="menu-list-item">
+            {%- if menuList.links.size > 0 -%}
+                {%- for l in menuList.links -%}
+                    {%- render 'link', link: l, showSubLink: true -%}
+                {%- endfor -%}
+            {%- else -%}
+                {%- for i in (1..5) -%}
+                    <li class="list-item"><a href="javascript:void(0);" class="list-item-link link">Sample menu item</a></li>
+                {%- endfor -%}
+            {%- endif -%}
+        </ul>
+{%- endcase -%}
+<!--|||-->
+{{section_css}}

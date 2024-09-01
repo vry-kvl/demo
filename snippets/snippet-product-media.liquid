@@ -1,0 +1,167 @@
+{%- liquid
+  assign galleryPosition = section.settings['gallery_position']
+  assign slideID = '#slideMain-' | append: section.id
+  assign slideThumbID = '#slideThumb-' | append: section.id
+-%}
+
+<div class="main-product-gallery thumbnail-{{galleryPosition}}">
+  <div class="gallery-wrapper">
+    <div class="main-gallery">
+      {%- comment -%}
+      -------------------------------
+      MAIN MEDIA
+      -------------------------------
+      {%- endcomment-%}
+      {%- if product.media.size > 0 -%}
+
+        {%- capture section_css -%}{{- section_css -}}
+          {%- assign mainHeight = section.settings.main_height -%}
+          {%- assign image_crop = section.settings.image_crop -%}
+          {%- assign hasPreload = true -%}
+
+          {%- case mainHeight -%}
+            {%- when 'default'  -%}
+              {%- assign mainHeight = nil -%}
+
+            {%- when 'adapt'  -%}
+              {%- liquid
+                assign firstImageRatio  = product.media | first
+                assign firstImageRatio  = firstImageRatio.preview_image.aspect_ratio | default: 1
+                assign mainHeight = 1 | divided_by: firstImageRatio | times: 100.0 | append: '%'
+
+                render 'css-resp', class: slideID, nextClass: ' .media-wrapper', css: 'padding-top', important: true, value: mainHeight
+              -%}
+
+            {%- else -%}
+              {%- liquid
+                if mainHeight == 'manually'
+                  assign mainMediaHeight = section.settings.manual_height
+                else
+                  assign mainMediaHeight = mainHeight
+                endif
+
+                render 'css-resp', class: slideID, nextClass: ' .media-wrapper', css: 'padding-top', important: true, value: mainMediaHeight
+              -%}
+          {%- endcase -%}
+
+
+          {%- if galleryPosition == 'left' -%}
+            <style>
+              @media (min-width: 1300px){
+                .slider-vertical-list{flex-flow: column;}
+                .templateProduct .thumbnail-left .media-item {max-width: 100%;}
+              }
+            </style>
+          {%- endif -%}
+        {%- endcapture -%}
+        {%- capture mainImageClass -%}object-fit--{% if image_crop %}cover{% else %}contain{% endif %}{%- endcapture -%}
+
+        <product-{% if product.media.size > 1 %}slider{% else %}gallery{% endif %}-component id="{{ slideID | remove: '#' }}" class="block js-slider-main" data-type="main">
+          <div id="{{ slideID | remove: '#' }}el" class="main-slider slider-list flex-1 flex js-slider">
+            {%- for media in product.media -%}
+              <div class="media-item media-type-{{media.media_type}}" data-media-index="{{media.position}}">
+                {%- if media.media_type == 'image' -%}
+                  {%- render 'image-style', image: media.preview_image, height: mainHeight, imgClass: mainImageClass, preload: hasPreload -%}
+                  {%- assign hasPreload = false -%}
+                {%- else -%}
+
+                  {%- liquid
+                    if mainHeight == 'default' or mainHeight == nil
+                      assign mediaImageRatio  = media.preview_image.aspect_ratio | default: 1
+                      assign mediaItemHeight = 1 | divided_by: mediaImageRatio | times: 100.0 | append: '%'
+                    endif
+                  -%}
+
+                  {%- capture mediaClass -%}pa w100 h100 t0 l0{% unless media.media_type == 'external_video' %} {{mainImageClass}}{% endunless %}{%- endcapture -%}
+                  {%- assign autoplay = false -%}
+                  {%- if forloop.first and media.media_type == 'video' -%}
+                    {%- assign autoplay = true -%}
+                    {%- assign mediaClass = mediaClass | append: ' playing' -%}
+                  {%- endif -%}
+
+                  <div class="media-wrapper image__style pr"{% if mediaItemHeight != nil %} style="padding-top: {{mediaItemHeight}};"{% endif %}>
+                    {%- case media.media_type  -%}
+                      {%- when 'video'          -%}{{ media | video_tag: image_size: "1024x", control: false, loop: true, autoplay: autoplay, class: mediaClass }}
+                      {%- when 'model'          -%}{{ media | model_viewer_tag: image_size: "1024x", class: mediaClass }}
+                      {%- when 'external_video' -%}
+                        {%- capture videoIndex -%}{% increment videoCounter %}{%- endcapture -%}
+                        {%- capture videoId -%}player{{media.external_id}}{%- endcapture -%}
+                        {{ media | external_video_tag: class: mediaClass, id: videoId, data-video-index: videoIndex, data-yt-id: media.external_id }}
+                    {%- endcase -%}
+                  </div>
+                {%- endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+
+          {%- if product.media.size > 1 -%}
+            {%- assign mainControlsID = slideThumbID | append: ' .js-slider' -%}
+            {%- render 'config-slide', id: slideID,
+                                      items: 1,
+                                      controls: true,
+                                      autoHeight: true,
+                                      navContainer: mainControlsID,
+                                      mode: 'carousel'
+            -%}
+          {%- endif -%}
+        </product-{% if product.media.size > 1 %}slider{% else %}gallery{% endif %}-component>
+
+      {%- else -%}
+        <div class="empty-media pr pt100">
+          <img src="{{ product.image | img_url: 'master' }}" alt="{{product.title}}" class="pa l0 t0 w100 h100 object-fit--cover border">
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%}
+    -------------------------------
+    THUMBNAIL
+    -------------------------------
+    {%- endcomment-%}
+    {%- if product.media.size > 1 -%}
+      <div class="thumbnail-gallery">
+        {%- liquid
+          assign thumbnailMaxItems = section.settings.gallery_items
+          assign thumbHeight = section.settings.thumb_height
+        -%}
+
+        {%- case thumbHeight -%}
+          {%- when 'default'  -%}{%- assign thumbHeight = nil -%}
+          {%- when 'adapt'  -%}
+            {%- liquid
+              assign firstImageRatio  = product.media | first
+              assign firstImageRatio  = firstImageRatio.preview_image.aspect_ratio | default: 1
+              assign thumbHeight = 1 | divided_by: firstImageRatio | times: 100.0 | append: '%'
+            -%}
+        {%- endcase -%}
+
+        {%- capture gridClass -%}{%- render 'config-grid', value: thumbnailMaxItems %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+
+        <product-slider-component id="{{ slideThumbID | remove: '#' }}" class="block js-slider-thumbnail{% if galleryPosition == 'left' %} js-large-vertical{% endif %}" data-type="thumb">
+          <div id="{{ slideThumbID | remove: '#' }}el" class="thumbnail-slider slider-{% if galleryPosition == 'left' %}vertical-{% endif %}list {{gridClass}} flex js-slider">
+            {%- for media in product.media -%}
+              <div class="media-item">
+                {%- render 'image-style', image: media.preview_image, height: thumbHeight, imgClass: 'object-fit--cover' -%}
+              </div>
+              {%- endfor -%}
+          </div>
+          {%- capture axis -%}{% if galleryPosition == 'left' %}vertical{% endif %}{%- endcapture -%}
+          {%- render 'config-slide', id: slideThumbID,
+                                    items: thumbnailMaxItems,
+                                    controls: true,
+                                    axis: axis,
+                                    gutter: '12'
+          -%}
+        </product-slider-component>
+      </div>
+
+      {%- capture section_css -%}{{- section_css -}}
+        <style>
+          .thumbnail-slider:not(.tns-slider) .media-item:nth-child(n+{{thumbnailMaxItems | plus: 1}}){display: none;}
+        </style>
+      {%- endcapture -%}
+    {%- endif -%}
+  </div>
+</div>
+<!--|||-->
+{{- section_css -}}

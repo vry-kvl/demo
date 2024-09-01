@@ -1,0 +1,98 @@
+{%- if request.page_type == 'index' -%}{%- break -%}{%- endif -%}
+
+{%- liquid
+  assign _layout = _layout | default: 'boxed'
+  
+  if request.page_type == 'cart'
+    assign _layout = 'full'
+  endif
+-%}
+
+<div id="breadcrumb" class="{{ section_class }}">
+  <div class="breadcrumb-inner{% if _layout != 'full' %} container{% endif %}">
+
+    <ul class="breadcrumb-list flex" itemscope itemtype="https://schema.org/BreadcrumbList">
+      <li class="" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="{{ shop.url }}">
+          <span itemprop="name">{{- 'general.breadcrumb.home' | t -}}</span>
+          <meta itemprop="position" content="{% increment brcCounter %}"/>
+        </a>
+      </li>
+      <li class="next">{%- render 'svg', type: 'breadcrumb' -%}</li>
+
+      {%- case request.page_type -%}
+        {%- when 'product' -%}
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ product.url | within: productCollection }}" itemprop="item">
+              <span itemprop="name">{{- product.title | truncatewords: 5 -}}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+        {%- when 'customers/addresses' or 'customers/order' -%}
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ routes.account_url }}" itemprop="item">
+              <span itemprop="name">{{- 'customer.account.title' | t -}}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+          <li class="next">{%- render 'svg', type: 'breadcrumb' -%}</li>
+
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ routes.account_addresses_url }}" itemprop="item">
+              <span itemprop="name">{{- page_title -}}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+        {%- when 'collection' -%}
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ routes.collections_url }}" itemprop="item">
+              <span itemprop="name">{{- 'general.breadcrumb.shop' | t -}}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+          <li class="next">{%- render 'svg', type: 'breadcrumb' -%}</li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ collection.url }}" itemprop="item">
+              <span itemprop="name">{{ page_title }}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+        {%- when 'article' -%}
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ blog.url }}" itemprop="item">
+              <span itemprop="name">{{- blog.title -}}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+          <li class="next">{%- render 'svg', type: 'breadcrumb' -%}</li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ article.url }}" itemprop="item">
+              <span itemprop="name">{{ page_title }}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+        {%- when 'search' -%}
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ routes.account_url }}" itemprop="item">
+              <span itemprop="name">{{ 'search.general.heading' | t: count: search.results_count }}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+        {%- else -%}
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="{{ routes.account_url }}" itemprop="item">
+              <span itemprop="name">{{ page_title }}</span>
+              <meta itemprop="position" content="{% increment brcCounter %}"/>
+            </a>
+          </li>
+
+      {%- endcase -%}
+    </ul>
+  </div>
+</div>

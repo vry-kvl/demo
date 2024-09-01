@@ -1,0 +1,56 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'shipping-rate' -%}
+
+{%- capture content -%}
+<shipping-calculator class="block" data-url="{{routes.cart_url | append: '/shipping_rates.json' }}">
+	<div class="shipping-content">
+
+    <p class="shipping-title">{{'cart.shipping.title' | t}}</p>
+
+		<form action="{{ routes.cart_url}}" class="shipping-form flex {% render 'snippet-section', type: 'spacing' %}">
+			<div class="form-field">
+				<label class="label-field" for="addressCountry{{object.id}}">{{- 'cart.shipping.country' | t -}}</label>
+				<select class="select-field" id="addressCountry{{object.id}}" name="shipping_address[country]" data-default="{% if shop.customer_accounts_enabled and customer %}{{ customer.default_address.country }}{% endif %}" required>{{ country_option_tags }}</select>
+			</div>
+
+			<div class="form-field" style="display:none;">
+				<label class="label-field" for="addressProvince{{object.id}}" id="address_province_label">{{- 'cart.shipping.province' | t -}}</label>
+				<select class="select-field" id="addressProvince{{object.id}}" name="shipping_address[province]" data-default="{% if shop.customer_accounts_enabled and customer and customer.default_address.province != '' %}{{ customer.default_address.province }}{% endif %}"></select>
+			</div>
+
+			<div class="form-field">
+				<label class="label-field" for="addressZip{{object.id}}">{{- 'cart.shipping.zip' | t -}}</label>
+				<input class="input-field" type="text" id="addressZip{{object.id}}" name="shipping_address[zip]"{% if shop.customer_accounts_enabled and customer %} value="{{ customer.default_address.zip }}"{% endif %} required/>
+			</div>
+
+			<div class="form-field form-button-group">
+				<button class="btn btn-1" type="submit">
+					<span class="state-default">{{ 'cart.shipping.button_submit' | t }}</span>
+					<span class="state-loading">{{ 'cart.shipping.button_submited' | t }}</span>
+				</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="wrapper-response">
+		<p class="response-title js-response-title"></p>
+		<ul class="shipping-list js-shipping-result"></ul>
+	</div>
+
+	<template>
+		<li class="shipping-item">
+			<span class="shipping-name"></span>&nbsp;&ndash;&nbsp;<span class="shipping-cost">{%- render 'money', value: 0 -%}</span>
+		</li>
+	</template>
+</shipping-calculator>
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+<script src="{{ 'shipping-calculator.js' | asset_url }}" defer></script>
+<script>
+	theme.shippingString = {
+		one_shipping_rate: {{ 'cart.shipping.one_shipping_rate' | t | json }},
+		many_shipping_rates: {{ 'cart.shipping.many_shipping_rates' | t | json }},
+		not_found_shipping_rate: {{ 'cart.shipping.not_found_shipping_rate' | t | json }}
+	}
+</script>

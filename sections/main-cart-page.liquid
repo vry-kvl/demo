@@ -1,0 +1,118 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'cart-page-items' -%}
+
+{%- capture CLASS -%}
+  |{{sectionID | remove: '.'}}
+{%- endcapture -%}
+
+<svg xmlnsXlink="http://www.w3.org/2000/svg" class="none">
+	{%- render 'svg', type: 'error', define: true -%}
+</svg>
+
+{%- capture section_css -%}{{section_css}}
+	{%- unless section.settings.boxed_layout -%}
+		.cart-layout.layout-full.container{max-width: inherit!important;}
+	{%- endunless -%}
+{%- endcapture -%}
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-id="{{section.id}}" data-section-type="cart-page">
+	<div class="section-container">
+		<cart-items class="block js-cart-change" data-card-id="{{section.id}}">
+			{%- if cart == empty -%}
+
+				<div class="page-header text-center">
+					{%- render 'svg', type: 'cart-empty' -%}
+					
+					<h1 class="page-heading h2 fw600">
+						<span class="text">{{ 'cart.general.empty_title' | t }}</span>
+					</h1>
+
+					<div class="cart-buttons">
+						<div class="button-item">
+							<a href="{{ section.settings.continue_shopping_url | default: routes.all_products_collection_url }}" class="btn btn-1">
+								{{ 'cart.general.continue_shopping' | t }}
+							</a>
+						</div>
+					</div>
+				</div>
+
+			{%- else -%}
+
+				<form action="{{ routes.cart_url }}" method="post" id="cart" class="cart-{{section.id}}">
+					<div class="cart__items">
+						<div class="cart-table">
+							<div class="cart-table-row cart-table-header flex flex-fill">
+
+								{%- assign components = 'product,price,quantity,subtotal' | split: ',' -%}
+								{%- for component in components -%}
+									<div class="table-header table-col-{{component}}">
+										{%- capture tableHeader -%}cart.general.headings.{{component}}{%- endcapture -%}
+										{{- tableHeader | t -}}
+									</div>
+								{%- endfor -%}
+							</div>
+
+							<div class="cart-table-body">
+								{%- for item in cart.items -%}
+									{%- render 'cart-item', item: item -%}
+								{%- endfor -%}
+							</div>
+						</div>
+					</div>
+				</form>
+			{%- endif -%}
+		</cart-items>
+
+		{%- unless cart == empty -%}
+			<div class="btn-wrapper btn-submit-wrapper flex {% render 'snippet-section', type: 'spacing' %}">
+				{%- if section.settings.show_clear_cart -%}
+					<div>
+						<a href="{{routes.cart_clear_url}}" class="btn btn-2 btn-clear-cart">{{ 'cart.general.clear' | t }}</a>
+					</div>
+				{%- endif -%}
+				<noscript>
+					<div>
+						<button type="submit" class="btn btn-1 btn-cart-submit" form="cart">{{ 'cart.general.update' | t }}</button>
+					</div>
+				</noscript>
+			</div>
+		{%- endunless -%}
+	</div>
+</div>
+
+{% schema %}
+{
+  "name": "Cart items",
+  "tag": "section",
+   "class": "cart-items-section",
+  "settings": [
+	  {
+	  	"type":"checkbox",
+	  	"id":"show_vendor",
+	  	"label":"Show vendor"
+	  },
+	  {
+	  	"type":"checkbox",
+	  	"id":"show_clear_cart",
+	  	"label":"Show Clear all button",
+	  	"default": true
+	  },
+	  {
+	  	"type":"url",
+	  	"id":"continue_shopping_url",
+	  	"label":"Continue shopping URL",
+	  	"info": "Default is redirected to the All products page"
+	  },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": "Boxed layout",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

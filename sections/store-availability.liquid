@@ -1,0 +1,89 @@
+{%- assign pick_up_availabilities = product_variant.store_availabilities | where: 'pick_up_enabled', true -%}
+
+
+{%- if pick_up_availabilities.size > 0 -%}
+  {%- render 'snippet-section', type: 'css-file', minify: true, name: 'store-availability' -%}
+
+  {%- assign closest_location = pick_up_availabilities.first -%}
+
+  <div class="store-availability-container">
+    <div class="store-availability-inner">
+
+      <div class="store-availability-closest-store">
+        {%- if closest_location.available -%}
+
+          <p class="closest-store-title">
+            {%- render 'svg', type: 'tick' -%}
+            {{ 'products.store_availability.pick_up_available_at_html' | t: location_name: closest_location.location.name }}
+          </p>
+          <p class="closest-store-title-pickup-time">{{ closest_location.pick_up_time }}</p>
+
+
+          <button class="link underline c-pointer js-popup-toggle" data-control="store-availabilities-popup">
+            {%- if pick_up_availabilities.size == 1 -%}
+              {{ 'products.store_availability.view_store_info' | t }}
+            {%- else -%}
+              {{ 'products.store_availability.check_other_stores' | t }}
+            {%- endif -%}
+          </button>
+
+        {%- else -%}
+
+          <p class="closest-store-title">
+            {%- render 'svg', type: 'error' -%}
+            {{ 'products.store_availability.pick_up_unavailable_at_html' | t: location_name: closest_location.location.name }}
+          </p>
+
+          {%- if pick_up_availabilities.size > 1 -%}
+            <button class="link underline c-pointer js-popup-toggle" data-control="store-availabilities-popup">
+              {{ 'products.store_availability.check_other_stores' | t }}
+            </button>
+          {%- endif -%}
+      {%- endif -%}
+      </div>
+    </div>
+
+
+    <div class="popup-gl js-popup store-availabilities-popup" data-control="store-availabilities-popup" id="StoreAvailability">
+      <div class="popup-layer js-popup-close"></div>
+
+      <div class="popup-inner">
+        <button type="button" class="btn btn-popup-close js-popup-close">
+          {%- render 'svg', type: 'close' -%}
+        </button>
+
+        <div class="popup-content">
+          <div class="store-availabilities-modal__product-information">
+            <h2 class="store-availabilities-product-title h4 js-product-title"></h2>
+            <p class="store-availabilities-variant-title js-variant-title">{{ product_variant.title }}</p>
+          </div>
+
+          <ul class="store-availabilities-list" role="list">
+
+            {%- for availability in pick_up_availabilities -%}
+              <li class="store-item">
+                <h3 class="store-item-location-name h5">{{availability.location.name}}</h3>
+
+                <div class="store-item-pick-time">
+                  {%- if availability.available -%}
+                    {{ 'products.store_availability.pick_up_available' | t }}, {{ availability.pick_up_time | downcase }}
+                  {%- else -%}
+                    {{ 'products.store_availability.pick_up_currently_unavailable' | t }}
+                  {%- endif -%}
+                </div>
+
+                <address class="store-item-address">{{ availability.location.address | format_address }}</address>
+
+                {%- if address.phone.size > 0 -%}
+                  <p class="store-item-phone">{{ address.phone }}</p>
+                {%- endif -%}
+              </li>
+
+            {%- endfor -%}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+{%- endif -%}

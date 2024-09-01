@@ -1,0 +1,85 @@
+{%- unless cart == empty -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'cart-page-footer' -%}
+
+<div id="main-cart-summary" data-section-id="{{section.id}}" data-section-type="cart-page">
+  <div class="section-container">
+
+      {%- for block in section.blocks -%}
+         <div class="cart__blocks cart-block-{{block.type}}"{{block.shopify_attributes}}>
+            {%- case block.type -%}
+
+               {%- when '@app' -%}{% render block %}
+
+               {%- when 'summary' -%}
+                  <div class="cart-summary-wrapper">
+                     <div class="cart-summary-title">
+                        <h5>{{- 'cart.general.totals' | t -}}</h5>
+                     </div>
+
+                     <div class="cart-summary">
+                        <div class="cart-summary-inner">
+                           {%- render 'snippet-cart', type: 'subtotal' -%}
+                           {%- render 'snippet-cart', type: 'checkout' -%}
+                        </div>
+                     </div>
+                  </div>
+
+               {%- when 'note' -%}
+                  <div class="cart-note-container">
+                     <cart-note class="cart-note">
+                        <label for="Cart-note" class="label-field">{{ 'cart.general.note' | t }}</label>
+                        <textarea class="input-field" name="note" form="cart" id="Cart-note" placeholder="{{ 'cart.general.note' | t }}">{{ cart.note }}</textarea>
+                     </cart-note>
+                  </div>
+
+               {%- when 'shipping' -%}
+                  {%- render 'shipping-rate', object: section -%}
+            {%- endcase -%}
+         </div>
+      {%- endfor -%}
+  </div>
+</div>
+{%- endunless -%}
+
+{% schema %}
+{
+   "name": "Cart summary",
+   "tag": "section",
+   "class": "cart-summary-section",
+   "settings": [
+   ],
+   "blocks": [
+      {
+         "type": "@app"
+      },
+      {
+         "type": "summary",
+         "name": "Summary",
+         "limit": 1
+      },
+      {
+         "type": "note",
+         "name": "Note",
+         "limit": 1
+      },
+      {
+         "type": "shipping",
+         "name": "Shipping estimate",
+         "limit": 1
+      }
+   ],
+   "default": {
+      "blocks": [
+         {
+            "type": "summary"
+         },
+         {
+            "type": "note"
+         },
+         {
+            "type": "shipping"
+         }
+      ]
+   }
+}
+{% endschema %}

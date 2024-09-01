@@ -1,0 +1,28 @@
+{%- if type == blank -%}{%- break -%}{%- endif -%}
+
+{%- if type == 'product-card' -%}
+	{%- assign limit = limit | default: 6 -%}
+
+	{%- for i in (1..limit) -%}
+		{%- capture index -%}{% cycle 1,2,3,4,5,6 %}{%- endcapture -%}
+		<product-card>
+			<head>{%- render 'empty-content', type: 'product', index: index -%}</head>
+			<main>
+				<div class="card-body text-center">
+					<h4 class="card-title">{{- 'products.product.sample_title' | t -}}</h4>
+					{%- render 'money', value: 999 -%}
+				</div>
+			</main>
+		</product-card>
+	{%- endfor -%}
+{%- else -%}
+	<div class="empty-{{type}}">
+		{%- capture index -%}-{{index | default: 1}}{%- endcapture -%}
+		{%- case type -%}
+			{%- when 'image' -%}{{ 'lifestyle' | append: index | placeholder_svg_tag }}
+			{%- when 'product' -%}{{ type | append: index | placeholder_svg_tag }}
+			{%- when 'collection' -%}{{ type | append: index | placeholder_svg_tag }}
+			{%- when 'once_image' -%}{{ 'image' | placeholder_svg_tag }}
+		{%- endcase -%}
+	</div>
+{%- endif -%}

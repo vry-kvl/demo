@@ -1,0 +1,209 @@
+body[dir=rtl] {
+  direction: rtl; }
+
+body[dir=rtl] .l0:not(.r0) {
+  left: auto;
+  right: 0; }
+
+body[dir=rtl] .r0:not(.l0) {
+  right: auto;
+  left: 0; }
+
+body[dir=rtl] footer-mobile-navigation .popup-close {
+  right: auto;
+  left: 16px; }
+
+body[dir=rtl] .header-icons .bubble-count {
+  right: auto;
+  left: -13px; }
+
+body[dir=rtl] .search-dropdown input {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0; }
+
+body[dir=rtl] .search-dropdown button {
+  border-radius: var(--border-radius) 0 0 var(--border-radius); }
+
+body[dir=rtl] .header-navigation .main-navigation > li mega-dropdown > a:before {
+  left: auto;
+  right: 0;
+  transform-origin: left; }
+
+body[dir=rtl] .header-navigation .main-navigation > li:hover mega-dropdown > a:not(.btn):before {
+  transform-origin: right; }
+
+body[dir=rtl] .slider-controls .slider-prev-button {
+  right: auto;
+  left: -10px; }
+
+body[dir=rtl] .slider-controls .slider-next-button {
+  left: auto;
+  right: -10px; }
+
+body[dir=rtl] .filter-list label:before {
+  right: 0;
+  left: auto; }
+
+body[dir=rtl] .collection-paginate details > div.l0 {
+  left: 0; }
+
+body[dir=rtl] .collection-sort details > .pa {
+  right: 0; }
+
+body[dir=rtl] .noUi-txt-dir-rtl.noUi-horizontal .noUi-handle {
+  right: 0;
+  left: auto; }
+
+body[dir=rtl] .noUi-txt-dir-rtl.noUi-horizontal .noUi-handle-upper {
+  right: -16px; }
+
+body[dir=rtl] .flipY {
+  transform: rotate(0); }
+
+body[dir=rtl] product-card form .btn .icon-option {
+  transform: rotate(-180deg); }
+
+@media (min-width: 750px) {
+  body[dir=rtl] .section-icon-list .flex > .block:not(:last-child):after {
+    right: auto;
+    left: -10px;
+    transform: rotate(90deg); } }
+
+body[dir=rtl] .dropdown.l0 {
+  right: auto;
+  left: auto; }
+
+body[dir=rtl] .mega-section {
+  left: 0;
+  right: 0; }
+
+body[dir=rtl] .mobilebar .mobile-icon-list .bubble-count {
+  right: auto;
+  left: -10px; }
+
+body[dir=rtl] .mobilebar .mobile-icon-list .header-icon--home svg {
+  height: 20px; }
+
+body[dir=rtl] .mobile-navigation-body .has-sub-layer a .expand svg {
+  transform: rotate(90deg); }
+
+body[dir=rtl] .mobile-navigation-layers .sub-main-layer {
+  right: -100%;
+  left: auto; }
+
+body[dir=rtl] .mobile-navigation-layers .sub-main-layer.active {
+  right: 0;
+  left: 0; }
+
+body[dir=rtl] .mobile-navigation-header .layer-title svg {
+  transform: rotate(180deg); }
+
+body[dir=rtl] .mobile-navigation-close {
+  right: auto;
+  left: 16px; }
+
+body[dir=rtl] .breadcrumb-list li .icon-breadcrumb {
+  transform: rotate(180deg); }
+
+@media (min-width: 1300px) {
+  body[dir=rtl] .section-featured-collections .slider-controls .slider-prev-button {
+    right: auto;
+    left: -25px; }
+  body[dir=rtl] .section-featured-collections .slider-controls .slider-next-button {
+    left: auto;
+    right: -25px; } }
+
+body[dir=rtl].templateProduct .main-product-gallery .slider-controls .slider-next-button {
+  left: auto;
+  right: 10px; }
+
+body[dir=rtl].templateProduct .main-product-gallery .slider-controls .slider-prev-button {
+  right: auto;
+  left: 10px; }
+
+body[dir=rtl] .main-product-info .swt-type-color input.disabled + label:before, body[dir=rtl] .main-product-info .swt-type-image input.disabled + label:before {
+  left: auto;
+  right: -1px; }
+
+body[dir=rtl] .main-product-info .swt-type-color .tooltip:before, body[dir=rtl] .main-product-info .swt-type-image .tooltip:before {
+  left: auto;
+  right: 50%;
+  transform: rotate(-45deg); }
+
+body[dir=rtl] .main-product-info .option-type-select .select-wrapper svg, body[dir=rtl].templateProduct .section-featured-collections .featured-collections--list .quantity-inner svg {
+  right: auto;
+  left: 15px; }
+
+@media (min-width: 750px) {
+  body[dir=rtl].templateProduct .section-featured-collections .featured-collections--list .card:nth-child(odd) product-card:after {
+    right: auto;
+    left: 0; } }
+
+body[dir=rtl] .bundle-checklist label:before {
+  left: auto;
+  right: 0; }
+
+body[dir=rtl] .bundle-content .select-variants > svg {
+  right: auto;
+  left: 10px; }
+
+body[dir=rtl] .section-static-newsletter-popup .block-form input {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0; }
+
+body[dir=rtl] .section-static-newsletter-popup .block-form button {
+  border-radius: var(--border-radius) 0 0 var(--border-radius); }
+
+body[dir=rtl] .section-static-newsletter-popup .countdown .countdown-item:first-child {
+  -webkit-padding-start: 0;
+  padding-inline-start: 0; }
+
+body[dir=rtl] .section-static-newsletter-popup .countdown .countdown-item {
+  padding: 0; }
+
+body[dir=rtl] .section-static-newsletter-popup .countdown .countdown-item:not(:first-child):before {
+  -webkit-padding-start: 6px;
+  padding-inline-start: 6px;
+  -webkit-padding-end: 0;
+  padding-inline-end: 0; }
+
+body[dir=rtl] .section-static-newsletter-popup .countdown .countdown-item:after {
+  -webkit-padding-start: 0;
+  padding-inline-start: 0;
+  -webkit-padding-end: 4px;
+  padding-inline-end: 4px; }
+
+body[dir=rtl] .popup-gl .btn-popup-close {
+  right: auto;
+  left: 0; }
+
+body[dir=rtl] .cart-noti-popup cart-recommendation:after, body[dir=rtl] .cart-noti-popup cart-recommendation:before {
+  right: -42px;
+  left: 0; }
+
+body[dir=rtl] .cart-noti-popup.with-recommend .popup-inner {
+  overflow-x: hidden; }
+
+body[dir=rtl].templateCart .quantity-select .icon-loading {
+  left: auto;
+  right: 50%; }
+
+body[dir=rtl] div.cart-sidebar .popup-inner {
+  right: auto;
+  left: -100%; }
+
+body[dir=rtl] div.cart-sidebar.active .popup-inner {
+  left: 0; }
+
+@media (min-width: 750px) {
+  body[dir=rtl] .product__toggle-nav a:before {
+    right: 0;
+    left: auto;
+    transform-origin: left; }
+  body[dir=rtl] .product__toggle-nav.active a:before, body[dir=rtl] .product__toggle-nav:hover a:before {
+    transform: scaleX(1);
+    transform-origin: right; }
+  body[dir=rtl] .main-products.flex-list-2 > div:nth-child(2n) product-card:before {
+    left: auto;
+    right: -20px; }
+  body[dir=rtl] .main-products.flex-list-2 > div:nth-child(odd) product-card:after {
+    right: auto;
+    left: 0; } }

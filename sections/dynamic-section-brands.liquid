@@ -1,0 +1,368 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'tiny-slider' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-brand-list' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType  = 'brands-list'
+  assign sectionID    = '.section-' | append: section.id
+  assign enableSlider = section.settings.enable_slide
+
+  unless enableSlider
+    assign showBottomBorder  = section.settings.show_border
+  endunless
+-%}
+
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+{%- endcapture -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+      <div class="section-content-inner">
+        {%- comment -%}
+        -------------------------------
+        Section heading
+        -------------------------------
+        {%- endcomment-%}
+        {%- assign sectionHeading = section.settings.section_heading -%}
+        {%- unless sectionHeading == blank -%}
+          <div class="section-heading-wrapper">
+            <h3 class="section-heading{% if section.settings['section_heading_fw'] > 0 %} fw{{section.settings['section_heading_fw']}}{% endif %}">{{sectionHeading}}</h3>
+          </div>
+          {%- capture section_css -%}{{- section_css -}}
+            {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+          {%- endcapture -%}
+        {%- endunless -%}
+
+        {%- comment -%}
+        -------------------------------
+        SECTION CONTENT RENDER
+        -------------------------------
+        {%- endcomment-%}
+        {%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+        {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+
+        {%- capture sectionContent -%}
+          {%- if section.blocks.size == 0 -%}
+            {%- for i in (1..12) -%}
+              <div class="block block-{{i}}">
+                <div class="block-inner">
+                  {%- render 'empty-content', type: 'once_image' -%}
+                </div>
+              </div>
+            {%- endfor -%}
+          {%- else -%}
+
+            {%- for block in section.blocks -%}
+              {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+
+              {%- capture section_css -%}{{- section_css -}}
+                {%- render 'css-resp', class: blockID, nextClass: ' .brand-item', css: 'width', value: block.settings['max_width'] -%}
+              {%- endcapture -%}
+
+              {%- capture logo -%}
+                {%- case block.settings.type -%}
+                  {%- when 'image' -%}{%- render 'image-style', image: block.settings.image -%}
+                  {%- else -%}
+                    {%- capture svg -%}{{ block.settings.svg | replace: '<svg', '<svg class="w100"' }}{%- endcapture -%}
+                    {%- render 'snippet-section', type: 'svg', svg: svg, id: block.id -%}
+                {%- endcase -%}
+              {%- endcapture -%}
+
+              <div class="block block-{{block.id}}"{{block.shopify_attributes}}>
+                <div class="block-inner brand-item brand-type-{{block.settings.type}}">
+                  <a href="{{ block.settings.link | defualt: 'javascript:void(0);' }}">
+                    {%- if logo == blank -%}
+                      {%- render 'empty-content', type: 'once_image' -%}
+                    {%- else -%}
+                      {{logo}}
+                    {%- endif -%}
+                  </a>
+                </div>
+              </div>
+            {%- endfor -%}
+          {%- endif -%}
+        {%- endcapture -%}
+
+        {%- if enableSlider -%}
+          {%- assign slideID = '#slide-' | append: section.id -%}
+          <slider-component id="{{ slideID | remove: '#' }}">
+            <div class="slider-container">
+              <div id="{{ slideID | remove: '#' }}el" class="slider-list js-slider flex{{gridClass}}">{{sectionContent}}</div>
+              {%- render 'config-slide', id: slideID,
+                                        items: section.settings.items_resp,
+                                        autoPlay: section.settings.autoplay,
+                                        controls: section.settings.navs,
+                                        dots: section.settings.dots,
+                                        loop: section.settings.loop
+              -%}
+            </div>
+          </slider-component>
+        {%- else -%}
+          <div class="flex{{gridClass}}">{{sectionContent}}</div>
+        {%- endif -%}
+
+        {%- comment -%}
+        -------------------------------
+        BUTTON BOTTOM
+        -------------------------------
+        {%- endcomment-%}
+        {%- assign sectionButton = section.settings.section_button -%}
+        {%- unless sectionButton == blank -%}
+          <div class="section-bottom-button text-center">
+            <a href="{{section.settings.section_button_link}}" class="link highlight underline">{{sectionButton}}</a>
+          </div>
+        {%- endunless -%}
+
+
+      </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- assign sectionBgColor = section.settings.section_background_color | remove: 'rgba(0,0,0,0)' -%}
+  {%- render 'css-resp', class: sectionID, css: 'background-color', value: sectionBgColor, splitBy: ';' -%}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+
+  {%- if showBottomBorder -%}
+    {{sectionID}} .block{border-bottom: 1px solid var(--miscellaneous-color);}
+  {%- endif -%}
+
+{%- endcapture -%}
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+
+
+{%- comment -%}
+-------------------------------
+Border Responsive
+-------------------------------
+{%- endcomment-%}
+{%- if showBottomBorder -%}
+  {%- assign mediaArray = section.settings['items_resp'] | split: ',' -%}
+  {%- capture mediaScreen -%}
+    {%- case mediaArray.size -%}
+      {%- when 1  -%}{{- '' -}}
+      {%- when 2  -%}{{- '(max-width: 749px),(min-width: 750px)' -}}
+      {%- when 3  -%}{{- '(max-width: 749px),(min-width: 750px) and (max-width: 999px),(min-width: 1000px)' -}}
+      {%- else    -%}{{- '(max-width: 749px),(min-width: 750px) and (max-width: 999px),(min-width: 1000px) and (max-width: 1299px),(min-width: 1300px)' -}}
+    {%- endcase -%}
+  {%- endcapture -%}
+  {%- assign mediaScreen  = mediaScreen | strip_newlines | split: ','  -%}
+
+  {%- for i in (1..mediaArray.size) -%}
+
+    {%- assign index = mediaArray[forloop.index0] | strip | times: 1.0 -%}
+    {%- assign rows = section.blocks.size | divided_by: index | ceil | minus: 1 | round: 0 -%}
+
+    {%- capture cssBorder -%}
+      {{sectionID}} .block:nth-child(n+{{rows | times: index  | round: 0 | plus: 1}}){border: none;}
+    {%- endcapture -%}
+
+    {%- assign mediaValue = mediaScreen[forloop.index0] | strip -%}
+    <style type="text/css" media="{% unless mediaValue == blank %}screen and {{mediaValue}}{% endunless %}" data-shopify>{{cssBorder}}</style>
+  {%- endfor -%}
+{%- endif -%}
+
+{{content}}
+
+{% schema %}
+{
+  "name": "Brands logo",
+  "tag": "section",
+  "presets": [
+    {
+      "name": "Brands logo",
+      "blocks": [
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type":"text",
+      "id":"items_resp",
+      "label":"Max number of item per row",
+      "default": "4,6",
+      "info": "E.g: 4,6. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"checkbox",
+      "id":"show_border",
+      "label":"Show border under row",
+      "info": "Only apply when Slider is disabled"
+    },
+    {
+       "type":"header",
+       "content":"Slider settings"
+    },
+    {
+      "type":"checkbox",
+      "id":"enable_slide",
+      "label":"Enable slide"
+    },
+    {
+       "type": "checkbox",
+       "id": "loop",
+       "label": "Loop"
+    },
+    {
+       "type": "checkbox",
+       "id": "navs",
+       "label": "Show next/prev arrows"
+    },
+    {
+       "type": "checkbox",
+       "id": "dots",
+       "label": "Show dots"
+    },
+    {
+       "type": "number",
+       "id": "autoplay",
+       "label": "Auto play slide (in second)",
+       "info": "E.g: 5"
+    },
+    {
+       "type":"header",
+       "content":"Section heading"
+    },
+    {
+      "type":"text",
+      "id":"section_heading",
+      "label":"Heading"
+    },
+    {
+       "type":"paragraph",
+       "content":"**Heading styles"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_align",
+      "label":"Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_margin",
+      "label":"Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"range",
+      "id":"section_heading_fw",
+      "label":"Adjust font weight",
+      "min":0,
+      "max":900,
+      "step":100,
+      "default": 0,
+      "info": "0 is auto"
+    },
+    {
+      "type":"color",
+      "id":"section_heading_color",
+      "label":"Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Bottom link"
+    },
+    {
+      "type":"text",
+      "id":"section_button",
+      "label":"Link text"
+    },
+    {
+      "type":"url",
+      "id":"section_button_link",
+      "label":"Link to",
+      "info": "http:// is required for external links"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"section_margin",
+      "label":"Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_padding",
+      "label":"Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_background_color",
+      "label":"Background color"
+    }
+  ],
+  "blocks": [
+    {
+      "type":"block",
+      "name":"Logo",
+      "settings": [
+        {
+          "type":"radio",
+          "id":"type",
+          "label":"Logo type",
+          "options":[
+            {
+              "value":"svg",
+              "label": "SVG"
+            },
+            {
+              "value":"image",
+              "label": "Image"
+            }
+          ],
+          "default": "svg"
+        },
+        {
+          "type":"url",
+          "id":"link",
+          "label":"Link to",
+          "info": "http:// is required for external links"
+        },
+        {
+          "type":"html",
+          "id":"svg",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        },
+        {
+          "type":"image_picker",
+          "id":"image",
+          "label":"Image icon"
+        },
+        {
+          "type":"text",
+          "id":"max_width",
+          "label":"Logo max width",
+          "info": "E.g: 100px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

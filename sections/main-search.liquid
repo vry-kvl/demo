@@ -1,0 +1,163 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'search-page' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-pagination' -%}
+
+{%- capture pageURL -%}{%- render 'page-url' -%}{%- endcapture -%}
+
+{%- liquid
+	assign sectionID = '.section-' | append: section.id
+	assign imageHeight = section.settings.image_height_style | remove: 'auto'
+	assign limit = section.settings.total
+	assign miniLimit = settings.limit_suggest
+-%}
+
+
+{%- capture content -%}
+
+{%- comment -%}
+-------------------------------
+Mini Search suggest
+-------------------------------
+{%- endcomment-%}
+{%- if pageURL contains 'view=suggest' -%}
+
+	<div id="resultContainer">
+		{%- render 'predictive-search', searchUrl: pageURL -%}
+	</div>
+
+{%- else -%}
+{%- comment -%}
+-------------------------------
+Search page
+-------------------------------
+{%- endcomment-%}
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}">
+	<div class="section-container container">
+
+		<div class="page-header text-center">
+			<h1 class="page-heading h2 fw600">
+				{{ 'search.general.results_with_count_and_term' | t: count: search.results_count, terms: search.terms }}
+			</h1>
+
+			{%- unless search.performed and search.results_count > 0 -%}
+				<p class="no-result">{{- 'search.general.no_results' | t -}}</p>
+			{%- endunless -%}
+
+			<div class="search-form-wrapper">
+				{%- render 'form' type: 'search' -%}
+			</div>
+		</div>
+
+		{%- if search.performed and search.results_count > 0 -%}
+			{%- paginate search.results by limit -%}
+				{%- if paginate.pages > 1 -%}
+					{%- capture counting -%}{{paginate.current_offset | plus: 1 }}&ndash;{{paginate.current_offset | plus: search.results.size }}{%- endcapture -%}
+					<p class="result-counting">{{- 'search.general.counting_result' | t: count: counting, total: search.results_count -}}</p>
+				{%- endif -%}
+
+				<div class="result-container">
+					<ul class="search-result-list">
+						{%- for item in search.results -%}
+							{%- liquid
+								assign itemURL = item.url | split: '?' | first
+								assign itemImage = item.media.first.preview_image | default: item.image
+							-%}
+
+							<li class="result-item item-type-{{item.object_type}}">
+								<a href="{{itemURL}}" class="flex flex-fill">
+									<div class="item-image-preview uppercase" style="max-width: 70px;">
+										{%- if item.object_type == 'page' -%}
+											<div class="image-preview page-preview">
+												<span class="text-overlay">{{- 'search.general.page' | t -}}</span>
+											</div>
+										{%- elsif itemImage!= blank -%}
+											{%- render 'image-style', image: itemImage, height: imageHeight, imgClass: 'object-fit--cover' -%}
+										{%- else -%}
+											<div class="image-preview no-image">
+												<span class="text-overlay">{{- 'search.general.no_image' | t -}}</span>
+											</div>
+										{%- endif -%}
+									</div>
+									<div class="item-detail">
+										<h3 class="h5 item-title md-flex justify-content-between">
+											<p>{{item.title | truncate: 50 }}</p>
+											{%- if item.object_type == 'product' -%}{%- render 'snippet-product-item', type: 'price', product: item -%}{%- endif -%}
+										</h3>
+
+										<div class="item-content">{{ item.content | strip_html | truncate: 200 }}</div>
+									</div>
+								</a>
+							</li>
+						{%- endfor -%}
+					</ul>
+				</div>
+
+				{%- if paginate.pages > 1 -%}
+					{%- render 'pagination', paginate: paginate -%}
+				{%- endif -%}
+			{%- endpaginate -%}
+		{%- endif -%}
+	</div>
+</div>
+
+{%- endif -%}
+{%- endcapture -%}
+
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: '.search-result-list .image-preview', css: 'padding-top', value: imageHeight -%}
+{%- endcapture -%}
+
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+
+{%- schema -%}
+{
+	"name": "Search page",
+	"tag": "section",
+	"settings": [
+		{
+			"type":"number",
+			"id":"total_items",
+			"label":"Total items per page",
+			"default": 20
+		},
+		{
+		   "type":"header",
+		   "content":"Preview image"
+		},
+		{
+			"type": "select",
+			"id": "image_height_style",
+			"label": "Select image height style",
+			"options": [
+				{
+					"value": "auto",
+					"label": "Auto"
+				},
+				{
+					"value": "100%",
+					"label": "Square (1:1)"
+				},
+				{
+					"value": "150%",
+					"label": "Portrait (2:3)"
+				},
+				{
+					"value": "75%",
+					"label": "Landscape (4:3)"
+				},
+				{
+					"value": "56.25%",
+					"label": "Wide (16:9)"
+				}
+				],
+				"default": "100%"
+		}
+
+	]
+}
+{%- endschema -%}

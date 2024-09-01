@@ -1,0 +1,9 @@
+<span class="js-cart-count">{{cart.item_count}}</span>
+
+{%- render 'snippet-cart', type: 'subtotal' -%}
+
+<p class="totals__subtotal-value js-cart-total">
+	{%- render 'money', value: cart.total_price, format: 'money_with_currency_format' -%}
+</p>
+
+{%- render 'cart-noti-poup' -%}

@@ -1,0 +1,76 @@
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionID = '.section-' | append: section.id
+-%}
+
+{%- capture CLASS -%}
+|page-section
+|layout-{{layout}}
+|{{sectionID | remove: '.'}}
+{%- endcapture -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+    <div class="section-content-inner">
+      {%- comment -%}
+      -------------------------------
+      Section heading
+      -------------------------------
+      {%- endcomment-%}
+      {%- assign sectionHeading = 'sections.404.title' | t -%}
+      {%- unless sectionHeading == blank -%}
+        <div class="section-heading-wrapper">
+          <h1 class="section-heading">{{sectionHeading}}</h1>
+        </div>
+        {%- capture section_css -%}{{- section_css -}}{%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}{%- endcapture -%}
+      {%- endunless -%}
+
+
+      {%- comment -%}
+      -------------------------------
+      Section content
+      -------------------------------
+      {%- endcomment-%}
+      <div class="page-content text-center">
+        <h2>{{ 'sections.404.content' | t }}</h2>
+      </div>
+      
+    </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{% schema %}
+{
+  "name": "404 section",
+  "tag": "section",
+  "settings": [
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "breadcrumb_layout",
+      "label": "Breadcrumb layout",
+      "options":[
+        {
+          "value":"boxed",
+          "label": "Boxed"
+        },
+        {
+          "value":"wide",
+          "label": "Wide"
+        }
+      ],
+      "default": "boxed"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,320 @@
+
+{%- capture content -%}
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+{%- liquid
+  assign sectionType        = ''
+  assign sectionID          = '.section-' | append: section.id  
+  assign description        = product.description
+  assign style              = section.settings.description_style
+  assign reviewApp          = settings.review_app
+  assign enable_multi_tab   = section.settings.enable_multi_tab
+  assign descriptionCheck   = description | strip_html
+-%}
+{%- if request.page_type == 'page' -%}
+  {%- assign description = page.content -%}
+{%- endif -%}
+
+{%- comment -%}
+-------------------------------
+PRODUCT DESCRIPTION
+-------------------------------
+{%- endcomment-%}
+
+{%- unless descriptionCheck == blank -%}
+  {%- if enable_multi_tab -%}
+    {%- assign description_parts = description | strip_newlines | strip | split: "<h5" -%}
+  {%- endif -%}
+
+  {%- if enable_multi_tab != true or description_parts.first.size > 0 -%}
+    {%- comment -%}
+    -------------------------------
+    Heading tab
+    -------------------------------
+    {%- endcomment-%}
+    {%- capture itemHeading -%}
+      <p class="product__toggle-nav nav-mobile">
+        <a href="javascript:void(0);" data-id="tab{{product.id}}" aria-controls="tab{{product.id}}" class="product__toggle-link js-tab-link">
+          <span class="text">{{ 'products.product.description' | t }}</span><!--expand-->
+        </a>
+      </p>
+    {%- endcapture -%}
+    {%- if style == 'tab' -%}{%- assign headingTabList = headingTabList | append: itemHeading -%}{%- endif -%}
+
+
+    {%- comment -%}
+    -------------------------------
+    Body tab
+    -------------------------------
+    {%- endcomment-%}
+    {%- capture bodyTabList -%}{{- bodyTabList -}}
+       <div class="product__toggle-item" id="tab{{product.id}}">
+        {{itemHeading}}
+        <div class="product__toggle-content">{{ description | split: '<h5>' | first }}</div>
+      </div>
+
+    {%- endcapture -%}
+  {%- endif -%}
+
+  {%- if enable_multi_tab -%}
+    {%- for part in description_parts -%}
+
+      {%- if part contains "</h5>" -%}
+        {%- liquid
+          assign fp = part | append: " " | split: "</h5>" | last
+          assign p  = part | append: " " | split: "</h5>" | last | strip_html | replace: "&nbsp;", "" | replace: " ", "" | strip_newlines
+          assign contentSplit = part | split: "</h5>"
+
+          assign remove  = part | split: ">" | first | append: ">"
+          assign heading = contentSplit[0] | strip_html | remove: remove
+        -%}
+        {%- if heading == blank -%}{%- continue -%}{%- endif -%}
+
+        {%- comment -%}
+        -------------------------------
+        Heading tab
+        -------------------------------
+        {%- endcomment-%}
+        {%- capture itemHeading -%}
+           <p class="product__toggle-nav nav-mobile">
+            <a href="tab{{product.id}}{{forloop.index0}}" data-id="tab{{product.id}}{{forloop.index0}}" aria-controls="tab{{product.id}}{{forloop.index0}}" class="product__toggle-link js-tab-link">
+              <span class="text">{{ heading }}</span><!--expand-->
+            </a>
+          </p>
+        {%- endcapture -%}
+        {%- if style == 'tab' -%}{%- assign headingTabList = headingTabList | append: itemHeading -%}{%- endif -%}
+
+        {%- comment -%}
+        -------------------------------
+        Body tab
+        -------------------------------
+        {%- endcomment-%}
+        {%- capture bodyTabList -%}{{- bodyTabList -}}
+          {%- capture description__content -%}{{ contentSplit[1] }}{%- endcapture -%}
+          {%- assign description__content = description__content | split: 'src=' | join: 'class="lazyload" data-src=' -%}
+          <div class="product__toggle-item" id="tab{{product.id}}{{forloop.index0}}">
+            {{itemHeading}}
+            <div class="product__toggle-content">{{ description__content }}</div>
+          </div>
+        {%- endcapture -%}
+
+
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endunless -%}
+
+{%- comment -%}
+-------------------------------
+Render from block
+-------------------------------
+{%- endcomment-%}
+{%- if section.blocks.size > 0 -%}
+
+  {%- for block in section.blocks -%}
+
+    {%- assign heading = block.settings.text -%}
+    {%- assign content = block.settings.content -%}
+
+    {%- case block.type -%}
+      {%- when 'page' -%}
+        {%- assign heading = heading | default: pages[content].title | default: 'Page' -%}
+        {%- assign content = pages[content].content -%}
+
+      {%- when 'review' -%}
+        {%- if reviewApp == 'none' -%}{%- continue -%}{%- endif -%}
+
+        {%- assign heading = 'products.product.reviews' | t  -%}
+        {%- capture content -%}{%- render 'review', product: product, type: '' -%}{%- endcapture -%}
+    {%- endcase -%}
+
+    {%- assign checkContent = content | strip_html -%}
+
+    {%- if checkContent == blank and block.type != 'review' -%}{%- continue -%}{%- endif -%}
+
+    {%- comment -%}
+    -------------------------------
+    Heading tab
+    -------------------------------
+    {%- endcomment-%}
+    {%- capture itemHeading -%}
+      <p class="product__toggle-nav nav-mobile">
+        <a href="#tab{{block.id}}" data-id="tab{{block.id}}" aria-controls="tab{{block.id}}" class="product__toggle-link js-tab-link">
+          <span class="text">{{ heading }}</span><!--expand-->
+        </a>
+      </p>
+    {%- endcapture -%}
+    {%- if style == 'tab' -%}{%- assign headingTabList = headingTabList | append: itemHeading -%}{%- endif -%}
+
+
+    {%- comment -%}
+    -------------------------------
+    Body tab
+    -------------------------------
+    {%- endcomment-%}
+    {%- capture bodyTabList -%}{{- bodyTabList -}}
+       <div class="product__toggle-item" id="tab{{block.id}}">
+        {{itemHeading}}
+        <div class="product__toggle-content">{{ content }}</div>
+      </div>
+    {%- endcapture -%}
+
+  {%- endfor -%}
+{%- endif -%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|product-description
+|product-description-{{style}}
+{%- endcapture -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+    <product-description class="block" data-style="{{style}}">
+      {%- if style == 'tab' -%}
+        {%- capture expand -%}
+          <span class="expand">
+            {%- render 'svg', type: 'plus', useLink: true, class: 'state-default' -%}
+            {%- render 'svg', type: 'minus', useLink: true, class: 'state-active' -%}
+          </span>
+        {%- endcapture -%}
+
+        <div class="product-description-head none md-flex">{{headingTabList | replace_first: 'product__toggle-nav', 'product__toggle-nav active' | remove: '<!--expand-->' | remove: 'nav-mobile' }}</div>
+        <div class="product-description-body js-tab-content">{{bodyTabList | replace_first: 'product__toggle-item', 'product__toggle-item active' | replace_first: 'nav-mobile', 'nav-mobile active' | replace: '<!--expand-->', expand }}</div>
+      {%- else -%}
+        {{bodyTabList | remove: '<!--expand-->' | remove: ' nav-mobile' }}
+      {%- endif -%}
+    </product-description>
+  </div>
+</div>
+
+{%- capture section_css -%}{{- section_css -}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+{%- endcapture -%}
+{%- endcapture -%}
+
+{%- assign checkEmptyTab = bodyTabList | strip_html | strip -%}
+{%- unless checkEmptyTab == blank -%}
+  {%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-description' -%}
+  {%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+{%- endunless -%}
+
+
+{% schema %}
+{
+  "name": "Product Description",
+  "tag": "section",
+  "class": "shopify-section-description",
+  "presets": [
+    {
+      "name": "Product Description"
+    }
+  ],
+  "settings": [
+    {
+      "type":"radio",
+      "id":"description_style",
+      "label":"Description style",
+      "options":[
+        {
+          "value":"default",
+          "label": "Default"
+        },
+        {
+          "value":"tab",
+          "label": "Tab"
+        }
+      ],
+      "default": "default"
+    },
+    {
+        "type": "checkbox",
+        "id": "enable_multi_tab",
+        "label": "Use Multi-tabs with heading 5 tag",
+        "default": true,
+        "info": "We use heading 5 in Product's description to seperate Multi-tabs, each <h5>Tabs Title</h5> will be considered as content seperator and tabs title"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": "Boxed layout",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_margin",
+      "label": "Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+  ],
+  "blocks": [
+    {
+        "type": "page",
+        "name": "Static page",
+        "settings": [
+            {
+                "type": "paragraph",
+                "content": "Static tan is created based on Page content. It's ueseful to add the same content for all products such as Shipping term, Size guide, etc."
+            },
+            {
+                "type": "text",
+                "id": "text",
+                "label": "Heading"
+            },
+            {
+                "type": "page",
+                "id": "content",
+                "label": "Select a Page"
+            }
+        ]
+    },
+    {
+        "type": "content",
+        "name": "Custom content",
+        "settings": [
+            {
+                "type": "text",
+                "id": "text",
+                "label": "Heading"
+            },
+            {
+                "type": "liquid",
+                "id": "content",
+                "label": "Content"
+            }
+        ]
+    },
+    {
+        "type": "metafield",
+        "name": "Metafield",
+        "settings": [
+            {
+                "type": "text",
+                "id": "text",
+                "label": "Heading"
+            },
+            {
+                "type": "text",
+                "id": "content",
+                "label": "Content"
+            }
+        ]
+    },
+    {
+        "type": "review",
+        "name": "Review",
+        "limit": 1
+    }
+  ]
+}
+{% endschema %}

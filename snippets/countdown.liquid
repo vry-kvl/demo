@@ -1,0 +1,30 @@
+{%- assign dateString = value | strip -%}
+{%- assign dateStringSplit = dateString | split: ' ' -%}
+{%- assign date = dateStringSplit.first | split: '/' -%}
+{%- capture date -%}{{date[2]}},{{date[1] | minus: 1}},{{date[0]}}{%- if value contains ':' -%},{{dateStringSplit.last | replace: ':', ',' }}{%- endif -%}{%- endcapture -%}
+
+<countdown-block class="countdown uppercase{% unless timerLabel %} no-label{% endunless %}" data-expired="{{date}}">
+    <span class="countdown-item js-days"
+      data-count="00"
+      data-one="{{ 'general.countdown.day' | t }}"
+      data-other="{{ 'general.countdown.days' | t }}"
+    >00</span>
+
+    <span class="countdown-item js-hours"
+      data-count="00"
+      data-one="{{ 'general.countdown.hour' | t }}"
+      data-other="{{ 'general.countdown.hours' | t }}"
+    >00</span>
+
+    <span class="countdown-item js-minutes"
+      data-count="00"
+      data-one="{{ 'general.countdown.minute' | t }}"
+      data-other="{{ 'general.countdown.minutes' | t }}"
+    >00</span>
+
+    <span class="countdown-item js-seconds"
+      data-count="00"
+      data-one="{{ 'general.countdown.second' | t }}"
+      data-other="{{ 'general.countdown.seconds' | t }}"
+    >00</span>
+</countdown-block>

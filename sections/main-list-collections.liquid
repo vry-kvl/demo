@@ -1,0 +1,458 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'tiny-slider' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-card' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-pagination' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-featured-collections' -%}
+
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType  = 'featured-collections'
+  assign sectionID    = '.section-' | append: section.id
+  assign resource     = section.settings.resource
+  assign hideEmpty    = section.settings.hide_collection_empty
+-%}
+
+
+{%- liquid
+  if resource == 'block'
+    assign collections = section.blocks | map: 'settings' | map: 'collection'
+  else
+    assign collections = collections
+  endif
+
+  case section.settings.sort
+    when 'products_high' or 'products_low'
+      assign collections = collections | sort: 'all_products_count'
+    when 'date' or 'date_reversed'
+      assign collections = collections | sort: 'published_at'
+  endcase
+
+  if section.settings.sort == 'products_high' or section.settings.sort == 'date_reversed' or section.settings.sort == 'alphabetical_reversed'
+    assign collections = collections | reverse
+  endif
+-%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+{%- endcapture -%}
+
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+      <div class="section-content-inner">
+        {%- comment -%}
+        -------------------------------
+        SECTION HEADING
+        -------------------------------
+        {%- endcomment-%}
+        {%- assign sectionHeading = section.settings.section_heading -%}
+        {%- unless sectionHeading == blank -%}
+          <div class="section-heading-wrapper">
+            <h3 class="section-heading">{{sectionHeading}}</h3>
+          </div>
+          {%- capture section_css -%}{{- section_css -}}
+            {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+          {%- endcapture -%}
+        {%- endunless -%}
+
+
+
+        {%- comment -%}
+        -------------------------------
+        SECTION CONTENT RENDER
+        -------------------------------
+        {%- endcomment-%}
+        {%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+
+        {%- paginate collections by section.settings.total_items -%}
+
+          <ul class="list featured-collections-list">
+            {%- for collection in collections -%}
+              {%- liquid
+                assign block = nil
+
+                for block in section.blocks
+                  if block.settings.collection == collection.handle
+                    assign block = block
+                    break
+                  endif
+                endfor
+
+                assign collectionTitle = block.settings.title | default: collection.title
+                assign items_resp = block.settings.items_resp | default: section.settings.items_resp
+                assign limit = block.settings.limit | default: 10
+                assign navs = block.settings.navs | default: true
+                assign loop = block.settings.loop | default: false
+                assign dots = block.settings.dots | default: true
+                assign autoplay = block.settings.autoplay | default: 0
+              -%}
+
+              {%- capture blockID -%}{{sectionID}} .block-{{collection.id}}{%- endcapture -%}
+
+              {%- if hideEmpty and collection.products_count == 0 -%}{%- continue -%}{%- endif -%}
+
+              <li class="featured-collections-item block-{{collection.id}}"{{block.shopify_attributes}}>
+                {%- comment -%}
+                -------------------------------
+                Collection title
+                -------------------------------
+                {%- endcomment-%}
+                {%- unless collectionTitle == blank -%}
+                  <div class="block-heading-wrapper collection-align flex align-items-center">
+                    <h4 class="block-heading">{{collectionTitle}}</h4>
+                    {%- if block.settings.show_count != false and collection.all_products_count > 0 -%}
+                      <div class="collection-count">
+                        <a href="{{collection.url}}" class="link highlight underline">{{- 'sections.product.view' | t: count: collection.all_products_count -}}</a>
+                      </div>
+                    {%- endif -%}
+                  </div>
+                {%- endunless -%}
+
+
+                {%- comment -%}
+                -------------------------------
+                Collection render list product
+                -------------------------------
+                {%- endcomment-%}
+                {%- if collection.all_products_count == 0 -%}
+                  <p>{{- 'collection.general.no_products' | t -}}</p>
+
+                {%- else -%}
+                  {%- assign slideID = '#slide-' | append: collection.id-%}
+                  <slider-component id="{{ slideID | remove: '#' }}">
+                    {%- capture gridClass -%}{%- render 'config-grid', value: items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+                    {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: items_resp, style: true -%}{%- endcapture -%}
+
+                    {%- case block.settings.sort_by -%}
+                      {%- when 'title_ascending'    -%}{%- assign products = collection.products | sort: 'title' -%}
+                      {%- when 'title_descending'   -%}{%- assign products = collection.products | sort: 'title' | reverse -%}
+                      {%- when 'price_ascending'    -%}{%- assign products = collection.products | sort: 'price' -%}
+                      {%- when 'price_descending'   -%}{%- assign products = collection.products | sort: 'price' | reverse -%}
+                      {%- when 'created_ascending'  -%}{%- assign products = collection.products | sort: 'published_at' -%}
+                      {%- when 'created_descending' -%}{%- assign products = collection.products | sort: 'published_at' | reverse -%}
+                      {%- else -%}{%- assign products = collection.products -%}
+                    {%- endcase -%}
+
+                    {%- liquid
+                      assign firstImageRatio  = products | map: 'featured_image' | first
+                      assign firstImageRatio  = firstImageRatio.aspect_ratio | default: 1
+                    -%}
+
+                    <div id="{{ slideID | remove: '#' }}el" class="main-collection slider-list js-slider flex{{gridClass}}">
+                      {%- for product in products limit: limit -%}
+                        {%- render 'product-item', product: product, imageRatio: firstImageRatio -%}
+                      {%- endfor -%}
+                    </div>
+
+                    {%- liquid
+
+                    -%}
+                    {%- render 'config-slide', id: slideID,
+                                                items: items_resp,
+                                                lazyload: true,
+                                                controls: navs,
+                                                loop: loop,
+                                                dots: dots,
+                                                autoPlay: autoplay
+                    -%}
+                  </slider-component>
+                {%- endif -%}
+
+
+                {%- comment -%}
+                -------------------------------
+                Promotion
+                -------------------------------
+                {%- endcomment-%}
+                {%- assign promoContent = block.settings.promo_content -%}
+                {%- unless promoContent == blank -%}
+                  <div class="promotion-applies highlight2">
+                    <a href="{{block.settings.promo_link | default: 'javascript:void(0);'}}" class="inherit-color">
+                      <div class="flex align-items-center">
+                        <span class="icon">{%- render 'svg', type: 'discount' -%}</span>
+                        <span class="text">{{promoContent}}</span>
+                      </div>
+                    </a>
+                  </div>
+                {%- endunless -%}
+              </li>
+            {%- endfor -%}
+          </ul>
+
+          {%- if resource == 'default' -%}
+            {%- render 'pagination', paginate: paginate -%}
+          {%- endif -%}
+        {%- endpaginate -%}
+      </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+
+{% schema %}
+{
+  "name": "List collections page",
+  "tag": "section",
+  "settings": [
+    {
+      "type":"select",
+      "id":"resource",
+      "label":"Choose collection from",
+      "options":[
+        {
+          "value":"default",
+          "label": "Default"
+        },
+        {
+          "value":"block",
+          "label": "Select blocks"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "select",
+      "id": "sort",
+      "label": "Sort collections by:",
+      "options": [
+        {
+          "value": "alphabetical",
+          "label": "Alphabetically, A-Z"
+        },
+        {
+          "value": "alphabetical_reversed",
+          "label": "Alphabetically, Z-A"
+        },
+        {
+          "value": "date_reversed",
+          "label": "Date, new to old"
+        },
+        {
+          "value": "date",
+          "label": "Date, old to new"
+        },
+        {
+          "value": "products_high",
+          "label": "Product count, high to low"
+        },
+        {
+          "value": "products_low",
+          "label": "Product count, low to high"
+        },
+        {
+          "value": "manually",
+          "label": "Manually"
+        }
+      ],
+      "default": "alphabetical",
+      "info": "Manually use for Select blocks"
+    },
+    {
+      "type":"text",
+      "id":"items_resp",
+      "label":"Max number of item per row",
+      "default": "2.5,6",
+      "info": "E.g: 4,6. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"number",
+      "id":"total_items",
+      "label":"Total items per page",
+      "default": 20,
+      "info": "Use for Default"
+    },
+    {
+      "type":"checkbox",
+      "id":"hide_collection_empty",
+      "label":"Hide Collection empty"
+    },
+    {
+       "type":"header",
+       "content":"Section heading"
+    },
+    {
+      "type":"text",
+      "id":"section_heading",
+      "label":"Heading"
+    },
+    {
+       "type":"paragraph",
+       "content":"**Heading styles"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_align",
+      "label":"Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_margin",
+      "label":"Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_heading_color",
+      "label":"Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Section style"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "breadcrumb_layout",
+      "label": "Breadcrumb layout",
+      "options":[
+        {
+          "value":"boxed",
+          "label": "Boxed"
+        },
+        {
+          "value":"wide",
+          "label": "Wide"
+        }
+      ],
+      "default": "boxed"
+    }
+  ],
+  "blocks": [
+    {
+      "type":"block",
+      "name":"Collection item",
+      "settings": [
+        {
+          "type":"collection",
+          "id":"collection",
+          "label":"Select a collection"
+        },
+        {
+          "type":"select",
+          "id":"sort_by",
+          "label":"Sort by",
+          "options":[
+            {
+              "value":"default",
+              "label": "Default"
+            },
+            {
+              "value":"title_ascending",
+              "label": "Alphabetically, A-Z"
+            },
+            {
+              "value":"title_descending",
+              "label": "Alphabetically, Z-A"
+            },
+            {
+              "value":"price_ascending",
+              "label": "Price, Low to High"
+            },
+            {
+              "value":"price_descending",
+              "label": "Price, High to Low"
+            },
+            {
+              "value":"created_ascending",
+              "label": "Date, Old to New"
+            },
+            {
+              "value":"created_descending",
+              "label": "Date, New to Old"
+            }
+          ],
+          "default": "default"
+        },
+        {
+          "type":"text",
+          "id":"title",
+          "label":"Collection title",
+          "info": "Blank to hide"
+        },
+        {
+          "type":"checkbox",
+          "id":"show_count",
+          "label":"Show collection count",
+          "default": true
+        },
+        {
+           "type"  :"text",
+           "id"    :"items_resp",
+           "label":"Max number of item per row",
+           "default": "2.5,6",
+           "info": "E.g: 2,3,4,5. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"number",
+          "id":"limit",
+          "label": "Limit",
+          "default": 10
+        },
+        {
+           "type": "checkbox",
+           "id": "loop",
+           "label": "Loop"
+        },
+        {
+           "type": "checkbox",
+           "id": "navs",
+           "label": "Show next/prev arrows",
+           "default": true
+        },
+        {
+           "type": "checkbox",
+           "id": "dots",
+           "label": "Show dots",
+           "default": true
+        },
+        {
+           "type": "number",
+           "id": "autoplay",
+           "label": "Auto play slide (in second)",
+           "info": "E.g: 5"
+        },
+        {
+           "type":"header",
+           "content":"Promotion"
+        },
+        {
+          "type":"text",
+          "id":"promo_content",
+          "label":"Promotion content"
+        },
+        {
+          "type":"url",
+          "id":"promo_link",
+          "label":"Link to",
+          "info": "http:// is required for external links"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

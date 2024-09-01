@@ -1,0 +1,3 @@
+.pagination-holder{margin-top:30px;margin-bottom:45px}.pagination-holder ul{margin:0 -3px;display:flex;flex-wrap:wrap;justify-content:center}.pagination-holder li{padding:0 3px}.pagination-holder li a{width:34px;height:34px;line-height:34px;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;border-radius:5px;transition:all .2s ease-out;cursor:pointer}.pagination-holder li.active a,.pagination-holder li:hover a{background:var(--primary-color);color:#fff}.pagination-holder li.active svg path,.pagination-holder li:hover svg path{fill:#fff}
+
+/*# sourceMappingURL=component-pagination.min.css.map */

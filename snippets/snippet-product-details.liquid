@@ -1,0 +1,648 @@
+{%- liquid
+  assign sectionID      = '.section-' | append: section.id
+  assign formID = formID | default: 'mainProductForm'
+  assign blockClass = 'field-info'
+  assign optionBlock = section.blocks | where: 'type', 'options' | first | default: section
+-%}
+
+{%- if product.variants.size <= 1 -%}
+  {%- assign disableDefaultVariant = false -%}
+{%- else -%}
+  {%- assign disableDefaultVariant = optionBlock.settings.disable_auto_selected | default: false -%}
+{%- endif -%}
+
+{%- if disableDefaultVariant -%}
+	{%- assign productSelect = productSelect | default: blank -%}
+{%- else -%}
+  {%- assign productSelect = productSelect | default: product.selected_or_first_available_variant -%}
+{%- endif -%}
+
+{%- case type -%}
+
+	{%- when '@app' -%}{%- render block -%}
+
+	{%- when 'text' -%}
+		<div class="field-text">
+			{{block.settings.text | default: block.settings.liquid }}
+		</div>
+
+  {%- when 'vendor' -%}
+    {%- if block.settings.show_social -%}
+    	<div class="flex justify-content-between">
+    		<div class="product-vendor">{{product.vendor}}</div>
+    		{%- render 'social-sharing' -%}
+    	</div>
+    {%- else -%}
+    	<div class="product-vendor">{{product.vendor}}</div>
+    {%- endif -%}
+
+  {%- when 'title' -%}
+  	<h1 class="product-title">{{product.title}}</h1>
+
+  {%- when 'price' -%}
+
+		<div class="product-price js-variant-update" data-index="{{type}}">
+			<div class="flex">
+
+				{%- if product.available -%}
+					{%- if disableDefaultVariant and productSelect == blank -%}
+				  	{%- capture mainPrice -%}{%- render 'money', value: product.price_min, class: 'price' -%}{%- endcapture -%}
+
+						<div class="price-range">{{ 'products.product.price_html' | t: price: mainPrice}}</div>
+
+					{%- else -%}
+  					{%- if productSelect.available -%}
+
+	  					{%- capture priceClass -%}price{% if productSelect.compare_at_price > productSelect.price %} sale-price{% endif %}{%- endcapture -%}
+	  					{%- render 'money', value: productSelect.price, class: priceClass -%}
+
+							{%- if productSelect.compare_at_price > productSelect.price -%}
+								{%- render 'money', value: productSelect.compare_at_price, class: 'price-compare' -%}
+
+								{%- comment -%}
+								-------------------------------
+								Sale label
+								-------------------------------
+								{%- endcomment-%}
+								{%- assign saleLabel = block.settings.sale_label -%}
+								{%- if saleLabel != 'hide' -%}
+									<div class="label-group uppercase">
+										<span class="label label-sale">
+											{%- if saleLabel == 'sale_percent' -%}
+												{%- assign saving = productSelect.compare_at_price | minus: productSelect.price | times: 100.0 | divided_by: productSelect.compare_at_price | round: 0 -%}
+												{{- 'products.label.sale_with_percent' | t: count: saving -}}
+											{%- else -%}
+												{{- 'products.label.sale' | t -}}
+											{%- endif -%}
+										</span>
+									</div>
+								{%- endif -%}
+							{%- endif -%}
+  					{%- else -%}
+							<span class="price-sold-out">{{- 'products.product.sold_out' | t -}}</span>
+  					{%- endif -%}
+
+					{%- endif -%}
+				{%- else -%}
+					<span class="price-sold-out">{{- 'products.product.sold_out' | t -}}</span>
+				{%- endif -%}
+			</div>
+		</div>
+
+  {%- when 'options' -%}
+
+		{%- liquid
+  		assign swt_button    = block.settings['swatch_button'] | default: settings['swatch_button'] | downcase | split: ','
+  		assign swt_color     = block.settings['swatch_color'] | default: settings['swatch_color']  | downcase | split: ','
+  		assign swt_image     = block.settings['swatch_image'] | default: settings['swatch_image']  | downcase | split: ','
+		-%}
+
+		{%- capture swtGroup_Button -%}{%- for item in swt_button -%}|{{- item | strip -}}{%- endfor -%}{%- endcapture -%}
+		{%- assign swtGroup_Button = swtGroup_Button | remove_first: '|' | split: '|' -%}
+
+		{%- capture swtGroup_Color -%}{%- for item in swt_color -%}|{{- item | strip -}}{%- endfor -%}{%- endcapture -%}
+		{%- assign swtGroup_Color = swtGroup_Color | remove_first: '|' | split: '|' -%}
+
+		{%- capture swtGroup_Image -%}{%- for item in swt_image -%}|{{- item | strip -}}{%- endfor -%}{%- endcapture -%}
+		{%- assign swtGroup_Image = swtGroup_Image | remove_first: '|' | split: '|' -%}
+
+  	<div class="{{blockClass}} product-options">
+      <div class="variants-wrapper">
+
+  			{%- if product.has_only_default_variant != true and product.variants.size > 1 -%}
+        	{%- for option in product.options_with_values -%}
+        		{%- assign optionName = option.name | downcase -%}
+
+        		{%- capture swatchType -%}
+      				{%- if swtGroup_Button contains optionName -%}{{- 'button' -}}{%- endif -%}
+      				{%- if swtGroup_Color contains optionName -%}{{- 'color' -}}{%- endif -%}
+      				{%- if swtGroup_Image contains optionName -%}{{- 'image' -}}{%- endif -%}
+        		{%- endcapture -%}
+
+        		{%- comment -%}Create swatch{%- endcomment-%}
+        		{%- if swatchType != blank -%}
+
+          		{%- capture swatchContent -%}{%- render 'swatch', formID: formID, disableDefaultVariant: disableDefaultVariant, swtType: swatchType, option: option -%}{%- endcapture -%}
+          		{%- assign swatchContent = swatchContent | split: '<!--|||-->' -%}
+          		{{- swatchContent[0] -}}
+
+          		{%- capture section_css -%}{{- section_css -}}{{- swatchContent[1] -}}{%- endcapture -%}
+        		{%- else -%}
+
+            	<div class="variant-options option-type-select">
+            		<label class="variant-options-header" for="Option{{ option.position }}">{{ option.name }}</label>
+            		<div class="select-wrapper">
+	            		<select id="Option{{ option.position }}" class="js-variant-change" name="option{{ option.position}}" form="{{formID}}">
+
+	            			{%- if disableDefaultVariant -%}
+	            				<option value="" selected>{{ 'products.product.select_an_option' | t }}</option>
+	            			{%- endif -%}
+
+	            			{%- for value in option.values -%}
+	            				{%- assign valueDownCase = value | downcase -%}
+	            				<option value="{{ value | escape }}"{%- if option.selected_value == value and productSelect != blank %} selected{% endif -%}>{{- value -}}</option>
+	            			{%- endfor -%}
+	            		</select>
+  							{%- render 'svg', type: 'caret' -%}
+            		</div>
+            	</div>
+        		{%- endif -%}
+        	{%- endfor -%}
+      	{%- endif -%}
+      </div>
+  	</div>
+
+  {%- when 'stock' -%}
+  	{%- assign block = section.blocks | where: 'type', 'buy_button' | first | default: section  -%}
+		{%- if block.settings.show_stock -%}
+			<span class="js-variant-update" data-index="{{type}}">
+				{%- unless productSelect == blank -%}
+					<span class="stock{% if productSelect.inventory_quantity < 1 or productSelect.inventory_quantity > 10 %} hide{% endif %}">
+						{%- if productSelect.inventory_management -%}
+						{{- 'products.product.quantity_with_label' | t: count: productSelect.inventory_quantity -}}
+						{%- endif -%}
+					</span>
+				{%- endunless -%}
+			</span>
+		{%- endif -%}
+
+	{%- when 'buy_button' -%}
+
+		{%- capture wlcp_content -%}
+  		{%- liquid
+  			if optionBlock.settings.wlcp_content == 'text'
+  				assign wlcpContent = true
+  			else
+  				assign wlcpContent = false
+  			endif
+  		-%}
+
+  		{%- if settings.show_wishlist -%}
+				{% render 'arn_wlcp_custom', type: 'wishlist_add', product: product, showText: wlcpContent %}
+  		{%- endif -%}
+  		{%- if settings.show_compare -%}
+				{% render 'arn_wlcp_custom', type: 'compare_add', product: product, showText: wlcpContent %}
+  		{%- endif -%}
+		{%- endcapture -%}
+
+		<div class="{{blockClass}}{% if wlcpContent %} has-wlcp-text{% else %} has-wlcp-icon{% endif %}">
+
+	  	<div class="{{blockClass}}">
+	    	<p class="stock-count">
+	    		<span>{{- 'products.product.quantity' | t -}}</span>
+	    		{%- render 'snippet-product-details', type: 'stock', productSelect: productSelect -%}
+
+	    		{%- if block.settings.show_preorder_button -%}
+	    			<span id="preorderAlert" class="highlight none">&nbsp;{{ 'products.pre_order.success' | t }}</span>
+	    		{%- endif -%}
+	    	</p>
+	  	</div>
+
+			<cart-form class="product-form">
+        {%- form 'product', product, id: formID, class:'product-form', novalidate: 'novalidate' -%}
+        	<input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+
+        	<div class="product-cart">
+        		<div class="product-cart-inner">
+        			<quantity-input class="quantity-select">
+        				<div class="quantity-inner flex">
+        					<button class="qty-minus c-pointer no-js-hidden" type="button" name="minus">
+        						{%- render 'svg', type: 'minus' -%}
+        					</button>
+
+        					<input type="number" name="quantity" value="1" min="1">
+
+        					<button class="qty-plus c-pointer no-js-hidden" type="button" name="plus">
+        						{%- render 'svg', type: 'plus' -%}
+        					</button>
+        				</div>
+        			</quantity-input>
+
+							<div class="product-cart_button js-variant-update" data-index="{{type}}">
+
+								{%- if productSelect == blank -%}
+									<button type="submit" name="add" class="btn add-to-cart btn-{{block.settings.cart_btn_style | default: 1 }} disabled">
+										<span class="icon">
+											{%- render 'svg', type: 'cart', useLink: false, fillColor: true -%}
+										</span>
+										<span class="text">{{- 'products.product.select_an_option' | t -}}</span>
+									</button>
+
+								{%- elsif productSelect.available -%}
+									<button type="submit" name="add" class="btn add-to-cart btn-{{block.settings.cart_btn_style | default: 1 }}">
+										<span class="icon">
+											{%- render 'svg', type: 'cart', useLink: false, fillColor: true -%}
+										</span>
+										<span class="text">{{- 'products.product.add_to_cart' | t -}}</span>
+									</button>
+
+								{%- elsif block.settings.show_preorder_button -%}
+									<button type="button" class="btn btn-{{block.settings.cart_btn_style | default: 1 }} btn-preorder js-popup-toggle" data-control="preorder-popup">
+										<span>{{- 'products.product.preorder' | t -}}</span>
+									</button>
+
+								{%- else -%}
+									<button type="submit" name="add" class="btn add-to-cart btn-{{block.settings.cart_btn_style | default: 1 }} disabled">
+										<span>{{- 'products.product.sold_out' | t -}}</span>
+									</button>
+								{%- endif -%}
+
+							</div>
+	        		{%- if block.settings.enable_dynamic_checkout -%}
+		        		<div class="dynamic-btn js-dynamic-checkout">{{ form | payment_button }}</div>
+	        		{%- endif -%}
+
+
+	        		{%- unless wlcp_content == blank -%}
+	        			<div class="wlcp-target wlcp-in-{% if wlcpContent %}text{% else %}icon{% endif %}">{{wlcp_content}}</div>
+	        		{%- endunless -%}
+
+        		</div>
+        	</div>
+        {%- endform -%}
+			</cart-form>
+
+			{%- if block.settings.show_preorder_button -%}
+				{%- render 'snippet-product-details', type: 'preorder', productSelect: productSelect -%}
+			{%- endif -%}
+
+		</div>
+
+	{%- when 'tags' -%}
+		<div class="{{blockClass}} product-tags">
+			<div class="flex">
+				<span class="field-title">{{- 'products.product.tag' | t -}}:</span>
+				<ul class="field-content flex">
+					{%- if product.tags.size > 0 -%}
+						{%- for tag in product.tags -%}
+							{%- assign firstCharacter = tag | slice: 0 -%}
+							{%- if firstCharacter == '_' -%}{%- continue -%}{%- endif -%}
+
+							<li>{{ tag | link_to_tag: tag }}{% unless forloop.last %}, {% endunless %}</li>
+						{%- endfor -%}
+					{%- endif -%}
+				</ul>
+			</div>
+		</div>
+
+	{%- when 'sku' -%}
+		<div class="{{blockClass}} product-sku">
+			<div class="flex">
+				<span class="field-title">{{- 'products.product.sku' | t -}}:</span>
+				<span class="field-content js-variant-update" data-index="{{type}}">{{productSelect.sku}}</span>
+			</div>
+		</div>
+
+	{%- when 'review' -%}
+		<div class="product-reviews-badge">
+			{%- render 'review', product: product, type: 'badge' -%}
+		</div>
+
+	{%- when 'store_availability' -%}
+
+		<div class="store-availability-wrapper js-variant-update" data-index="{{type}}">
+			<store-availability
+	          data-variant-id="{{productSelect.id}}"
+	          data-product-title="{{ product.title | escape }}"
+	          data-has-only-default-variant="{{ product.has_only_default_variant }}"
+	          data-base-url="{{ shop.url }}{{ routes.root_url }}">
+
+			</store-availability>
+		</div>
+
+	{%- when 'promotion' -%}
+		{%- liquid
+			assign promoContent = block.settings.promo_content
+			assign promoLink = block.settings.promo_link
+		-%}
+		{%- unless promoContent == blank -%}
+			<div class="{{blockClass}} field-promo promotion-applies highlight2">
+				<div class="text-center">
+					<a href="{{promoLink}}" class="inherit-color flex align-items-center">
+						<span class="icon">{%- render 'svg', type: 'discount' -%}</span>
+						<span class="text">{{promoContent}}</span>
+					</a>
+				</div>
+			</div>
+		{%- endunless -%}
+
+	{%- when 'share' -%}
+		<div class="{{blockClass}} field-sharing">
+			{%- render 'social-sharing' -%}
+		</div>
+
+	{%- when 'border' -%}
+		<hr class="field-border"/>
+
+	{%- when 'svg_content' -%}
+
+		{%- assign style = block.settings.style -%}
+        <div class="svg-content style-{{style}}">
+            <div class="svg-content-inner{% if style == 'horizontal' %} flex{% endif %}">
+              {%- for i in (1..3) -%}
+                {%- liquid
+                  assign text  = 'text_' | append: i
+                  assign svg   = 'svg_' | append: i
+                  assign text  = block.settings[text]
+                  assign svg   = block.settings[svg]
+                -%}
+
+                {%- if text == blank -%}{%- continue -%}{%- endif -%}
+
+                <div class="flex align-items-center">
+                  {%- unless svg == blank -%}<span class="icon inline-flex">{{svg}}</span>{%- endunless -%}
+                  <span class="text">{{text}}</span>
+                </div>
+              {%- endfor -%}
+            </div>
+        </div>
+
+	{%- when 'countdown' -%}
+
+		{%- assign value = block.settings.text -%}
+		{%- unless value contains '/' -%}
+			{%- assign value = block.settings.text | date: '%d/%m/%Y %H:%M' -%}
+		{%- endunless -%}
+
+		{%- if value == blank -%}{%- break -%}{%- endif -%}
+
+		<div class="field-countdown">
+			{%- render 'countdown', value: value, timerLabel: block.settings.show_label -%}
+		</div>
+
+	{%- when 'json' -%}
+		{%- assign days_product_price_valid_until = 10 | times: 86400 -%}
+
+		{%- assign gtin_option = 'gtin' -%}
+		{%- if product.selected_or_first_available_variant.barcode != blank -%}
+		{%- assign is_barcode_available = true -%}
+		{%- assign gtin_string_length = product.selected_or_first_available_variant.barcode | size -%}
+
+		{%- if gtin_string_length == 8 or gtin_string_length == 12 or gtin_string_length == 13 or gtin_string_length == 14 -%}
+		  {%- assign is_valid_gtin_length = true -%}
+		  {%- assign gtin_option = gtin_option | append: gtin_string_length -%}
+		{%- endif -%}
+		{%- endif -%}
+
+		{%- capture main_entity_microdata -%}
+			"@type": "Product",
+			"offers": [
+			  {%- for variant in product.variants -%}
+			    {
+			      "@type": "Offer",
+			      "name": {{ variant.title | json }},
+			      "availability": {%- if variant.available -%}"https://schema.org/InStock"{%- else -%}"https://schema.org/OutOfStock"{%- endif -%},
+			      "price": {{ variant.price | divided_by: 100.0 | json }},
+			      "priceCurrency": {{ cart.currency.iso_code | json }},
+			      "priceValidUntil": "{{ 'now' | date: '%s' | plus: days_product_price_valid_until | date: '%Y-%m-%d'}}",
+			      {%- if variant.sku != blank -%}
+			        "sku": {{ variant.sku | json }},
+			      {%- endif -%}
+			      "url": "{{ product.url }}?variant={{ variant.id }}"
+			    }{% unless forloop.last %},{% endunless %}
+			  {%- endfor -%}
+			],
+			{%- if is_barcode_available and is_valid_gtin_length %}
+			  "{{gtin_option}}": {{ product.selected_or_first_available_variant.barcode | json }},
+			  "productId": {{ product.selected_or_first_available_variant.barcode | json }},
+			{%- elsif is_barcode_available %}
+			  "mpn": {{ product.selected_or_first_available_variant.barcode | json }},
+			  "productId": {{ product.selected_or_first_available_variant.barcode | json }},
+			{%- endif %}
+			"brand": {
+			  "name": {{ product.vendor | json }}
+			},
+			"name": {{ product.title | json }},
+			"description": {{ product.description | strip_html | json }},
+			"category": {{ product.type | json }},
+			"url": "{{ product.url }}",
+			"sku": {{ product.selected_or_first_available_variant.sku | json }},
+			"image": {
+			  "@type": "ImageObject",
+			  "url": "https:{{ product.featured_media | img_url: '1024x' }}",
+			  "image": "https:{{ product.featured_media | img_url: '1024x' }}",
+			  "name": {{ product.featured_media.alt | json }},
+			  "width": "1024",
+			  "height": "1024"
+			}
+		{%- endcapture -%}
+		<script type="application/ld+json">
+			{
+				"@context": "http://schema.org",
+				{{ main_entity_microdata }}
+			}
+		</script>
+
+  {%- when 'template' -%}
+  	{%- if product.variants.size <= 1 -%}{%- break -%}{%- endif -%}
+  	{%- assign currentBlocks =  section.blocks | map: 'type'
+																								|	remove: 'vendor'
+																								| remove: 'text'
+																								| remove: 'title'
+																								| remove: 'tags'
+																								| remove: 'review'
+																								| remove: 'promotion'
+																								| remove: 'share'
+																								| remove: 'svg_content'
+																								| remove: 'border'
+																								| remove: 'countdown'
+																								-%}
+	  <template id="productTemplate">
+
+	  	{%- for variant in product.variants -%}
+	  		<div class="variant-template" data-variant-id="{{variant.id}}">
+			  	{%- for block in section.blocks -%}{%- unless currentBlocks contains block.type -%}{%- continue -%}{%- endunless -%}
+			  		{%- render 'snippet-product-details', type: block.type, block: block, productSelect: variant -%}
+			  	{%- endfor -%}
+
+	  			{%- if template contains 'column' -%}
+		  			{%- assign groupBlockType = 'price,options,buy_button' | split: ',' -%}
+
+		  			{%- for block in groupBlockType -%}{%- assign blockType = block | strip -%}
+		  				{%- render 'snippet-product-details', type: blockType, block: section, productSelect: variant -%}
+		  			{%- endfor -%}
+	  			{%- endif -%}
+		  	</div>
+	  	{%- endfor -%}
+	  </template>
+
+	{%- when 'zoomTemplate' -%}
+		{%- unless section.settings.show_zoom -%}{%- break -%}{%- endunless -%}
+		{%- capture zoomGalleryJSON -%}
+			[{%- for img in product.images -%}
+				{
+				    "src": {{img | img_url: 'master' | json }},
+				    "msrc": {{img | img_url: 'small' | json }},
+				    "w": {{img.width}},
+				    "h": {{img.height}},
+				    "attached": {{img.variants | map: 'id' | join: ',' | json}}
+				}{%- unless forloop.last -%},{%- endunless -%}
+			{%- endfor -%}]
+		{%- endcapture -%}
+
+		<script type="application/json" id="zoomGalleryJSON">{{ zoomGalleryJSON }}</script>
+		<script src="{{ "photoswipe.min.js" | asset_url }}" defer></script>
+
+		{%- capture section_css -%}{{section_css}}
+		.pswp{display:none;position:absolute;width:100%;height:100%;left:0;top:0;overflow:hidden;-ms-touch-action:none;touch-action:none;z-index:9999;-webkit-text-size-adjust:100%;-webkit-backface-visibility:hidden;outline:0}.pswp *{-webkit-box-sizing:border-box;box-sizing:border-box}.pswp img{max-width:none}.pswp--animate_opacity{opacity:.001;will-change:opacity;-webkit-transition:opacity 333ms cubic-bezier(.4, 0, .22, 1);transition:opacity 333ms cubic-bezier(.4, 0, .22, 1)}.pswp--open{display:block}.pswp--zoom-allowed .pswp__img{cursor:-webkit-zoom-in;cursor:-moz-zoom-in;cursor:zoom-in}.pswp--zoomed-in .pswp__img{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab}.pswp--dragging .pswp__img{cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing}.pswp__bg{position:absolute;left:0;top:0;width:100%;height:100%;background:#000;opacity:0;-webkit-transform:translateZ(0);transform:translateZ(0);-webkit-backface-visibility:hidden;will-change:opacity}.pswp__scroll-wrap{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden}.pswp__container,.pswp__zoom-wrap{-ms-touch-action:none;touch-action:none;position:absolute;left:0;right:0;top:0;bottom:0}.pswp__container,.pswp__img{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}.pswp__zoom-wrap{position:absolute;width:100%;-webkit-transform-origin:left top;-ms-transform-origin:left top;transform-origin:left top;-webkit-transition:-webkit-transform 333ms cubic-bezier(.4, 0, .22, 1);transition:transform 333ms cubic-bezier(.4, 0, .22, 1)}.pswp__bg{will-change:opacity;-webkit-transition:opacity 333ms cubic-bezier(.4, 0, .22, 1);transition:opacity 333ms cubic-bezier(.4, 0, .22, 1)}.pswp--animated-in .pswp__bg,.pswp--animated-in .pswp__zoom-wrap{-webkit-transition:none;transition:none}.pswp__container,.pswp__zoom-wrap{-webkit-backface-visibility:hidden}.pswp__item{position:absolute;left:0;right:0;top:0;bottom:0;overflow:hidden}.pswp__img{position:absolute;width:auto;height:auto;top:0;left:0}.pswp__img--placeholder{-webkit-backface-visibility:hidden}.pswp__img--placeholder--blank{background:#222}.pswp--ie .pswp__img{width:100%!important;height:auto!important;left:0;top:0}.pswp__error-msg{position:absolute;left:0;top:50%;width:100%;text-align:center;font-size:14px;line-height:16px;margin-top:-8px;color:#ccc}.pswp__error-msg a{color:#ccc;text-decoration:underline}/*! PhotoSwipe Default UI CSS by Dmitry Semenov | photoswipe.com | MIT license */.pswp__button{width:44px;height:44px;position:relative;background:0 0;cursor:pointer;overflow:visible;-webkit-appearance:none;display:block;border:0;padding:0;margin:0;float:right;opacity:.75;-webkit-transition:opacity .2s;transition:opacity .2s;-webkit-box-shadow:none;box-shadow:none}.pswp__button:focus,.pswp__button:hover{opacity:1}.pswp__button:active{outline:0;opacity:.9}.pswp__button::-moz-focus-inner{padding:0;border:0}.pswp__ui--over-close .pswp__button--close{opacity:1}.pswp__button,.pswp__button--arrow--left:before,.pswp__button--arrow--right:before{background:url({{ "default-skin.png" | asset_url }}) 0 0 no-repeat;background-size:264px 88px;width:44px;height:44px}@media (-webkit-min-device-pixel-ratio:1.1),(-webkit-min-device-pixel-ratio:1.09375),(min-resolution:105dpi),(min-resolution:1.1dppx){.pswp--svg .pswp__button,.pswp--svg .pswp__button--arrow--left:before,.pswp--svg .pswp__button--arrow--right:before{background-image:url({{ "default-skin.svg" | asset_url }})}.pswp--svg .pswp__button--arrow--left,.pswp--svg .pswp__button--arrow--right{background:0 0}}.pswp__button--close{background-position:0 -44px}.pswp__button--share{background-position:-44px -44px}.pswp__button--fs{display:none}.pswp--supports-fs .pswp__button--fs{display:block}.pswp--fs .pswp__button--fs{background-position:-44px 0}.pswp__button--zoom{display:none;background: none}.pswp--zoom-allowed .pswp__button--zoom{display:block}.pswp--zoomed-in .pswp__button--zoom{background: none}.pswp--touch .pswp__button--arrow--left,.pswp--touch .pswp__button--arrow--right{visibility:hidden}.pswp__button--arrow--left,.pswp__button--arrow--right{background:0 0;top:50%;margin-top:-50px;width:70px;height:100px;position:absolute}.pswp__button--arrow--left{left:0}.pswp__button--arrow--right{right:0}.pswp__button--arrow--left:before,.pswp__button--arrow--right:before{content:'';top:35px;background-color:rgba(0,0,0,.3);height:30px;width:32px;position:absolute}.pswp__button--arrow--left:before{left:6px;background:0 0}.pswp__button--arrow--right:before{right:6px;background:0 0}.pswp__counter,.pswp__share-modal{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.pswp__share-modal{display:block;background:rgba(0,0,0,.5);width:100%;height:100%;top:0;left:0;padding:10px;position:absolute;z-index:1600;opacity:0;-webkit-transition:opacity .25s ease-out;transition:opacity .25s ease-out;-webkit-backface-visibility:hidden;will-change:opacity}.pswp__share-modal--hidden{display:none}.pswp__share-tooltip{z-index:1620;position:absolute;background:#fff;top:56px;border-radius:2px;display:block;width:auto;right:44px;-webkit-box-shadow:0 2px 5px rgba(0,0,0,.25);box-shadow:0 2px 5px rgba(0,0,0,.25);-webkit-transform:translateY(6px);-ms-transform:translateY(6px);transform:translateY(6px);-webkit-transition:-webkit-transform .25s;transition:transform .25s;-webkit-backface-visibility:hidden;will-change:transform}.pswp__share-tooltip a{display:block;padding:8px 12px;color:#000;text-decoration:none;font-size:14px;line-height:18px}.pswp__share-tooltip a:hover{text-decoration:none;color:#000}.pswp__share-tooltip a:first-child{border-radius:2px 2px 0 0}.pswp__share-tooltip a:last-child{border-radius:0 0 2px 2px}.pswp__share-modal--fade-in{opacity:1}.pswp__share-modal--fade-in .pswp__share-tooltip{-webkit-transform:translateY(0);-ms-transform:translateY(0);transform:translateY(0)}.pswp--touch .pswp__share-tooltip a{padding:16px 12px}a.pswp__share--facebook:before{content:'';display:block;width:0;height:0;position:absolute;top:-12px;right:15px;border:6px solid transparent;border-bottom-color:#fff;-webkit-pointer-events:none;-moz-pointer-events:none;pointer-events:none}a.pswp__share--facebook:hover{background:#3e5c9a;color:#fff}a.pswp__share--facebook:hover:before{border-bottom-color:#3e5c9a}a.pswp__share--twitter:hover{background:#55acee;color:#fff}a.pswp__share--pinterest:hover{background:#ccc;color:#ce272d}a.pswp__share--download:hover{background:#ddd}.pswp__counter{position:absolute;left:0;top:0;height:44px;font-size:13px;line-height:44px;color:#fff;opacity:.75;padding:0 10px}.pswp__caption{position:absolute;left:0;bottom:0;width:100%;min-height:44px}.pswp__caption small{font-size:11px;color:#bbb}.pswp__caption__center{text-align:left;max-width:420px;margin:0 auto;font-size:13px;padding:10px;line-height:20px;color:#ccc}.pswp__caption--empty{display:none}.pswp__caption--fake{visibility:hidden}.pswp__preloader{width:44px;height:44px;position:absolute;top:0;left:50%;margin-left:-22px;opacity:0;-webkit-transition:opacity .25s ease-out;transition:opacity .25s ease-out;will-change:opacity;direction:ltr}.pswp__preloader__icn{width:20px;height:20px;margin:12px}.pswp__preloader--active{opacity:1}.pswp__preloader--active .pswp__preloader__icn{background:url(preloader.gif) 0 0 no-repeat}.pswp--css_animation .pswp__preloader--active{opacity:1}.pswp--css_animation .pswp__preloader--active .pswp__preloader__icn{-webkit-animation:clockwise .5s linear infinite;animation:clockwise .5s linear infinite}.pswp--css_animation .pswp__preloader--active .pswp__preloader__donut{-webkit-animation:donut-rotate 1s cubic-bezier(.4,0,.22,1) infinite;animation:donut-rotate 1s cubic-bezier(.4,0,.22,1) infinite}.pswp--css_animation .pswp__preloader__icn{background:0 0;opacity:.75;width:14px;height:14px;position:absolute;left:15px;top:15px;margin:0}.pswp--css_animation .pswp__preloader__cut{position:relative;width:7px;height:14px;overflow:hidden}.pswp--css_animation .pswp__preloader__donut{-webkit-box-sizing:border-box;box-sizing:border-box;width:14px;height:14px;border:2px solid #fff;border-radius:50%;border-left-color:transparent;border-bottom-color:transparent;position:absolute;top:0;left:0;background:0 0;margin:0}@media screen and (max-width:1024px){.pswp__preloader{position:relative;left:auto;top:auto;margin:0;float:right}}@-webkit-keyframes clockwise{0%{-webkit-transform:rotate(0);transform:rotate(0)}100%{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}@keyframes clockwise{0%{-webkit-transform:rotate(0);transform:rotate(0)}100%{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}@-webkit-keyframes donut-rotate{0%{-webkit-transform:rotate(0);transform:rotate(0)}50%{-webkit-transform:rotate(-140deg);transform:rotate(-140deg)}100%{-webkit-transform:rotate(0);transform:rotate(0)}}@keyframes donut-rotate{0%{-webkit-transform:rotate(0);transform:rotate(0)}50%{-webkit-transform:rotate(-140deg);transform:rotate(-140deg)}100%{-webkit-transform:rotate(0);transform:rotate(0)}}.pswp__ui{-webkit-font-smoothing:auto;visibility:visible;opacity:1;z-index:1550}.pswp__top-bar{position:absolute;left:0;top:0;height:44px;width:100%}.pswp--has_mouse .pswp__button--arrow--left,.pswp--has_mouse .pswp__button--arrow--right,.pswp__caption,.pswp__top-bar{-webkit-backface-visibility:hidden;will-change:opacity;-webkit-transition:opacity 333ms cubic-bezier(.4, 0, .22, 1);transition:opacity 333ms cubic-bezier(.4, 0, .22, 1)}.pswp--has_mouse .pswp__button--arrow--left,.pswp--has_mouse .pswp__button--arrow--right{visibility:visible}.pswp__caption,.pswp__top-bar{background-color:rgba(0,0,0,.5)}.pswp__ui--fit .pswp__caption,.pswp__ui--fit .pswp__top-bar{background-color:rgba(0,0,0,.3)}.pswp__ui--idle .pswp__top-bar{opacity:0}.pswp__ui--idle .pswp__button--arrow--left,.pswp__ui--idle .pswp__button--arrow--right{opacity:0}.pswp__ui--hidden .pswp__button--arrow--left,.pswp__ui--hidden .pswp__button--arrow--right,.pswp__ui--hidden .pswp__caption,.pswp__ui--hidden .pswp__top-bar{opacity:.001}.pswp__ui--one-slide .pswp__button--arrow--left,.pswp__ui--one-slide .pswp__button--arrow--right,.pswp__ui--one-slide .pswp__counter{display:none}.pswp__element--disabled{display:none!important}.pswp--minimal--dark .pswp__top-bar{background:0 0}
+		{%- endcapture -%}
+
+		<template id="zoomPopupTemplate">
+		  <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+		    <div class="pswp__bg"></div>
+		    <div class="pswp__scroll-wrap">
+		      <div class="pswp__container">
+		        <div class="pswp__item"></div>
+		        <div class="pswp__item"></div>
+		        <div class="pswp__item"></div>
+		      </div>
+		      <div class="pswp__ui pswp__ui--hidden">
+		        <div class="pswp__top-bar">
+		          <div class="pswp__counter"></div>
+		          <button class="pswp__button pswp__button--close" title="{{ 'products.zoom.close' | t }}">
+		            {% render 'svg', type: 'delete' %}
+		          </button>
+		          <button class="pswp__button pswp__button--share" title="{{ 'products.zoom.share' | t }}">
+		          </button>
+		          <button class="pswp__button pswp__button--fs" title="{{ 'products.zoom.toggle_fullscreen' | t }}">
+		          </button>
+		          <button class="pswp__button pswp__button--zoom" title="{{ 'products.zoom.zoom_inout' | t }}">
+		            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+		              <path d="M17.984 16.48C17.568 16.064 16.896 16.064 16.48 16.48C16.064 16.896 16.064 17.568 16.48 17.984L17.984 16.48ZM25.888 27.424C26.304 27.84 27.008 27.84 27.424 27.424C27.84 27.008 27.84 26.336 27.424 25.888L25.888 27.424ZM16.48 17.984L25.888 27.424L27.424 25.888L17.984 16.48L16.48 17.984V17.984ZM18.912 10.528C18.912 15.136 15.168 18.912 10.528 18.912V21.056C16.32 21.056 21.056 16.32 21.056 10.528H18.912V10.528ZM10.528 18.912C5.888 18.912 2.112 15.136 2.112 10.528H0C0 16.32 4.704 21.056 10.528 21.056V18.912V18.912ZM2.112 10.528C2.112 5.888 5.888 2.112 10.528 2.112V0C4.704 0 0 4.704 0 10.528H2.112ZM10.528 2.112C15.168 2.112 18.912 5.888 18.912 10.528H21.056C21.056 4.704 16.32 0 10.528 0V2.112V2.112Z" fill="white"/>
+		            </svg>
+		          </button>
+		          <div class="pswp__preloader">
+		            <div class="pswp__preloader__icn">
+		              <div class="pswp__preloader__cut">
+		                <div class="pswp__preloader__donut"></div>
+		              </div>
+		            </div>
+		          </div>
+		        </div>
+		        <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+		          <div class="pswp__share-tooltip"></div>
+		        </div>
+
+		        <button class="pswp__button pswp__button--arrow--left" title="{{ 'products.zoom.previous' | t }}">
+		          <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+		            <path d="M16.8 0.361846C17.184 0.809846 17.152 1.48185 16.704 1.86585L2.72 13.8658L16.704 25.8658C17.152 26.2498 17.184 26.9218 16.8 27.3698C16.416 27.8178 15.744 27.8498 15.296 27.4658L0.384 14.6658C0.128 14.4738 0 14.1858 0 13.8658C0 13.5458 0.128 13.2578 0.384 13.0658L15.296 0.265846C15.744 -0.118154 16.416 -0.0861539 16.8 0.361846V0.361846Z" fill="white"/>
+		          </svg>
+		        </button>
+		        <button class="pswp__button pswp__button--arrow--right" title="{{ 'products.zoom.next' | t }}">
+		          <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+		            <path d="M0.265846 27.3698C-0.118154 26.9218 -0.086154 26.2498 0.361846 25.8658L14.3778 13.8658L0.361846 1.86585C-0.086154 1.48185 -0.118154 0.809846 0.265846 0.361846C0.649846 -0.0861539 1.32185 -0.118154 1.76985 0.265846L16.6818 13.0658C16.9378 13.2578 17.0658 13.5458 17.0658 13.8658C17.0658 14.1858 16.9378 14.4738 16.6818 14.6658L1.76985 27.4658C1.32185 27.8498 0.649846 27.8178 0.265846 27.3698Z" fill="white"/>
+		          </svg>
+		        </button>
+
+		        <div class="pswp__caption">
+		          <div class="pswp__caption__center"></div>
+		        </div>
+		      </div>
+		    </div>
+		  </div>
+		</template>
+
+	{%- when 'preorder' -%}
+
+		<div class="popup-gl js-popup preorder-poup" data-control="preorder-popup">
+			{%- render 'snippet-section', type: 'css-file', minify: true, name: 'preorder-popup' -%}
+			<div class="popup-layer js-popup-close"></div>
+
+			<div class="popup-inner">
+				<div class="popup-content">
+	        <button type="button" class="btn btn-popup-close js-popup-close">
+	          {%- render 'svg', type: 'close' -%}
+	        </button>
+
+					<h4 class="popup-heading text-center">{{- 'products.pre_order.title' | t -}}</h4>
+
+					{%- form 'contact' -%}
+						{%- if form.posted_successfully? -%}
+							<style>#preorderAlert{display: initial!important;}</style>
+						{%- endif -%}
+
+				    {%- if form.errors -%}
+				      <p class="form__message error" tabindex="-1" autofocus>
+				        {%- render 'svg', type: 'error', useLink: true -%}
+				        <span>{{errorTitle}}</span>
+				      </p>
+              {{ form.errors | default_errors }}
+				    {%- endif -%}
+
+						<div class="form-field">
+							<label class="label-field" for="preorderName">{{'products.pre_order.name' | t }}</label>
+							<input type="text" id="preorderName" class="input-field" value="{% if customer %}{{ customer.name | escape }}{% endif %}" name="contact[name]" autofocus/>
+						</div>
+
+						<div class="form-field">
+							<label class="label-field" for="preorder">{{'products.pre_order.email' | t }}</label>
+							<input type="email" id="preorder" class="input-field" value="{% if customer %}{{ customer.email }}{% endif %}" name="contact[email]"/>
+						</div>
+
+						<div class="form-field">
+							<label class="label-field" for="preorderPhone">{{'products.pre_order.phone' | t }}</label>
+							<input type="text" id="preorderPhone" class="input-field" value="{% if customer %}{{ customer.phone }}{% endif %}" name="contact[phone]">
+						</div>
+
+						<div class="form-field js-variant-update" data-index="preorder">
+							<label class="label-field" for="preorderProductTitle">{{'products.pre_order.product_name' | t }}</label>
+							<input type="text" id="preorderProductTitle" class="input-field" value="{{ product.title | escape }}{% unless product.has_only_default_variant %} {{productSelect.title | escape }}{% endunless %}" name="contact[product_name]"/>
+							<input type="hidden" value="{{ shop.url | append: productSelect.url }}" name="contact[product_link]"/>
+						</div>
+
+						<div class="form-field">
+							<label class="label-field" for="preorderMessagge">{{'products.pre_order.message' | t }}</label>
+							<textarea id="preorderMessagge" class="input-field" name="contact[body]"></textarea>
+						</div>
+
+						<div class="form-field form-button-group text-center">
+							<button type="submit" class="btn btn-1">
+								<span class="text">{{- 'products.pre_order.submit' | t -}}</span>
+							</button>
+						</div>
+					{%- endform -%}
+
+				</div>
+			</div>
+		</div>
+
+	{%- when 'swatch_style' -%}
+		{%- liquid
+  		assign sectionID  = '.section-' | append: section.id
+			assign swatchType = block.settings.type
+		-%}
+		{%- capture swatchID -%}{{sectionID}} .swt-type-{{swatchType}}{%- endcapture -%}
+
+		{%- capture section_css -%}{{section_css}}
+
+			{%- render 'css-resp', class: swatchID, nextClass: ' label', css: 'padding', value: block.settings.size -%}
+			{%- render 'css-resp', class: swatchID, nextClass: ' label', css: 'border-radius', value: block.settings.border_radius -%}
+
+			{%- case swatchType -%}
+				{%- when 'button' -%}
+					{%- render 'css-resp', class: swatchID, nextClass: ' input:checked + label:before', css: 'border-radius', value: block.settings.border_radius -%}
+				{%- when 'color' -%}
+				{%- else -%}
+			{%- endcase -%}
+		{%- endcapture -%}
+
+	{%- when 'logo' -%}
+
+		{%- liquid
+			assign logo = block.settings.logo | img_url: 'master'
+			assign logoUrl = block.settings.text | default: logo
+		-%}
+
+		{%- if logoUrl == blank -%}{%- continue -%}{%- endif -%}
+
+		<div class="product-logo pa r0 t0 none lg-block">
+			<img class="lazyload" data-src="{{logoUrl}}" alt="Product logo" loading="lazy">
+		</div>
+		{%- capture section_css -%}{{- section_css -}}
+			{%- render 'css-resp', class: sectionID, nextClass: ' .product-logo img', css: 'max-width', value: block.settings['max_width'] -%}
+		{%- endcapture -%}
+
+
+{%- endcase -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}

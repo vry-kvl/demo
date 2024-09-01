@@ -1,0 +1,126 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'customer' -%}
+{%- liquid
+  assign pageTitle = 'customer.register.title' | t
+  assign firstName = 'customer.register.first_name' | t
+  assign lastName = 'customer.register.last_name' | t
+  assign emailAddress = 'customer.register.email' | t
+  assign password = 'customer.register.password' | t
+  assign submitButton = "customer.register.submit" | t
+
+  assign errorTitle = 'form.general.error_title' | t
+
+  assign loginTitle = 'customer.register.login_title' | t
+  assign loginSubtitle = 'customer.register.login_subtitle' | t
+  assign loginButton = 'customer.register.login_buttom' | t
+-%}
+
+<svg xmlnsXlink="http://www.w3.org/2000/svg" class="none">
+  {%- render 'svg', type: 'error', define: true -%}
+</svg>
+
+<div class="container">
+  <div class="main-page flex flex-1 flex-md-2 {% render 'snippet-section', type: 'spacing' %}">
+
+    <div class="block-item first-block">
+      <div class="block-inner">
+
+      	{%- comment -%}
+      	-------------------------------
+      	Register form
+      	-------------------------------
+      	{%- endcomment-%}
+        <div class="form-wrapper register-form">
+          <h1 class="page-heading h2 fw600">{{pageTitle}}</h1>
+				  {%- form 'create_customer', novalidate: 'novalidate' -%}
+				    {%- if form.errors -%}
+				      <p class="form__message error" tabindex="-1" autofocus>
+				        {%- render 'svg', type: 'error', useLink: true -%}
+				        <span>{{errorTitle}}</span>
+				      </p>
+              {{ form.errors | default_errors }}
+				    {%- endif -%}
+
+
+				    <div class="form-field">
+				      <label class="label-field" for="RegisterForm-FirstName">{{ firstName }}</label>
+				      <input
+				        type="text"
+				        name="customer[first_name]"
+				        id="RegisterForm-FirstName"
+				        class="input-field"
+				        {% if form.first_name %}value="{{ form.first_name }}"{% endif %}
+				        autocomplete="given-name"
+				      >
+				    </div>
+
+				    <div class="form-field">
+				      <label class="label-field" for="RegisterForm-LastName">{{ lastName }}</label>
+				      <input
+				        type="text"
+				        name="customer[last_name]"
+				        id="RegisterForm-LastName"
+				        class="input-field"
+				        {% if form.last_name %}value="{{ form.last_name }}"{% endif %}
+				        autocomplete="family-name"
+				      >
+				    </div>
+
+				    <div class="form-field">
+				      <label class="label-field" for="RegisterForm-email">{{ emailAddress }}</label>
+				      <input
+				        type="email"
+				        name="customer[email]"
+				        id="RegisterForm-email"
+				        class="input-field"
+				        {% if form.email %} value="{{ form.email }}"{% endif %}
+				        spellcheck="false"
+				        autocapitalize="off"
+				        autocomplete="email"
+				        aria-required="true"
+				        {% if form.errors contains 'email' %}
+				          aria-invalid="true"
+				          aria-describedby="RegisterForm-email-error"
+				        {% endif %}
+				      >
+				    </div>
+
+				    <div class="form-field">
+				      <label class="label-field" for="RegisterForm-password">{{ password }}</label>
+				      <input
+				        type="password"
+				        name="customer[password]"
+				        id="RegisterForm-password"
+				        class="input-field"
+				        aria-required="true"
+				        {% if form.errors contains 'password' %}
+				          aria-invalid="true"
+				          aria-describedby="RegisterForm-password-error"
+				        {% endif %}
+				      >
+				    </div>
+
+            <div class="form-field form-button-group">
+				      <button type="submit" class="btn btn-1">{{ submitButton }}</button>
+				    </div>
+				  {%- endform -%}
+				</div>
+      </div>
+    </div>
+
+    {%- comment -%}
+    -------------------------------
+    Login redirect
+    -------------------------------
+    {%- endcomment-%}
+    <div class="block-item second-block">
+      <div class="block-inner">
+        <div class="form-wrapper">
+          <h2 class="page-heading h2 fw600">{{loginTitle}}</h2>
+          <p>{{ loginSubtitle }}</p>
+          <a href="{{routes.account_login_url}}" class="btn btn-1">{{loginButton}}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
