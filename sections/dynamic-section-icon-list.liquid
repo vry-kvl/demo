@@ -1,0 +1,323 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-icon-list' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType = 'icon-list'
+  assign sectionID = '.section-' | append: section.id
+  assign textFw = section.settings.text_fw
+  assign style = section.settings.style
+-%}
+
+{%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+{%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+|style-{{style}}
+{% if section.settings.show_border %}|show-bottom-border{% endif %}
+{% if section.settings.show_arrow %}|show-arrows{% endif %}
+{%- endcapture -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+    <div class="section-content-inner">
+      {%- comment -%}
+      -------------------------------
+      Section heading
+      -------------------------------
+      {%- endcomment-%}
+      {%- assign sectionHeading = section.settings.section_heading -%}
+      {%- unless sectionHeading == blank -%}
+        <div class="section-heading-wrapper">
+          <h3 class="section-heading">{{sectionHeading}}</h3>
+        </div>
+        {%- capture section_css -%}{{- section_css -}}
+          {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+        {%- endcapture -%}
+      {%- endunless -%}
+
+
+      {%- comment -%}
+      -------------------------------
+      Section content
+      -------------------------------
+      {%- endcomment-%}
+      <div class="flex-container">
+        <ul class="flex{{gridClass}}">
+          {%- if section.blocks.size == 0 -%}
+            {%- for i in (1..3) -%}
+              <li class="block block-{{i}}">
+                <div class="block-inner">
+                  <span class="icon">
+                    {%- capture icon -%}{%- cycle 'truck', 'leaf', 'discount' -%}{%- endcapture -%}
+                    {%- render 'svg', type: icon -%}
+                  </span>
+                  <span class="text fw{{textFw}}">Lorem ipsum dolor sit amet</span>
+                </div>
+              </li>
+            {%- endfor -%}
+
+          {%- else -%}
+
+            {%- for block in section.blocks -%}
+              {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+
+              {%- capture section_css -%}{{- section_css -}}
+                {%- render 'css-resp', class: blockID, nextClass: ' .icon', css: 'width', value: block.settings['max_width'] -%}
+              {%- endcapture -%}
+
+
+              <li class="block block-{{block.id}}"{{block.shopify_attributes}}>
+                <div class="block-inner {% if style == 'vertical' %}lg-block {% endif %}flex align-items-center">
+                  <div class="icon icon-type-{{block.settings.icon_type}}">
+                    {%- case block.settings.icon_type -%}
+                      {%- when 'image' -%}{%- render 'image-style', image: block.settings.image -%}
+                      {%- else -%}{{ block.settings.svg }}
+                    {%- endcase -%}
+                  </div>
+
+                  {%- capture textContent -%}
+                    {%- for i in (1..2) -%}
+                      {%- assign text = 'text_' | append: i -%}
+                      {%- assign text = block.settings[text] -%}
+                      {%- if text == blank -%}{%- continue -%}{%- endif -%}
+
+                      <div class="text text-{{i}}{% if i == 1 %} fw{{textFw}}{% endif %}">{{ text }}</div>
+                    {%- endfor -%}
+                  {%- endcapture -%}
+
+                  {%- unless textContent == blank -%}
+                    <div class="group-text">{{textContent}}</div>
+                  {%- endunless -%}
+                </div>
+              </li>
+            {%- endfor -%}
+          {%- endif -%}
+        </ul>
+
+      </div>
+    </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .flex-container', css: 'max-width', value: section.settings['section_max_width'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .section-content-inner', css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .block .text-1', css: 'font-size', value: section.settings['text_fs'] -%}
+{%- endcapture -%}
+
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{% schema %}
+{
+  "name": "Icon list",
+  "tag": "section",
+  "presets": [
+    {
+      "name": "Icon list",
+      "blocks": [
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type":"radio",
+      "id":"style",
+      "label":"Style:",
+      "options":[
+        {
+          "value":"horizontal",
+          "label": "Horizontal"
+        },
+        {
+          "value":"vertical",
+          "label": "Vertical"
+        }
+      ],
+      "default": "vertical"
+    },
+    {
+      "type":"text",
+      "id":"items_resp",
+      "label":"Max number of item per row",
+      "default": "1,3",
+      "info": "E.g: 1,3. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+       "type":"paragraph",
+       "content":"Item styles"
+    },
+    {
+      "type":"text",
+      "id":"text_fs",
+      "label":"Adjust item heading font size",
+      "info": "E.g: 15px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"range",
+      "id":"text_fw",
+      "label":"Adjust item heading font weight",
+      "min":100,
+      "max":900,
+      "step":100,
+      "default": 300
+    },
+    {
+       "type":"header",
+       "content":"Section heading"
+    },
+    {
+      "type":"text",
+      "id":"section_heading",
+      "label":"Heading"
+    },
+    {
+       "type":"paragraph",
+       "content":"**Heading styles"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_align",
+      "label":"Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_margin",
+      "label":"Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_heading_color",
+      "label":"Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"checkbox",
+      "id":"show_border",
+      "label":"Show Bottom border",
+      "default": true
+    },
+    {
+      "type":"checkbox",
+      "id":"show_arrow",
+      "label":"Show Arrows",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"section_max_width",
+      "label":"Section max width",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_margin",
+      "label":"Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_padding",
+      "label":"Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"select",
+      "id":"section_visible",
+      "label":"Visibility",
+      "options":[
+        {
+          "value":"hide_mobile",
+          "label": "Hide on Mobile"
+        },
+        {
+          "value":"hide_desktop",
+          "label": "Hide on Desktop"
+        },
+        {
+          "value":"all",
+          "label": "Show all"
+        }
+      ],
+      "default": "all"
+    }
+  ],
+  "blocks": [
+    {
+      "type":"svg_content",
+      "name":"SVG + Content",
+      "settings": [
+        {
+          "type":"text",
+          "id":"text_1",
+          "label":"Heading",
+          "default": "Lorem ipsum"
+        },
+        {
+          "type":"text",
+          "id":"text_2",
+          "label":"Content"
+        },
+        {
+          "type":"radio",
+          "id":"icon_type",
+          "label":"Icon type",
+          "options":[
+            {
+              "value":"svg",
+              "label": "SVG"
+            },
+            {
+              "value":"image",
+              "label": "Image"
+            }
+          ],
+          "default": "svg"
+        },
+        {
+          "type":"html",
+          "id":"svg",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        },
+        {
+          "type":"image_picker",
+          "id":"image",
+          "label":"Image icon"
+        },
+        {
+          "type":"text",
+          "id":"max_width",
+          "label":"Icon max width",
+          "default": "100px",
+          "info": "E.g: 100px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

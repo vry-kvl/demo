@@ -1,0 +1,56 @@
+{%- if value == blank -%}{%- break -%}{%- endif -%}
+
+{%- assign value = value | strip | remove: ' ' | split: ',' -%}
+
+{%- capture mediaClass -%}
+  {%- case value.size -%}
+    {%- when 1  -%}-
+    {%- when 2  -%}-,-md-
+    {%- when 3  -%}-,-md-,-lg-
+    {%- else    -%}-,-md-,-lg-,-xl-
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign mediaClass = mediaClass | split: ',' -%}
+
+{%- capture mediaScreen -%}
+  {%- case value.size -%}
+    {%- when 1  -%}
+    {%- when 2  -%},min-width: 750px
+    {%- when 3  -%},min-width: 750px,min-width: 1000px
+    {%- else -%},min-width: 750px,min-width: 1000px,min-width: 1300px
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign mediaScreen = mediaScreen | split: ',' -%}
+
+
+{%- for m in mediaClass -%}
+  {%- capture mValue -%}{{value[forloop.index0] | handle }}{%- endcapture -%}
+
+  {%- if style -%}
+
+    {%- assign screen = mediaScreen[forloop.index0] -%}
+    {%- unless value[forloop.index0] contains '.' -%}{%- continue -%}{%- endunless -%}
+
+    {%- capture screen -%}
+      {%- if forloop.first and mediaScreen.size > 1 -%}{{- 'max-width: 749px' -}}
+      {%- else -%}{{- screen -}}
+      {%- endif -%}
+    {%- endcapture -%}
+
+    {%- if screen contains 'px' -%} @media ({{screen}}){ {%- endif -%}
+      {%- if id != blank -%}{{id}}{%- else -%}  {{'.section-' | append: section.id}}{%- endif -%}
+
+      {%- liquid
+        assign widthPerItem = 100.0 | divided_by: value[forloop.index0]
+      -%}
+
+      {{- ' .flex' | append: m | append: mValue -}}>*{
+        {{- -}}flex: 0 0 {{widthPerItem}}%;
+        {{- -}}max-width: {{widthPerItem}}%;
+      {{- -}} }
+      {%- if screen contains 'px' -%} } {%- endif -%}
+
+  {%- else -%}
+    {{- ' flex' | append: m | append: mValue -}}
+  {%- endif -%}
+{%- endfor -%}

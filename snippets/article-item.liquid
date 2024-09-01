@@ -1,0 +1,32 @@
+{%- liquid
+  assign image = article.image
+  assign excerpt = article.excerpt_or_content | truncatewords: 20 | strip_html
+  assign blockType = section.blocks | map: 'type'
+-%}
+
+<article class="article-card">
+  <main class="article-card_body">
+    {%- for type in blockType -%}
+      {%- case type -%}
+        {%- when 'image' -%}
+          <div class="article-image">
+            <a href="{{article.url}}">
+              {%- render 'image-style' image: image, imgClass: imgClass, height: imgHeight -%}
+            </a>
+          </div>
+
+        {%- when 'title' -%}
+          <h3 class="article-title h4"><a href="{{article.url}}">{{article.title}}</a></h3>
+
+        {%- when 'info' -%}
+          <div class="article-info">
+            {{ article.published_at | time_tag: '%B %d, %Y' }}
+            <span class="author">{{article.author}}</span>
+          </div>
+
+        {%- when 'excerpt' -%}
+          <div class="article-excerpt">{{excerpt}}</div>
+      {%- endcase -%}
+    {%- endfor -%}
+  </main>
+</article>

@@ -1,0 +1,1 @@
+{"version":3,"sources":[".common/_47_product-slider-component.scss"],"names":[],"mappings":"AAAA,sBAAA,CACC,UAAA,CAAA,IAAgB,CAAA","file":"product-slider-component.min.css","sourcesContent":[".product-layout-column {\r\n\tbackground: #eee;\r\n}"]}

@@ -1,0 +1,47 @@
+{%- liquid
+  assign currencyType = settings.currency_type
+
+  case currencyType
+    when 'shopify'
+      assign listCurrencies = shop.enabled_currencies
+      assign defaultCurrency = cart.currency.iso_code
+
+    when 'arena'
+      assign defaultCurrency = settings.default_currency | strip
+      assign supportedCurrencies = settings.supported_currencies | strip
+      assign listCurrencies = defaultCurrency | append: ' ' | append: supportedCurrencies | strip | replace: '  ', ' ' | split: ' '
+
+  endcase
+-%}
+
+{%- case type -%}
+  {%- when 'default' -%}{{- defaultCurrency -}}
+
+  {%- when 'list' -%}
+    {%- case currencyType -%}
+      {%- when 'shopify' -%}{{- listCurrencies | map: 'iso_code' | join: ' ' -}}
+      {%- when 'arena' -%}{{- listCurrencies | join: ' ' -}}
+    {%- endcase -%}
+
+  {%- else -%}
+
+    {%- for item in listCurrencies -%}
+      {%- liquid
+        case currencyType
+          when 'shopify'
+            assign currencyCode = item.iso_code
+            assign countryCode = localization.available_countries | where: 'name', item.name | map: 'iso_code'
+            assign symbol = item.symbol
+          when 'arena'
+            assign currencyCode = item | strip
+        endcase
+      -%}
+
+      <li class="{% if currencyCode == defaultCurrency %} active{% endif %}">
+        <button type="button" class="c-pointer uppercase highlight-hover js-currencies js-multi-shop js-currencies-{{currencyCode}}" data-value="{{currencyCode}}" data-code="{{countryCode | default: currencyCode}}">
+          <span class="currency-flag currency-flag-{{currencyCode | handle }}"></span>
+          <span>{{currencyCode}}{% unless symbol == blank %} ({{symbol}}){% endunless %}</span>
+        </button>
+      </li>
+    {%- endfor -%}
+{%- endcase -%}

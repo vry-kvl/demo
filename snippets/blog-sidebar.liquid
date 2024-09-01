@@ -1,0 +1,72 @@
+{%- liquid
+  assign sidebar_block_list = 'menu,featured-blogs,tags'
+-%}
+
+<aside class="sidebar" id="blog-sidebar">
+  {%- for block in section.blocks -%}
+    {%- unless sidebar_block_list contains block.type -%}{%- continue -%}{%- endunless -%}
+    {%- assign blockID = '#block-' | append: block.id -%}
+
+    <div class="sidebar_widget widget-{{block.type}}" id="block-{{block.id}}" {{block.shopify_attributes}}>
+      <div class="sidebar_widget_title d-flex justify-conetent-between">
+        <span>{{block.settings.title}}</span>
+        {%- if block.type == 'tags' -%}{%- render 'svg' type: 'is-loading' -%}{%- endif -%}
+      </div>
+      {%- case block.type -%}
+        {%- when 'menu' -%}
+          <ul class="menu-list">
+            {%- for link in linklists[block.settings.menu].links -%}
+              <li class="menu-item">
+                <a href="{{link.url}}">
+                  {{link.title}}
+                  {%- if link.object.articles_count  != blank-%}
+                    <span class="number">({{link.object.articles_count}})</span>
+                  {%- endif -%}
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        {% comment %} end {% endcomment %}
+
+        {%- when 'tags' -%}
+          {%- liquid
+            assign auto_detect_tags = block.settings.auto_detect_tags
+            assign tags_list = block.settings.tags_list | split: ','
+          -%}
+
+          {%- if auto_detect_tags -%}
+            {%- assign tags_list = blog.all_tags -%}
+          {%- endif -%}
+          <ul class="tags-list">
+            {%- for tag in tags_list -%}
+              {%- unless blog.all_tags contains tag -%} {%- continue -%} {%- endunless -%}
+              <li class="tag-item js-tag {% if current_tags contains tag -%} active {%- endif -%}" data-tag-handle="{{tag | handle}}">
+                {%- if current_tags contains tag -%}
+                  {{tag | link_to_remove_tag: tag}}
+                {%- else -%}
+                  {{tag | link_to_add_tag: tag}}
+                {%- endif -%}
+              </li>
+            {%- endfor -%}
+          </ul>
+        {% comment %} end {% endcomment %}
+
+        {%- when 'featured-blogs' -%}
+          <div class="articles-list grid-1 d-grid">
+            {%- for article in blogs[block.settings.blog].articles limit: block.settings.limit -%}
+              <article class="article position-relative">
+                <a href="{{article.url}}">
+                  <div class="article_image">
+                    {%- render 'image-style' image: article.image , limit: 540, padding_top: '55%' -%}
+                  </div>
+                  <p class="position-absolute article_title">{{article.title}}</p>
+                </a>
+              </article>
+            {%- endfor -%}
+          </div>
+          <style>{%- render 'grid-spacing' preClassID: blockID, class: ' .d-grid'  value: block.settings.items_spacing -%}</style>
+        {% comment %} end {% endcomment %}
+      {%- endcase -%}
+    </div>
+  {%- endfor -%}
+</aside>

@@ -1,0 +1,291 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'store-list' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- capture content -%}
+{%- liquid
+  assign sectionType        = 'store-list'
+  assign sectionID          = '.section-' | append: section.id
+  assign showBottomBorder  = section.settings.show_border
+-%}
+
+
+{%- capture CLASS -%}
+|section-{{sectionType}}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+      <div class="section-content-inner">
+        {%- comment -%}
+        -------------------------------
+        Section heading
+        -------------------------------
+        {%- endcomment-%}
+        {%- assign sectionHeading = section.settings.section_heading -%}
+        {%- assign sectionSubText = section.settings.section_subtext -%}
+        {%- unless sectionHeading == blank  and sectionSubText == blank -%}
+          <div class="section-heading-wrapper">
+            {%- unless sectionHeading == blank -%}
+              <h3 class="section-heading">{{sectionHeading}}</h3>
+            {%- endunless -%}
+            {%- unless sectionSubText == blank -%}
+              <p>{{sectionSubText}}</p>
+            {%- endunless -%}
+          </div>
+          {%- capture section_css -%}{{- section_css -}}
+            {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+          {%- endcapture -%}
+        {%- endunless -%}
+
+        {%- if section.blocks.size > 0 -%}
+
+          {%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+          {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+
+          <div class="flex{{gridClass}}">
+            {%- for block in section.blocks -%}
+              {%- liquid
+                assign mapLink         = block.settings.link_to_map | default: 'javascript:void(0);'
+                assign storeTitle      = block.settings.title
+                assign address         = block.settings.address
+                assign workingTime     = block.settings.working_time
+                assign phone           = block.settings.phone
+                assign mail            = block.settings.mail
+              -%}
+
+              <div class="store-item block"{{block.shopify_attributes}}>
+                <div class="store-inner">
+                  <a href="{{mapLink}}" class="inherit-color" target="_blank">
+                    {%- unless storeTitle == blank -%}
+                      <h3 class="store-title h5 fw500">{{storeTitle}}</h3>
+                    {%- endunless -%}
+                    {%- unless address == blank -%}
+                      <div class="store-address">{{address}}</div>
+                    {%- endunless -%}
+                    {%- unless workingTime == blank -%}
+                      <div class="store-working-time">{{workingTime}}</div>
+                    {%- endunless -%}
+                    {%- unless phone == blank -%}
+                      <p class="store-phone-number h4 fw500">{{phone}}</p>
+                    {%- endunless -%}
+                  </a>
+                  {%- unless mail == blank -%}
+                  <div class="store-email">
+                    <a href="mailto:{{mail}}" class="highlight underline">{{mail}}</a>
+                  </div>
+                  {%- endunless -%}
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+
+        {%- else -%}
+
+          <div class="custom-block-text">
+            <h2>Talk about your brand</h2>
+            <p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>
+          </div>
+        {%- endif -%}
+
+      </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+
+  {%- if showBottomBorder -%}
+    {{sectionID}} .store-item{border-bottom: 1px solid var(--miscellaneous-color);}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+
+
+{%- comment -%}
+-------------------------------
+Border Responsive
+-------------------------------
+{%- endcomment-%}
+{%- if showBottomBorder -%}
+  {%- assign mediaArray = section.settings['items_resp'] | split: ',' -%}
+  {%- capture mediaScreen -%}
+    {%- case mediaArray.size -%}
+      {%- when 1  -%}{{- '' -}}
+      {%- when 2  -%}{{- '(max-width: 749px),(min-width: 750px)' -}}
+      {%- when 3  -%}{{- '(max-width: 749px),(min-width: 750px) and (max-width: 999px),(min-width: 1000px)' -}}
+      {%- else    -%}{{- '(max-width: 749px),(min-width: 750px) and (max-width: 999px),(min-width: 1000px) and (max-width: 1299px),(min-width: 1300px)' -}}
+    {%- endcase -%}
+  {%- endcapture -%}
+  {%- assign mediaScreen  = mediaScreen | strip_newlines | split: ','  -%}
+
+  {%- for i in (1..mediaArray.size) -%}
+
+    {%- assign index = mediaArray[forloop.index0] | strip | times: 1.0 -%}
+    {%- assign rows = section.blocks.size | divided_by: index | ceil | minus: 1 | round: 0 -%}
+    
+    {%- capture cssBorder -%}
+      {{sectionID}} .block:nth-child(n+{{rows | times: index  | round: 0 | plus: 1}}){border: none; margin-bottom: 0;}
+    {%- endcapture -%}
+
+    {%- assign mediaValue = mediaScreen[forloop.index0] | strip -%}
+    <style type="text/css" media="{% unless mediaValue == blank %}screen and {{mediaValue}}{% endunless %}" data-shopify>{{cssBorder}}</style>
+  {%- endfor -%}
+{%- endif -%}
+
+
+{{content}}
+
+{% schema %}
+{
+  "name": "Store list",
+  "tag": "section",
+  "templates": ["page"],
+  "presets": [
+    {
+      "name": "Store list"
+    }
+  ],
+  "settings": [
+    {
+      "type":"text",
+      "id":"items_resp",
+      "label":"Max number of item per row",
+      "default": "2,3,4",
+      "info": "E.g: 2,4. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"checkbox",
+      "id":"show_border",
+      "label":"Show border bottom on each item"
+    },
+    {
+       "type":"header",
+       "content":"Section heading"
+    },
+    {
+      "type":"text",
+      "id":"section_heading",
+      "label":"Heading"
+    },
+    {
+      "type":"text",
+      "id":"section_subtext",
+      "label":"Subtext"
+    },
+    {
+       "type":"paragraph",
+       "content":"**Heading styles"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_align",
+      "label":"Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_margin",
+      "label":"Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_heading_color",
+      "label":"Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"section_margin",
+      "label":"Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_padding",
+      "label":"Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"select",
+      "id":"section_visible",
+      "label":"Visibility",
+      "options":[
+        {
+          "value":"hide_mobile",
+          "label": "Hide on Mobile"
+        },
+        {
+          "value":"hide_desktop",
+          "label": "Hide on Desktop"
+        },
+        {
+          "value":"all",
+          "label": "Show all"
+        }
+      ],
+      "default": "all"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "content",
+      "name": "Block item",
+      "settings": [
+        {
+          "type":"text",
+          "id":"title",
+          "label":"Store name",
+          "default": "Store name"
+        },
+        {
+          "type":"richtext",
+          "id":"address",
+          "label":"Address"
+        },
+        {
+          "type":"richtext",
+          "id":"working_time",
+          "label":"Working time"
+        },
+        {
+          "type":"text",
+          "id":"phone",
+          "label":"Phone number"
+        },
+        {
+          "type":"text",
+          "id":"mail",
+          "label":"Mail"
+        },
+        {
+          "type":"url",
+          "id":"link_to_map",
+          "label":"Map link:"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

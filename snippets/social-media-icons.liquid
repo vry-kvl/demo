@@ -1,0 +1,29 @@
+{%- capture socialList -%}
+  |facebook
+  |instagram
+  |pinterest
+  |youtube
+  |twitter
+  |tiktok
+  |tumblr
+  |snapchat
+  |vimeo
+{%- endcapture -%}
+{%- assign socialList = socialList | remove_first: '|' | strip_newlines | split: '|' -%}
+
+<ul class="list list-social" role="list">
+  {%- for item in socialList -%}
+    {%- assign social = item | strip -%}
+    {%- capture id -%}social_{{social}}_link{%- endcapture -%}
+
+    {%- if settings[id] == blank -%}{%- continue -%}{%- endif -%}
+
+    {%- capture label -%}general.social.links.{{social}}{%- endcapture -%}
+
+    <li class="list-social__item inline-block">
+      <a href="{{ settings[id] }}" class="link link--text list-social__link" aria-describedby="a11y-external-message" title="{{ label | t }}">
+        {%- render 'svg', type: social -%}
+      </a>
+    </li>
+  {%- endfor -%}
+</ul>

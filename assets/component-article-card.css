@@ -1,0 +1,17 @@
+.section-featured-blog .featured-blog-list {
+  position: relative; }
+
+.section-featured-blog .article-title a {
+  color: var(--text-color);
+  font-size: 20px;
+  line-height: 1.4em;
+  font-weight: 500;
+  display: block; }
+
+.section-featured-blog .article-info {
+  color: var(--subtext-color);
+  font-size: 13px;
+  line-height: 1.4em; }
+
+.section-featured-blog .tns-nav {
+  margin-top: 30px; }

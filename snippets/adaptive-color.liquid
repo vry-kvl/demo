@@ -1,0 +1,50 @@
+{%- comment -%}
+-------------------------------
+USAGE: {%- render 'adaptive-color', type: '', color: varriable -%}
+-------------------------------
+{%- endcomment-%}
+{%- case type -%}
+  {%- when 'unknow' -%}
+    {%- comment -%}
+    Case nay duoc su dung voi cac element ma text co dinh, co the thay doi mau 1 chut de hien thi dep, kieu nhu color-overlay-text-focus, text khi focus, overlay..)
+    {%- endcomment -%}
+
+    {%- assign color_brightness = color | color_brightness -%}
+    {%- if color_brightness < 64 -%}
+      {%- if is_background_color -%}
+        {%- assign new_color = color | color_lighten: 10 -%}
+      {%- else -%}
+        {%- assign new_color = color | color_lighten: 15 -%}
+      {%- endif -%}
+    {%- else -%}
+      {%- if is_background_color -%}
+        {%- assign new_color = color | color_darken: 5 -%}
+      {%- else -%}
+        {%- assign new_color = color | color_darken: 10 -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- if color_brightness < 26 -%}
+      {%- if is_background_color -%}
+        {%- assign new_color = color | color_lighten: 15 -%}
+      {%- else -%}
+        {%- assign new_color = color | color_lighten: 25 -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    {{- new_color -}}
+
+  {%- else -%}
+
+    {%- liquid
+      unless color == blank
+        assign white = color | brightness_difference: '#FFFFFF'
+
+        if white >= 125
+          echo '#FFFFFF'
+        else
+          echo '#000000'
+        endif
+      endunless
+    -%}
+{%- endcase -%}

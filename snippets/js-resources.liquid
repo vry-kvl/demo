@@ -1,0 +1,108 @@
+{%- assign minify = true -%}
+
+{%- capture fileName -%}plugin{% if minify %}.min{% endif %}.js{%- endcapture -%}
+<script src="{{fileName | asset_url}}" async></script>
+
+{%- capture jsFiles -%}
+  |theme
+  {%- if settings.currency_type == 'arena' -%}|multi-currencies{%- endif -%}
+  {%- if settings.enable_predictive_search -%}|predictive-search{%- endif -%}
+  {%- if settings.enable_fomo -%}|fomo-section{%- endif -%}
+
+  {%- case request.page_type -%}
+    {%- when 'product'    -%}|product-page
+    {%- when 'collection' -%}|collection-page
+    {%- when 'cart' -%}|cart-page
+    {%- when request.page_type contains 'address' -%}|address-page
+    {%- when 'page'    -%}|page
+  {%- endcase -%}
+{%- endcapture -%}
+{%- assign jsFiles = jsFiles | remove_first: '|' | split: '|' -%}
+
+<script type="application/javascript" data-theme-script>
+  {%- unless request.design_mode -%}
+    {%- if request.host == 'demo-preview.myshopify.com' or request.host contains 'arena' or request.host contains 'arenacommerce' -%}window.BOOMR = {version:1};{%- endif -%}
+  {%- endunless -%}
+  document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
+
+  window.theme = Object.assign( window.theme || {}, {
+    routes: {
+      pageType: {{request.page_type | json }},
+      searchUrl: {{ routes.search_url | json }},
+      collectionAllUrl: {{ routes.all_products_collection_url | json }},
+      cartAdd: {{ routes.cart_add_url | append: '.js' | json }},
+      cartUrl: {{ routes.cart_url | json }},
+      cartGet: {{ routes.cart_url | append: '.js' | json }},
+      cartChange: {{ routes.cart_change_url | append: '.js' | json }},
+      cartUpdate: {{ routes.cart_update_url | append: '.js' | json }},
+      cartClear: {{ routes.cart_clear_url | append: '.js' | json }}
+    },
+    assets: {
+      defaultImage: "{{ 'default-image.jpg' | asset_img_url: 'master' }}",
+      currenciesRateUrl: "{{'/services/javascripts/currencies.js' | within: shop}}",
+      klaviyoScript: '//www.klaviyo.com/media/js/public/klaviyo_subscribe.js'
+    },
+    settings: {
+      themeLayout: {{settings['theme_layout'] | default: 'ltr' | downcase | json}},
+      currencyType: {{settings['currency_type'] | json}},
+      currency: {{shop.currency | json}},
+      currencyFormat: {{settings['currency_format'] | json}},
+      moneyFormat: {{shop.money_format | json}},
+      defaultCurrency: {{settings['default_currency'] | json}},
+      cartStyle: {{settings['cart_styles'] | json}},
+      cartAddedEffect: {{settings['effect_cart_added'] | json}}
+    },
+    string: {
+      unavailable: {{- 'products.product.unavailable' | t | json -}}
+    }
+    {%- case request.page_type -%}
+      {%- when 'product' -%},product: {{product | json}}
+    {%- endcase -%}
+  });
+
+  let jsResources = [
+    {%- for file in jsFiles -%}
+      {%- if file contains '.js' -%}
+        {{- file | json -}}
+      {%- else -%}
+        {%- capture fileName -%}{{-file | strip -}}{% if minify %}.min{% endif %}.js{%- endcapture -%}
+        {{- fileName | asset_url | json  -}}
+      {%- endif -%}
+        {%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ];
+
+  jsPreload();
+
+  document.addEventListener('DOMContentLoaded', jsLoad, {once: true});
+
+  function jsPreload(){
+    jsResources.forEach( resource =>{
+      let link = document.createElement('link');
+      link.href = resource;
+      link.rel = 'preload';
+      link.as = 'script';
+      document.head.append(link);
+    })
+  }
+
+  async function jsLoad(){
+    for (const resource of jsResources) {
+      await new Promise((reslove, rejcet) => {
+        let script = document.createElement("script");
+        script.src = resource;
+        script.onload = () => {reslove(1);};
+        document.body.append(script);
+      })
+    }
+  }
+  function removeDupLink(element){
+    const exist = document.querySelectorAll(`link[data-name="${element.dataset.name}"]:not([as="script"])`).length;
+
+    if(exist > 1){
+      element.nextElementSibling && element.nextElementSibling.tagName == 'NOSCRIPT' && element.nextElementSibling.remove();
+      element.remove();
+      return;
+    }
+  }
+</script>

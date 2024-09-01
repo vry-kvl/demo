@@ -1,0 +1,66 @@
+{%- case type -%}
+	{%- when 'header' -%}
+    {%- if settings.announcement_bar     -%}{%- section 'announcement-bar' -%}{%- endif -%}
+    {%- section 'header' -%}
+    {%- if settings.enable_mega_menu     -%}{%- section 'header-mega-menu' -%}{%- endif -%}
+    {%- if settings.enable_mega_menu_tab -%}{%- section 'header-mega-menu-tab' -%}{%- endif -%}
+
+	{%- when 'footer' -%}
+    {%- if settings.enable_footer_widget -%}{%- section 'footer-widget' -%}{%- endif -%}
+    {%- if settings.enable_icon_list 	-%}{%- section 'static-section-icon-list' -%}{%- endif -%}
+    {%- section 'footer' -%}
+
+	{%- when 'modal' -%}
+		<modal-box class="modal">
+			<div class="modal-layer js-modal-close"></div>
+			<div class="modal-content">
+				<button type="button" class="modal-button-close js-modal-close"></button>
+				<div class="modal-header"></div>
+				<div class="modal-body"></div>
+			</div>
+		</modal-box>
+
+	{%- when 'splitContent' -%}
+		{%- comment -%}
+			Params:
+			+ key: split content by keyword
+			+ firstSection: just split content in the first section
+			+ output: which content will be render after split
+		{%- endcomment-%}
+
+		{%- capture splitStart -%}<!--split:{{key}}[-->{%- endcapture -%}
+		{%- capture splitend -%}<!--split:{{key}}]-->{%- endcapture -%}
+
+		{%- if content contains splitStart -%}
+
+			{%- assign splitContent = content | split: splitStart -%}
+
+			{%- for c in splitContent -%}
+				{%- if c contains splitend -%}
+					{%- assign cSplit = c | split: splitend -%}
+					{%- capture mainContent -%}{{ mainContent | append: cSplit.last }}{%- endcapture -%}
+
+					{%- if existed != true -%}
+						{%- capture preloadContent -%}{{ preloadContent | append: cSplit.first }}{%- endcapture -%}
+					{%- endif -%}
+
+					{%- if firstSection and cSplit.last contains '</section>' -%}
+						{%- assign existed = true -%}
+					{%- endif -%}
+
+				{%- else -%}
+					{%- capture mainContent -%}{{ mainContent | append: c }}{%- endcapture -%}
+
+				{%- endif -%}
+			{%- endfor -%}
+		{%- endif -%}
+
+
+		{%- case output -%}
+			{%- when 'value' -%}
+				{{preloadContent}}
+			{%- else -%}
+				{{ mainContent | default: content }}
+		{%- endcase -%}
+
+{%- endcase -%}

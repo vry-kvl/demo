@@ -1,0 +1,110 @@
+{%- assign effectCartAdded = settings['effect_cart_added'] -%}
+{%- if effectCartAdded contains 'popup' and product != blank -%}
+
+{%- if effectCartAdded == 'popup_suggest' or product.metafields.c_f.cart_recommend -%}
+	{%- assign hasRecommend = true -%}
+{%- endif -%}
+
+{%- assign item = cart.items | where: 'id', product.selected_or_first_available_variant.id | first -%}
+
+
+<div id="cartAddedPopup" class="cart-noti-popup{% if hasRecommend %} with-recommend{% endif %} popup-gl js-popup js-cart-noti">
+	<!--{{product.selected_or_first_available_variant.id}}-->
+	<!--{{cart.items | map: 'id' | join: ',  '}}-->
+	{%- render 'snippet-section', type: 'css-file', minify: true, name: 'cart-noti-popup' -%}
+
+	<div class="popup-layer js-popup-close"></div>
+
+	<div class="popup-inner">
+		{%- if hasRecommend -%}
+			<button type="button" class="btn btn-popup-close js-popup-close">
+				{%- render 'svg', type: 'close' -%}
+			</button>		
+		{%- endif -%}
+
+		<div class="popup-content-wrapper">
+			<h4 class="popup-title">
+				<div class="popup-title-inner">
+					<span class="icon-ticked">
+						<svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path fill-rule="evenodd" clip-rule="evenodd" d="M10 1.39288L3.556 8L0 4.34124L1.36086 2.95079L3.55837 5.21182L8.64151 0L10 1.39288Z" fill="#FFFFFF"/>
+						</svg>
+					</span>
+					<span class="text">{{- 'cart.popup.title' | t -}}</span>
+				</div>
+			</h4>
+			<div class="popup-content">
+				{%- unless hasRecommend -%}
+
+					<div class="item-information flex flex-1 flex-md-2">
+						{%- capture imageRatio -%}
+							{%- case cart_item_image_ratio -%}
+								{%- when '100%' 	-%}{{- 1 -}}
+								{%- when '150%' 	-%}{{- 2 | divided_by: 3 -}}
+								{%- when '75%' 		-%}{{- 4 | divided_by: 3 -}}
+								{%- when '56.25%' 	-%}{{- 16 | divided_by: 9 -}}
+							{%- endcase -%}
+						{%- endcapture -%}
+
+						{%- render 'product-item',
+													product: product,
+													imageRatio: imageRatio,
+													cartBtnPosition: 'top',
+													hideCart: true 
+						-%}
+
+						<div class="cart-summary">
+							<div class="cart-summary-content">
+								<p class="cart-subtext">{{- 'cart.popup.subtext' | t: count: cart.item_count -}}</p>
+								<p class="cart-total">
+									<span class="text">{{- 'cart.general.total' | t -}}:</span> {%- render 'money', value: cart.total_price, format: 'money_with_currency_format', class: 'cart-total-price' -%}
+								</p>
+							</div>
+
+							<div class="cart-buttons">
+								<div class="button-item">
+									<button class="btn btn-1 btn-cart-shopping js-popup-close" type="button">{{- 'cart.general.continue_shopping' | t -}}</button>
+								</div>
+								<div class="button-item">
+									<a href="{{routes.cart_url}}" class="btn btn-1 btn-go-cart">{{ 'cart.general.view_cart' | t }}</a>
+								</div>
+								<div class="button-item">
+									<a href="{{routes.cart_url | replace: 'cart', 'checkout' }}" class="btn btn-1 btn-cart-checkout">{{ 'cart.general.checkout' | t }}</a>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				{%- else -%}
+					<div class="item-information flex flex-fill">
+						{%- render 'cart-item', type: 'image', item: item -%}						
+
+						<div class="item-information-body flex flex-fill">
+							{%- render 'cart-item', type: 'name', item: item -%}
+							<div class="item-quantity">
+								<span>&times;{{ item.quantity }}</span>
+							</div>
+							{%- render 'cart-item', type: 'total', item: item -%}
+						</div>
+					</div>
+
+					{%- render 'snippet-cart', type: 'recommendation', PRODUCTID: product.id, itemResp: '2.1,3,3' -%}
+
+					<div class="cart-buttons text-center">
+						<div class="button-item">
+							<a href="{{routes.cart_url}}" class="btn btn-1 btn-go-cart">{{ 'cart.popup.continue_to_cart' | t }}</a>
+						</div>
+
+						<div class="button-item">
+							<a href="javascript:void(0);" class="btn-cart-close js-popup-close">{{- 'cart.popup.no_thanks' | t -}}</a>
+						</div>
+					</div>
+				{%- endunless -%}
+
+
+
+			</div>
+		</div>
+	</div>
+</div>
+{%- endif -%}

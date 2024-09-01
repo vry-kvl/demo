@@ -1,0 +1,190 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'customer' -%}
+
+{%- liquid
+  assign pageTitle = 'customer.login.title' | t
+  assign emailAddress = 'customer.login.email_address' | t
+  assign password = 'customer.login.password' | t
+  assign forgottenPassword = 'customer.login.forgotten_password' | t
+  assign submitButton = 'customer.login.submit' | t
+
+  assign resetTitle = 'customer.reset_password.title' | t
+  assign resetContent = 'customer.reset_password.subtitle' | t
+  assign resetButton = 'customer.reset_password.submit' | t
+  assign resetSuccess = "customer.reset_password.message" | t
+
+  assign errorTitle = 'form.general.error_title' | t
+  assign cancelButton = 'customer.general.cancel' | t
+  assign guestButton = 'customer.general.guest_login' | t
+
+  assign registerTitle = 'customer.login.register_title' | t
+  assign registerSubtitle = 'customer.login.register_subtitle' | t
+  assign registerButton = 'customer.login.register_button' | t
+-%}
+
+<style>
+  #recover,
+  #recover:target + div{display: none;}
+  #recover:target{display: block;}
+  #login, #recover {
+    scroll-margin-top: 20rem;
+  }
+</style>
+<div class="container">
+  <div class="main-page flex flex-1 flex-md-2 {% render 'snippet-section', type: 'spacing' %}">
+
+    <div class="block-item first-block">
+      <div class="block-inner">
+        {%- comment -%}
+        -------------------------------
+        Recover form
+        -------------------------------
+        {%- endcomment-%}
+        <div class="form-wrapper recover-form" id="recover" tabindex="-1">
+
+          <h2 class="page-heading h2 fw600">{{resetTitle}}</h2>
+          <p>{{ resetContent }}</p>
+
+          {%- form 'recover_customer_password' -%}
+            {% assign recover_success = form.posted_successfully? %}
+
+            <div class="form-field">
+              <label class="label-field" for="RecoverEmail">{{ emailAddress }}</label>
+              <input
+                    type="email"
+                    name="email"
+                    id="RecoverEmail"
+                    class="input-field"
+                    value=""
+                    autocorrect="off"
+                    autocapitalize="off"
+                    autocomplete="email"
+                    {% if form.errors %}
+                    aria-invalid="true"
+                    aria-describedby="RecoverEmail-email-error"
+                    autofocus
+                    {% endif %}
+              >
+              {%- if form.errors -%}
+                <p id="RecoverEmail-email-error" class="form__message error">
+                  {%- render 'svg', type: 'error', useLink: true -%}
+                  <span>{{ form.errors.messages['form'] }}</span>
+                </p>
+              {%- endif -%}
+            </div>
+
+            <div class="form-field form-button-group">
+              <button type="submit" class="btn btn-1">{{ resetButton }}</button>
+              <a href="#login" class="btn btn-2">{{ cancelButton }}</a>
+            </div>
+          {%- endform -%}
+        </div>
+
+
+        {%- comment -%}
+        -------------------------------
+        Login form
+        -------------------------------
+        {%- endcomment-%}
+
+        <div class="form-wrapper login-form" id="login" tabindex="-1">
+          <h1 class="page-heading h2 fw600">{{pageTitle}}</h1>
+
+          {%- if recover_success == true -%}
+            <p class="form__message success" tabindex="-1" autofocus>
+              {%- render 'svg', type: 'tick', useLink: true -%}
+              <span>{{resetSuccess}}</span>
+            </p>
+          {%- endif -%}
+
+          {%- form 'customer_login', novalidate: 'novalidate' -%}
+            {%- if form.errors -%}
+              <p class="form__message error" tabindex="-1" autofocus>
+                {%- render 'svg', type: 'error', useLink: true -%}
+                <span>{{ errorTitle }}</span>
+              </p>
+              {{ form.errors | default_errors }}
+            {%- endif -%}
+
+
+            <div class="form-field">
+              <label class="label-field" for="CustomerEmail">{{ emailAddress }}</label>
+              <input
+                type="email"
+                name="customer[email]"
+                id="CustomerEmail"
+                class="input-field"
+                autocomplete="email"
+                autocorrect="off"
+                autocapitalize="off"
+                {% if form.errors contains 'form' %}
+                  aria-invalid="true"
+                {% endif %}
+              >
+            </div>
+
+            {%- if form.password_needed -%}
+              <div class="form-field">
+                <label class="label-field" for="CustomerPassword">{{ password }}</label>
+                <input
+                  type="password"
+                  value=""
+                  name="customer[password]"
+                  id="CustomerPassword"
+                  class="input-field"
+                  autocomplete="current-password"
+                  {% if form.errors contains 'form' %}
+                    aria-invalid="true"
+                  {% endif %}
+                >
+              </div>
+              <div class="form-field">
+                <a href="#recover" class="link-recover">{{ forgottenPassword }}</a>
+              </div>
+            {%- endif -%}
+
+            <div class="form-field form-button-group">
+              <button type="submit" class="btn btn-1">{{ submitButton }}</button>
+            </div>
+
+          {%- endform -%}
+        </div>
+
+
+        {%- comment -%}
+        -------------------------------
+        Shopify guest login
+        -------------------------------
+        {%- endcomment-%}
+        {%- if shop.checkout.guest_login -%}
+          <div class="form-wrapper guest-login-form">
+            <h4 class="page-heading h2 fw600">{{pageTitle}}</h4>
+            {%- form 'guest_login' -%}
+              <div class="form-field form-button-group">
+                <button type="submit" class="btn btn-1">{{guestButton}}</button>
+              </div>
+            {%- endform -%}
+          </div>
+        {%- endif -%}
+
+
+      </div>
+    </div>
+
+
+
+    {%- comment -%}
+    -------------------------------
+    Register redirect
+    -------------------------------
+    {%- endcomment-%}
+    <div class="block-item second-block">
+      <div class="block-inner">
+        <div class="form-wrapper">
+          <h3 class="page-heading h2 fw600">{{registerTitle}}</h3>
+          <p>{{ registerSubtitle }}</p>
+          <a href="{{routes.account_register_url}}" class="btn btn-1">{{registerButton}}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

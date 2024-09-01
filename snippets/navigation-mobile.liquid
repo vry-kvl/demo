@@ -1,0 +1,72 @@
+{%- liquid
+  assign enableMegaMenu       = settings.enable_mega_menu
+  assign enableMegaMenuTab    = settings.enable_mega_menu_tab
+  assign mobileMenu           = section.settings.mobile_menu | default: section.settings.main_menu
+  assign mobileMenu           = linklists[mobileMenu]
+  assign verticalMenu         = section.settings.vertical_menu
+  assign verticalMenuTitle    = section.settings.vertical_menu_title
+-%}
+
+<template id="mobileNav">
+  <mobile-navigation class="menu-mobile lg-none js-popup" data-control="m-navigation" data-layer-list=".mobile-navigation-layers">
+
+    <div class="mobile-navigation">
+     <button class="mobile-navigation-close popup-close js-popup-close" type="button">{%- render 'svg', type: 'close' -%}</button>
+
+     <div class="mobile-navigation-layers">
+       <section class="mobile-navigation-layer main-layer active">
+         <div class="mobile-navigation-header">
+           <div class="header-multi-shop">
+             {%- render 'header-snippet', type: 'multi_shop', inMobile: true -%}
+           </div>
+         </div>
+
+         <div class="mobile-navigation-body">
+           <ul class="menu-mobile-list" role="navigation" aria-label="Main">
+
+             {%- comment -%}
+             -------------------------------
+             VERTICAL MENU
+             -------------------------------
+             {%- endcomment-%}
+             {%- if verticalMenuTitle != blank  -%}
+               {%- capture subLayer -%}{%- render 'header-snippet', type: 'mobile_layer', enableMegaMenu: enableMegaMenu, link: linklists[verticalMenu], title: verticalMenuTitle -%}{%- endcapture -%}
+               {%- capture mobileLayer -%}{{mobileLayer}}{{subLayer}}{%- endcapture -%}
+
+               <li class="list-item js-nav-counter list-item-vertical{% if subLayer != blank %} has-sub-layer{% endif %}">
+                 <a href="javascript:void(0);" class="list-item-link link" title="{{ verticalMenuTitle | escape }}"{% if enableMegaMenu or subLayer != blank %} data-layer-id="{{ verticalMenuTitle | escape | sha1 }}"{% endif %}>
+                   <span>{{- verticalMenuTitle -}}</span>
+                   <span class="expand">{%- render 'svg', type: 'caret' -%}</span>
+                 </a>
+               </li>
+             {%- endif -%}
+
+             {%- comment -%}
+             -------------------------------
+             MAIN MENU
+             -------------------------------
+             {%- endcomment-%}
+             {%- for link in  mobileMenu.links -%}
+
+               {%- comment -%}
+               -------------------------------
+               RENDER SUB LAYER
+               -------------------------------
+               {%- endcomment-%}
+               {%- capture subLayer -%}{%- render 'header-snippet', type: 'mobile_layer', enableMegaMenu: enableMegaMenu, link: link -%}{%- endcapture -%}
+               {%- capture mobileLayer -%}{{mobileLayer}}{{subLayer}}{%- endcapture -%}
+               <li class="list-item js-nav-counter{% if subLayer != blank %} has-sub-layer{% endif %}">
+                 <a href="{{link.url}}" class="list-item-link link" title="{{ link.title | escape }}"{% if enableMegaMenu or subLayer != blank %} data-layer-id="{{ link.title | escape | sha1 }}"{% endif %}>
+                   <span>{{- link.title -}}</span>
+                   <span class="expand">{%- render 'svg', type: 'caret' -%}</span>
+                 </a>
+               </li>
+             {%- endfor -%}
+           </ul>
+         </div>
+       </section>
+       {{mobileLayer}}
+     </div>
+    </div>
+  </mobile-navigation>
+</template>

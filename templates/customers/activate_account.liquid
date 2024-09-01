@@ -1,0 +1,76 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'customer' -%}
+
+{%- liquid
+  assign pageTitle = 'customer.active_account.title' | t
+  assign pageContent = 'customer.active_account.subtitle' | t
+  assign password = 'customer.active_account.password' | t
+  assign passwordConfirm = 'customer.active_account.confirm_password' | t
+  assign submitButton = 'customer.active_account.accept_button' | t
+  assign declineButton = 'customer.active_account.decline_button' | t
+
+  assign errorTitle = 'form.general.error_title' | t
+-%}
+
+<svg xmlnsXlink="http://www.w3.org/2000/svg" class="none">
+  {%- render 'svg', type: 'error', define: true -%}
+</svg>
+
+<div class="container">
+  <div class="main-page flex flex-1 flex-md-2 {% render 'snippet-section', type: 'spacing' %} justify-content-center text-center">
+
+    <div class="block-item">
+      <div class="block-inner">
+        <div class="form-wrapper reset-password-form">
+          <h1 class="page-heading h2 fw600">{{pageTitle}}</h1>
+          <p>{{pageContent}}</p>
+
+          {%- form 'activate_customer_password' -%}
+            {%- if form.errors -%}
+              <p class="form__message" tabindex="-1" autofocus>
+                {%- render 'svg', type: 'error', useLink: true -%}
+                <span>{{errorTitle}}</span>
+              </p>
+              {{ form.errors | default_errors }}
+            {%- endif -%}
+
+            <div class="form-field">
+              <label class="label-field block text-left" for="password">{{ password }}</label>
+              <input
+                type="password"
+                name="customer[password]"
+                id="password"
+                class="input-field"
+                autocomplete="new-password"
+                {% if form.errors contains 'password' %}
+                  aria-invalid="true"
+                  aria-describedby="password-error"
+                {% endif %}
+              >
+            </div>
+
+            <div class="form-field">
+              <label class="label-field block text-left" for="password_confirmation">{{ passwordConfirm }}</label>
+              <input
+                type="password"
+                name="customer[password_confirmation]"
+                id="password_confirmation"
+                class="input-field"
+                autocomplete="new-password"
+                {% if form.errors contains 'password' %}
+                  aria-invalid="true"
+                  aria-describedby="password_confirmation-error"
+                {% endif %}
+              >
+            </div>
+
+            <div class="form-field form-button-group">
+              <button type="submit" class="btn btn-1">{{ submitButton }}</button>
+              <button type="submit" name="decline" class="btn btn-2">{{ declineButton }}</button>
+            </div>
+
+          {%- endform -%}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,3 @@
+.fomo-section .fomo-block{max-width:350px;width:100%}.fomo-section .fomo-image{flex:unset;-webkit-margin-end:15px;margin-inline-end:15px}.fomo-section .fomo-wrapper{z-index:97}.fomo-section .fomo-wrapper .fomo-block{display:block;transition:all .25s ease-in-out;padding:15px;transform:translateX(100%)}.fomo-section .fomo-content{white-space:nowrap}.fomo-section .fomo-wrapper .fomo-block:not(.active){position:absolute;pointer-events:none}.fomo-section .fomo-block.active{transform:translateX(0);position:static}
+
+/*# sourceMappingURL=fomo-section.min.css.map */

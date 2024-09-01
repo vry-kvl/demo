@@ -1,0 +1,84 @@
+{%- case type -%}
+
+  {%- when 'css-file' -%}
+    {%- unless section.id contains 'static' -%}<!--split:css[-->{%- endunless -%}
+
+    {%- capture fileName -%}{{name | handle }}{% if minify %}.min{% endif %}.css{%- endcapture -%}
+    <link rel="stylesheet" href="{{ fileName | asset_url }}" media="print" onload="this.media='all';" data-name="{{name | handle }}">
+    <noscript>{{ fileName | asset_url | stylesheet_tag }}</noscript>
+
+    {%- unless section.id contains 'static' -%}<!--split:css]-->{%- endunless -%}
+
+  {%- when 'css' -%}
+
+    {%- if section.settings.breadcrumb_layout == 'wide' -%}
+      {%- capture value -%}{{- value -}}#breadcrumb .breadcrumb-inner.container{padding: 0 15px; max-width: 100%;}@media (min-width: 1300px) {#breadcrumb .breadcrumb-inner.container{padding:0 50px;}}{%- endcapture -%}
+    {%- endif -%}
+
+    {%- capture media -%}{{- media -}}
+      {%- case section.settings.section_visible -%}
+        {%- when 'hide_mobile' -%}{{- 'min-width: 1000px' -}}
+        {%- when 'hide_desktop' -%}{{- 'max-width: 999px' -}}
+      {%- endcase -%}
+    {%- endcapture -%}
+
+    {%- if value == blank -%}{%- break -%}{%- endif -%}
+    <style type="text/css" media="{% if media != blank %}screen and ({{media}}){% else %}all{% endif %}" data-shopify>
+      {{- value | remove: '<style>' | remove: '<style data-shopify>' | remove: '</style>' | strip_newlines | strip -}}
+    </style>
+
+  {%- when 'class' -%}
+    {%- if class == blank -%}{%- break -%}{%- endif -%}
+
+    {%- assign object = object | default: section -%}
+
+    {%- capture class -%}{{- class -}}
+      {%- case object.settings.section_visible -%}
+        {%- when 'hide_mobile' -%}|none|lg-block
+        {%- when 'hide_desktop' -%}|lg-none
+      {%- endcase -%}
+    {%- endcapture -%}
+
+    {%- assign loop = class | split: '|' -%}
+    {%- capture class -%}{%- for c in loop -%},{{ c | strip }}{%- endfor -%}{%- endcapture -%}
+    {{- class | split: ',' | join: ' ' | strip -}}
+
+  {%- when 'spacing' -%}
+    {%- liquid
+      assign flex_gap = settings.flex_gap | split: ','
+    -%}
+    {%- if sliderSpacing -%}
+      {%- for value in flex_gap -%}{{value | strip}}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}
+    {%- else -%}
+      {%- case flex_gap.size -%}
+        {%- when 1  -%}flex-gap
+        {%- when 2  -%}flex-gap flex-gap-md
+        {%- when 3  -%}flex-gap flex-gap-md flex-gap-lg
+        {%- else  -%}flex-gap flex-gap-md flex-gap-lg flex-gap-xl
+      {%- endcase -%}
+    {%- endif -%}
+
+  {%- when 'heading_style' -%}
+    {%- assign object = object | default: section -%}
+    {%- render 'css-resp', class: sectionID, nextClass: ' .section-heading-wrapper', css: 'text-align', value: object.settings['section_heading_align'] -%}
+    {%- render 'css-resp', class: sectionID, nextClass: ' .section-heading-wrapper', css: 'margin', value: object.settings['section_heading_margin'] -%}
+    {%- render 'css-resp', class: sectionID, nextClass: ' .section-heading-wrapper .section-heading', css: 'font-size', value: object.settings['section_heading_fs'] -%}
+    {%- render 'css-resp', class: sectionID, nextClass: ' .section-heading-wrapper .section-heading', css: 'font-weight', value: object.settings['section_heading_fw'] -%}
+
+    {%- if object.settings['section_heading_color'] != 'rgba(0,0,0,0)' and object.settings['section_heading_color'] != blank -%}
+      {%- render 'css-resp', class: sectionID, nextClass: ' .section-heading-wrapper .section-heading', css: 'color', value: object.settings['section_heading_color'], splitBy: ';' -%}
+    {%- endif -%}
+
+  {%- when 'svg' -%}
+    {%- assign ID = ' id="' | append: id -%}
+    {%- assign URL = '="url(#' | append: id -%}
+    {{- svg | replace: ' id="', ID | replace: '="url(#', URL -}}
+
+  {%- when 'content' -%}
+    {%- assign contentSplit = content | strip_newlines | split: '<!--|||-->' -%}
+
+    {%- if css -%}{{- contentSplit.last -}}
+    {%- else -%}{{- contentSplit.first -}}
+    {%- endif -%}
+
+{%- endcase -%}

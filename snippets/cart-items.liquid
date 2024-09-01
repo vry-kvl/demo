@@ -1,0 +1,201 @@
+{%- assign cartStyle = settings.cart_styles | remove: 'cart_page' -%}
+
+{%- case cartStyle -%}
+    {%- when 'dropdown' -%}
+        {%- render 'snippet-section', type: 'css-file', minify: true, name: 'cart-dropdown' -%}
+
+        <cart-items id="miniCart" class="mini-cart block cart-dd pa t100 r0 block js-cart-change" data-card-id="cart-section" data-section-id="cart-section">
+            <form action="{{routes.cart_url}}" id="cart" class="form-cart-section">
+                {%- if preload -%}
+                    <div class="cart-loading">
+                        {%- render 'svg', type: 'loading', useLink: true -%}
+                    </div>
+
+                {%- elsif cart.item_count == 0 -%}
+                    {%- render 'snippet-cart', type: 'empty' -%}
+
+                {%- else -%}
+                    <ul class="list-cart-items">
+                        {%- for item in cart.items -%}
+                            <div class="cart-item js-cart-line" data-index="{{ item.index | plus: 1 }}">
+                                <div class="item-inner">
+                                    <div class="item-image">
+                                        {%- render 'cart-item', type: 'image', item: item -%}
+                                    </div>
+
+                                    <div class="item-information">
+                                        {%- render 'cart-item', type: 'name', item: item -%}
+                                        {%- render 'cart-item', type: 'total', item: item -%}
+                                    </div>
+
+                                    <div class="item-quantity">
+                                        <p>&times; {{item.quantity}}</p>
+                                    </div>
+
+                                    <div class="item-remove">
+                                        <cart-remove-button>
+                                            <a href="{{ item.url_to_remove }}" aria-label="{{ 'cart.general.remove_title' | t: title: item.title }}" data-index="{{ item.index | plus: 1 }}" data-url="{{item.url}}">
+                                                {% render 'svg', type: 'remove', useLink: true %}
+                                            </a>
+                                        </cart-remove-button>
+                                    </div>
+                                </div>
+                            </div>
+                        {%- endfor -%}
+                    </ul>
+
+                    <div class="mini-cart-footer">
+                        <div class="totals flex justify-content-between">
+                            <h5 class="totals__subtotal">{{ 'cart.general.subtotal' | t }}</h5>
+                            <p class="totals__subtotal-value js-cart-total">
+                                {%- render 'money', value: cart.total_price, format: 'money_with_currency_format' -%}
+                            </p>
+                        </div>
+
+                        <div class="cart-buttons">
+                            <a href="{{routes.cart_url}}" class="btn btn-1" title="{{- 'cart.general.go_to_cart' | t -}}">{{- 'cart.general.go_to_cart' | t -}}</a>
+                            <a href="{{routes.cart_url | replace: 'cart', 'checkout' }}" class="btn btn-2 btn-cart-checkout">{{ 'cart.general.checkout' | t }}</a>
+                        </div>
+                    </div>
+                {%- endif -%}
+            </form>
+        </cart-items>
+
+    {%- when 'popup' -%}
+        {%- render 'snippet-section', type: 'css-file', minify: true, name: 'cart-popup' -%}
+
+        <div class="popup-gl js-popup cart-popup" data-control="cart-popup" id="cartPopup">
+            <div class="popup-layer js-popup-close"></div>
+
+            <div class="popup-inner">
+                <button type="button" class="btn btn-popup-close js-popup-close">
+                    {%- render 'svg', type: 'close' -%}
+                </button>
+
+                <div class="popup-content cart-content">
+                    <cart-items class="block js-cart-change" data-card-id="cart-section" data-section-id="cart-section">
+                        <form action="{{routes.cart_url}}" id="cart" class="form-cart-section">
+
+                            {%- if preload -%}
+                                <div class="cart-loading">
+                                    {%- render 'svg', type: 'loading', useLink: true -%}
+                                </div>
+
+                            {%- elsif cart.item_count == 0 -%}
+                                {%- render 'snippet-cart', type: 'empty' -%}
+
+                            {%- else -%}
+
+                                <div class="cart-header flex justify-content-between">
+                                    <h3 class="cart-heading-text">{{- 'cart.general.title' | t -}}</h3>
+
+                                    <div class="cart-totals text-right">
+                                        <h5 class="totals__subtotal">
+                                            <span class="text">{{ 'cart.general.subtotal' | t }}</span>
+
+                                            <span class="totals__subtotal-value js-cart-total">
+                                                {%- render 'money', value: cart.total_price, format: 'money_with_currency_format' -%}
+                                            </span>
+                                        </h5>
+                                    </div>
+                                </div>
+
+                                <div class="cart-table">
+                                    <div class="cart-table-row cart-table-header flex flex-fill">
+
+                                        {%- assign components = 'product,price,quantity,subtotal' | split: ',' -%}
+                                        {%- for component in components -%}
+                                            <div class="table-header table-col-{{component}}">
+                                                {%- capture tableHeader -%}cart.general.headings.{{component}}{%- endcapture -%}
+                                                {{- tableHeader | t -}}
+                                            </div>
+                                        {%- endfor -%}
+                                    </div>
+
+                                    <div class="cart-table-body">
+                                        {%- for item in cart.items -%}
+                                            {%- render 'cart-item', item: item -%}
+                                        {%- endfor -%}
+                                    </div>
+                                </div>
+
+                                <div class="cart-footer">
+
+                                    <div class="cart-buttons">
+                                        <a href="{{routes.cart_url}}" class="btn btn-1" title="{{- 'cart.general.go_to_cart' | t -}}">{{- 'cart.general.go_to_cart' | t -}}</a>
+                                        <a href="{{routes.cart_url | replace: 'cart', 'checkout' }}" class="btn btn-2 btn-cart-checkout">{{ 'cart.general.checkout' | t }}</a>
+                                    </div>
+                                </div>
+
+                            {%- endif -%}
+                        </form>
+                    </cart-items>
+                </div>
+            </div>
+        </div>
+
+    {%- when 'sidebar' -%}
+        {%- render 'snippet-section', type: 'css-file', minify: true, name: 'cart-sidebar' -%}
+
+        <div class="popup-gl js-popup cart-sidebar" data-control="cart-sidebar" id="cartSidebar">
+            <div class="popup-layer js-popup-close"></div>
+
+            <div class="popup-inner">
+
+                <div class="popup-content cart-content">
+                    <div class="cart-header text-center">
+                        <h3 class="cart-heading-text">
+                            <a href="{{ routes.cart_url }}">{{- 'cart.general.title' | t -}}</a>
+                        </h3>
+
+                        <button type="button" class="btn btn-popup-close js-popup-close">
+                            {%- render 'svg', type: 'close' -%}
+                            <span class="text">{{- 'cart.general.close' | t -}}</span>
+                        </button>
+                    </div>
+
+                    <cart-items class="block js-cart-change" data-card-id="cart-section" data-section-id="cart-section">
+                        <form action="{{routes.cart_url}}" id="cart" class="form-cart-section">
+
+                            {%- if preload -%}
+                                <div class="cart-loading">
+                                    {%- render 'svg', type: 'loading', useLink: true -%}
+                                </div>
+
+                            {%- elsif cart.item_count == 0 -%}
+                                {%- render 'snippet-cart', type: 'empty' -%}
+
+                            {%- else -%}
+                                <div class="cart-table">
+                                    <div class="cart-table-body">
+                                        {%- for item in cart.items -%}
+                                            {%- render 'cart-item', item: item, style: 'flyout' -%}
+                                        {%- endfor -%}
+                                    </div>
+                                </div>
+
+                                <div class="cart-footer">
+                                    <div class="cart-totals flex justify-content-between">
+                                        <h5 class="totals__subtotal">{{ 'cart.general.subtotal' | t }}</h5>
+                                        <p class="totals__subtotal-value js-cart-total">
+                                            {%- render 'money', value: cart.total_price, format: 'money_with_currency_format' -%}
+                                        </p>
+                                    </div>
+
+                                    <div class="cart-buttons">
+                                        <div class="button-item">
+                                            <a href="{{routes.cart_url | replace: 'cart', 'checkout' }}" class="btn btn-1 btn-cart-checkout">{{ 'cart.general.checkout' | t }}</a>
+                                        </div>
+                                    </div>
+
+                                    {%- render 'snippet-cart', type: 'recommendation' -%}
+                                </div>
+
+                            {%- endif -%}
+                        </form>
+                    </cart-items>
+                </div>
+            </div>
+        </div>
+
+{%- endcase -%}

@@ -1,0 +1,432 @@
+{%- liquid
+   assign disableLink = section.settings.disable_link
+   assign backgroundColor = section.settings.mobilebar_background_color | remove: 'rgba(0,0,0,0)'
+   assign iconColor = section.settings.mobilebar_icon_color | remove: 'rgba(0,0,0,0)'
+-%}
+
+{%- render 'snippet-section', type: 'css-file', name: 'mobile-bar', minify: true -%}
+
+{%- unless request.design_mode -%}<template id="mobileNavigation">{%- endunless -%}
+
+   {%- capture ID -%}.mobilebar .mobile-icon-list{%- endcapture -%}
+
+   {%- capture content -%}
+     <ul class="mobile-icon-list flex flex-fill align-items-center">
+       {%- for block in section.blocks -%}
+         {%- capture visibileCheck -%}
+           {%- case request.page_type -%}
+             {%- when 'index' -%}{{- block.settings['show_homepage'] -}}
+             {%- when 'collection' -%}{{- block.settings['show_collection_page'] -}}
+             {%- when 'product' -%}{{- block.settings['show_product_page'] -}}
+             {%- when 'blog' -%}{{- block.settings['show_blog_page'] -}}
+             {%- when 'article' -%}{{- block.settings['show_blog_page'] -}}
+             {%- when 'page' -%}{{- block.settings['show_pages'] -}}
+           {%- endcase -%}
+         {%- endcapture -%}
+         {%- if visibileCheck contains 'false' -%}{%- continue -%}{%- endif -%}
+
+         {%- capture iconClass -%}header-icon-item text-center block-{{block.id}}{%- endcapture -%}
+         {%- capture blockID -%}.mobilebar .block-{{block.id}}{%- endcapture -%}
+         {%- capture textContent -%}
+            {%- if section.settings.show_text and block.settings.text != blank -%}
+               <span class="text block">{{block.settings.text}}</span>
+            {%- endif -%}
+         {%- endcapture -%}
+
+
+         {%- case block.type -%}
+           {%- when 'mobile_hamburger' -%}
+               <li class="{{iconClass}} header-icon--hamburger">
+                 <button type="button" class="js-tload js-popup-toggle" data-control="m-navigation" data-tload="#mobileNav" data-disable-link="{{disableLink}}">
+                   <span class="icon-on-show">{%- render 'svg', type: 'hamburger' -%}</span>
+                   <span class="icon-on-close">{%- render 'svg', type: 'close' -%}</span>
+                   {{textContent}}
+                 </button>
+               </li>
+
+               {%- capture section_css -%}{{- section_css -}}
+                  {%- unless iconColor == blank -%}{{blockID}} svg path{stroke: {{iconColor}};}{%- endunless -%}
+               {%- endcapture -%}
+
+            {%- when 'mobile_home' -%}
+               <li class="{{iconClass}} header-icon--home">
+                  <a href="{{routes.root_url}}">
+                     {%- render 'svg', type: 'home' -%}
+                     {{textContent}}
+                  </a>
+               </li>
+
+               {%- capture section_css -%}{{- section_css -}}
+                  {%- unless iconColor == blank -%}{{blockID}} svg path{stroke: {{iconColor}};}{%- endunless -%}
+               {%- endcapture -%}
+
+            {%- when 'mobile_account' -%}
+               {%- if shop.customer_accounts_enabled-%}
+                  <li class="{{iconClass}} header-icon--account">
+                     <a href="{{routes.account_url}}" title="{{- 'sections.header.account' | t -}}">
+                        {%- render 'svg', type: 'account' -%}
+                        {{textContent}}
+                     </a>
+                  </li>
+
+                  {%- capture section_css -%}{{- section_css -}}
+                     {%- unless iconColor == blank -%}{{blockID}} svg path{stroke: {{iconColor}};}{%- endunless -%}
+                  {%- endcapture -%}
+
+               {%- endif -%}
+
+            {%- when 'mobile_wishlist' -%}
+               {%- if settings.show_wishlist -%}
+                  <li class="{{iconClass}}">
+                     <div class="wishlist-target">
+                        {% render 'arn_wlcp_custom', type: 'wishlist_show' %}
+                     </div>
+                     {{textContent}}
+                  </li>
+
+                  {%- capture section_css -%}{{- section_css -}}
+                     {%- unless iconColor == blank -%}{{blockID}} svg path{stroke: {{iconColor}};}{%- endunless -%}
+                  {%- endcapture -%}
+               {%- endif -%}
+
+            {%- when 'mobile_cart' -%}
+               <li class="{{iconClass}} header-icon--cart">
+
+                  {%- assign cartStyle = settings.cart_styles -%}
+
+                  {%- capture cartClass -%}
+                     js-mini-cart
+                     {%- case cartStyle -%}
+                        {%- when 'popup' or 'sidebar' -%}{% if request.page_type != 'cart' %} js-popup-toggle js-tload" data-tload="#miniCart" data-control="cart-{{cartStyle}}{%- endif -%}
+                     {%- endcase -%}
+                  {%- endcapture -%}
+
+                  <a href="{{routes.cart_url}}" title="{{- 'sections.header.cart' | t -}}" class="{{cartClass | strip_newlines}}" data-style="{{cartStyle}}">
+                     <div>
+                        {%- render 'svg', type: 'cart', fillColor: true -%}
+                        <span class="bubble-count bubble-cart js-cart-count" data-cart-count="{{cart.item_count}}"></span>
+                     </div>
+                     {{textContent}}
+                  </a>
+
+                  {%- capture section_css -%}{{- section_css -}}
+                     {%- unless iconColor == blank -%}{{blockID}} svg path{fill: {{iconColor}};}{%- endunless -%}
+                  {%- endcapture -%}
+               </li>
+
+         {%- endcase -%}
+       {%- endfor -%}
+     </ul>
+   {%- endcapture -%}
+
+   {%- liquid
+      assign topSpacing = section.settings.top_spacing | default: 0 | append: 'px'
+      assign bottomSpacing = section.settings.bottom_spacing | default: 0 | append: 'px'
+   -%}
+   {%- capture section_css -%}{{- section_css -}}
+     {{ID}}{
+         padding: {{topSpacing}} 0 calc(env(safe-area-inset-bottom) + {{bottomSpacing}});
+         {%- unless backgroundColor == blank -%}background: {{backgroundColor}};{%- endunless -%}
+      }
+      {%- unless iconColor == blank -%}{{ID}} .text{color: {{iconColor}};}{%- endunless -%}
+   {%- endcapture -%}
+
+   <div class="mobilebar pf l0 b0 w100 lg-none trans02s{% if request.design_mode %} adminEditor{% endif %}" id="mobileNavigation">
+     {%- render 'snippet-section', type: 'css', value: section_css, media: 'max-width: 1000px' -%}
+     {{ content | strip_newlines }}
+   </div>
+{%- unless request.design_mode -%}</template>{%- endunless -%}
+
+{%- javascript  -%}
+   window.addEventListener('scroll', function(){
+      if(document.getElementById('mobileNavigation').classList.contains('adminEditor')) return;
+
+      if((document.body.clientHeight-window.scrollY-window.innerHeight) < 200 && window.matchMedia('(max-width: 1000px)').matches)
+         document.getElementById('mobileNavigation').classList.add('disabled');
+      else
+         document.getElementById('mobileNavigation').classList.remove('disabled');
+   });
+{%- endjavascript -%}
+
+{% schema %}
+{
+   "name": "Mobile bar",
+   "tag": "section",
+   "settings": [
+      {
+         "type":"checkbox",
+         "id":"disable_link",
+         "label":"Disable link when has a sub menu"
+      },
+      {
+         "type":"checkbox",
+         "id":"show_text",
+         "label":"Show text content"
+      },
+      {
+         "type":"header",
+         "content":"Color & styles"
+      },
+      {
+         "type":"number",
+         "id":"top_spacing",
+         "label":"Top spacing",
+         "default": 12
+      },
+      {
+         "type":"number",
+         "id":"bottom_spacing",
+         "label":"Bottom spacing",
+         "default": 12
+      },
+      {
+         "type": "color_background",
+         "id": "mobilebar_background_color",
+         "label": "Background color",
+         "default": "#FFFFFF"
+      },
+      {
+         "type": "color",
+         "id": "mobilebar_icon_color",
+         "label": "Icon color",
+         "default": "#191919"
+      }
+   ],
+   "blocks": [
+      {
+         "type": "mobile_hamburger",
+         "name": "Mobilebar: Hamburger",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"text",
+               "label":"Text",
+               "default": "Menu"
+            },
+            {
+               "type": "checkbox",
+               "id": "show_homepage",
+               "label": "Show on Homepage",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_collection_page",
+               "label": "Show on Collection page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_product_page",
+               "label": "Show on Product page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_blog_page",
+               "label": "Show on Blog page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_pages",
+               "label": "Show on Pages",
+               "default": true
+            }
+         ]
+      },
+      {
+         "type": "mobile_home",
+         "name": "Mobilebar: Home",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"text",
+               "label":"Text",
+               "default": "Home"
+            },
+            {
+               "type": "checkbox",
+               "id": "show_homepage",
+               "label": "Show on Homepage",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_collection_page",
+               "label": "Show on Collection page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_product_page",
+               "label": "Show on Product page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_blog_page",
+               "label": "Show on Blog page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_pages",
+               "label": "Show on Pages",
+               "default": true
+            }
+         ]
+      },
+      {
+         "type": "mobile_account",
+         "name": "Mobilebar: Account",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"text",
+               "label":"Text",
+               "default": "Account"
+            },
+            {
+               "type": "checkbox",
+               "id": "show_homepage",
+               "label": "Show on Homepage",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_collection_page",
+               "label": "Show on Collection page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_product_page",
+               "label": "Show on Product page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_blog_page",
+               "label": "Show on Blog page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_pages",
+               "label": "Show on Pages",
+               "default": true
+            }
+         ]
+      },
+      {
+         "type": "mobile_wishlist",
+         "name": "Mobilebar: Wishlist",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"text",
+               "label":"Text",
+               "default": "Wishlist"
+            },
+            {
+               "type": "checkbox",
+               "id": "show_homepage",
+               "label": "Show on Homepage",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_collection_page",
+               "label": "Show on Collection page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_product_page",
+               "label": "Show on Product page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_blog_page",
+               "label": "Show on Blog page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_pages",
+               "label": "Show on Pages",
+               "default": true
+            }
+         ]
+      },
+      {
+         "type": "mobile_cart",
+         "name": "Mobilebar: Cart",
+         "limit": 1,
+         "settings": [
+            {
+               "type":"text",
+               "id":"text",
+               "label":"Text",
+               "default": "Your cart"
+            },
+            {
+               "type": "checkbox",
+               "id": "show_homepage",
+               "label": "Show on Homepage",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_collection_page",
+               "label": "Show on Collection page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_product_page",
+               "label": "Show on Product page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_blog_page",
+               "label": "Show on Blog page",
+               "default": true
+            },
+            {
+               "type": "checkbox",
+               "id": "show_pages",
+               "label": "Show on Pages",
+               "default": true
+            }
+         ]
+      }
+   ],
+   "default": {
+      "blocks": [
+         {
+            "type": "mobile_hamburger"
+         },
+         {
+            "type": "mobile_home"
+         },
+         {
+            "type": "mobile_account"
+         },
+         {
+            "type": "mobile_wishlist"
+         },
+         {
+            "type": "mobile_cart"
+         }
+      ]
+   }
+}
+{% endschema %}

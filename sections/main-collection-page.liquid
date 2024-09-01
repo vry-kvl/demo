@@ -1,0 +1,334 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'collection-page' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-sidebar' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-card' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-pagination' -%}
+
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- liquid
+  assign sectionType    = 'collection-page'
+  assign sectionID      = '.section-' | append: section.id
+  if request.design_mode
+    assign total          = section.settings.total_items | default: 20 | times: 1
+  else
+    assign total          = cart.attributes['collectionPaginate'] | default: section.settings.total_items | default: 20 | times: 1
+  endif
+  assign filterType     = section.settings.filter_type
+  assign filterStyle    = section.settings.filter_style
+  assign descriptionPosition = section.settings.description_position
+-%}
+
+{%- capture spacing -%}{% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+
+{%- capture content -%}
+{%- capture CLASS -%}
+|collection-page
+|layout-{{layout}}
+|{{sectionID | remove: '.'}}
+{%- endcapture -%}
+
+{%- paginate collection.products by total -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}"
+  data-section-type="{{sectionType}}"
+  data-section-id="{{section.id}}"
+  data-filter-style="{{filterStyle}}"
+  >
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    {%- comment -%}
+    -------------------------------
+    COLLECTION TITLE
+    -------------------------------
+    {%- endcomment-%}
+    <div class="collection-title">
+      <div class="flex align-items-start">
+        <h1 class="h3">{{collection.title}}</h1>
+        <small class="collection-count highlight js-filter-facet">({{collection.products_count}})</small>
+      </div>
+    </div>
+
+    {%- if descriptionPosition == 'top' and collection.description != blank -%}
+      <div class="collection-description">{{collection.description}}</div>
+    {%- endif -%}
+
+
+    {%- if filterStyle == 'sidebar' -%}
+      <div class="lg-flex flex-fill {{spacing}}">
+    {%- endif -%}
+
+    <div class="main-collection order1">
+
+      {%- render 'snippet-collection', type: 'toolbar' -%}
+
+
+      {%- comment -%}
+      -------------------------------
+      RENDER PRODUCT
+      -------------------------------
+      {%- endcomment-%}
+      {%- capture gridClass -%}
+        {%- if request.design_mode or cart.attributes['collectionView'] == blank -%}
+          {%- render 'snippet-collection', type: 'view' -%}
+        {%- else -%}
+          {{- cart.attributes['collectionView'] -}}
+        {%- endif -%}
+      {%- endcapture -%}
+
+      <div id="mainProducts" class="js-filter-facet">
+        <div class="main-products flex {{gridClass}} {{spacing}} js-product-grid">
+          {%- if collection.products.size == 0 -%}
+            <p class="collection-empty">{{- 'collection.general.no_products' | t -}}</p>
+
+          {%- else -%}
+
+            {%- liquid
+              assign firstImageRatio  = collection.products | map: 'featured_image' | first
+              assign firstImageRatio  = firstImageRatio.aspect_ratio | default: 1
+            -%}
+
+            {%- for product in collection.products -%}
+              {%- render 'product-item', product: product, imageRatio: firstImageRatio, cartBtnPosition: 'all' -%}
+            {%- endfor -%}
+          {%- endif -%}
+        </div>
+
+        {%- render 'pagination', paginate: paginate, type: section.settings.paginate_style -%}
+      </div>
+    </div>
+
+
+    {%- if descriptionPosition == 'bottom' and collection.description != blank -%}
+      <div class="collection-description">{{collection.description}}</div>
+    {%- endif -%}
+
+    {%- comment -%}
+    -------------------------------
+    COLLECTION SIDEBAR
+    -------------------------------
+    {%- endcomment-%}
+    {%- if filterStyle == 'sidebar' -%}
+        <div id="sidebar" class="order0">
+          <div class="sidebar-inner">
+            <button class="sidebar-close js-sidebar-close" type="button">{%- render 'svg', type: 'close' -%}</button>
+            <collection-filter class="block" data-type="{{filterType}}" data-and-logic="{{section.settings.filter_and}}">
+              <form action="{{collection.url}}" id="collectionFilter"></form>
+                {%- render 'snippet-collection', type: 'blocks' -%}
+            </collection-filter>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+
+  </div>
+</div>
+{%- endpaginate -%}
+
+
+{%- endcapture -%}
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+
+
+
+{%- schema -%}
+  {
+    "name" : "Collection page",
+    "tag" : "section",
+    "settings" : [
+      {
+        "type":"range",
+        "id":"item_per_row",
+        "label":"Max number of item per row",
+        "min":3,
+        "max":6,
+        "step":1,
+        "default": 5
+      },
+      {
+        "type":"number",
+        "id":"total_items",
+        "label":"Total items per page",
+        "default": 20
+      },
+      {
+        "type":"select",
+        "id":"paginate_style",
+        "label":"Paginate style",
+        "options":[
+          {
+            "value":"pages",
+            "label": "Pages"
+          },
+          {
+            "value":"infinite",
+            "label": "Infinite loading"
+          }
+        ],
+        "default": "infinite"
+      },
+      {
+         "type":"header",
+         "content":"Collection description"
+      },
+      {
+        "type":"select",
+        "id":"description_position",
+        "label":"Description position",
+        "options":[
+          {
+            "value":"top",
+            "label": "Top"
+          },
+          {
+            "value":"bottom",
+            "label": "Bottom"
+          },
+          {
+            "value":"hide",
+            "label": "Hidden"
+          }
+        ],
+        "default": "top"
+      },
+      {
+         "type":"header",
+         "content":"Toolbar"
+      },
+      {
+        "type":"checkbox",
+        "id":"view_mode",
+        "label":"Show view mode",
+        "default": true
+      },
+      {
+        "type":"text",
+        "id":"total_viewlist",
+        "label":"Total view list",
+        "default": "5,10,15,20",
+        "info": "Blank to hide"
+      },
+      {
+         "type":"header",
+         "content":"Filter"
+      },
+      {
+        "type":"radio",
+        "id":"filter_type",
+        "label":"Filter type",
+        "options":[
+          {
+            "value":"tag",
+            "label": "by Product tags"
+          },
+          {
+            "value":"attribute",
+            "label": "by Product attributes"
+          }
+        ],
+        "default": "attribute"
+      },
+      {
+         "type":"checkbox",
+         "id":"filter_and",
+         "label":"Enable 'AND' operator in a group filter",
+         "default": true
+      },
+      {
+        "type":"radio",
+        "id":"filter_style",
+        "label":"Fitler style",
+        "options":[
+          {
+            "value":"dropdown",
+            "label": "Dropdown"
+          },
+          {
+            "value":"sidebar",
+            "label": "Sidebar"
+          }
+        ],
+        "default": "sidebar"
+      },
+      {
+         "type"  :"text",
+         "id"    :"filter_item_resp",
+         "label" :"Max number of item per row",
+         "default": "1,4",
+         "info": "Only for filter style dropdown [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+         "type":"header",
+         "content":"Section style"
+      },
+      {
+        "type":"checkbox",
+        "id":"boxed_layout",
+        "label":"Boxed layout",
+        "default": true
+      },
+      {
+        "type": "select",
+        "id": "breadcrumb_layout",
+        "label": "Breadcrumb layout",
+        "options":[
+          {
+            "value":"boxed",
+            "label": "Boxed"
+          },
+          {
+            "value":"wide",
+            "label": "Wide"
+          }
+        ],
+        "default": "boxed"
+      },
+      {
+        "type":"text",
+        "id":"section_margin",
+        "label":"Section margin",
+        "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      },
+      {
+        "type":"text",
+        "id":"section_padding",
+        "label":"Section padding",
+        "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "menu",
+        "name": "Menu",
+        "settings": [
+          {
+            "type":"link_list",
+            "id":"menu",
+            "label":"Select a menu"
+          }
+        ]
+      },
+      {
+        "type": "filter_tags",
+        "name": "Filter Product tags",
+        "settings": [
+          {
+            "type":"text",
+            "id":"title",
+            "label":"Filter title"
+          },
+          {
+            "type":"textarea",
+            "id":"filter_options",
+            "label":"Filter options"
+          }
+        ]
+      },
+      {
+        "type": "filter_attributes",
+        "name": "Filter Product attributes",
+        "limit": 1
+      }
+    ]
+  }
+{%- endschema -%}

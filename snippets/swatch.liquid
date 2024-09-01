@@ -1,0 +1,50 @@
+{%- if option == blank or swtType == blank -%}{%- break -%}{%- endif -%}
+
+{%- liquid
+    assign sectionID = '.section-' | append: section.id
+    assign disableDefaultVariant = disableDefaultVariant | default: false
+-%}
+
+{%- capture optionIndex -%}option{{ option.position }}{%- endcapture -%}
+{%- capture optionName -%}{{option.name | downcase }}{%- endcapture -%}
+
+<div class="variant-options option-type-swatch">
+    <div class="variant-options-header swt-header">
+        <p>{{ option.name }}</p>
+    </div>
+
+    <div class="swt-container flex">
+        {%- for value in option.values -%}
+            {%- capture swtID -%}{{sectionID | remove: '.' }}swt{{option.position}}_{{value|handle}}{%- endcapture -%}
+            {%- assign variantSelect = product.variants | where: optionIndex, value | first -%}
+
+            {%- if swtType == 'image' -%}
+                {%- capture section_css -%}{{- section_css -}}
+                    <style>label[for="{{ swtID }}"]{background-image: url({{ variantSelect.featured_media |img_url: '100x'}})!important;}</style>
+                {%- endcapture -%}
+            {%- endif -%}
+
+            <div class="swt-item swt-type-{{swtType}}">                
+                <input
+                    type="radio"
+                    id="{{ swtID }}"
+                    class="none js-variant-change{% unless variantSelect.available %} disabled{% endunless %}"
+                    name="option{{ option.position }}"
+                    form="{{formID}}"
+                    value="{{value | escape}}"{% if option.selected_value == value and disableDefaultVariant != true %} checked{% endif %}                    
+                >
+
+                {%- if swtType != 'button' -%}
+                    <label for="{{ swtID }}" class="c-pointer bg-100 bg-no-rp c-{{value | handle}}"></label>
+                    <span class="tooltip">{{value}}</span>
+
+                {%- else -%}
+                    <label for="{{ swtID }}" class="c-pointer">{{value}}</label>
+                {%- endif -%}
+            </div>
+        {%- endfor -%}
+    </div>
+</div>
+
+<!--|||-->
+{{section_css}}

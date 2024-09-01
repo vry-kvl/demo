@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}" class="no-js">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0,viewport-fit=cover">
+  <meta name="google" content="notranslate">
+  <meta name='HandheldFriendly' content='True'>
+  <meta name='MobileOptimized' content='360'>
+  <meta http-equiv="cleartype" content="on">
+  <meta name="theme-color" content="{{ settings.main_color }}">
+  <style>
+    body {  scroll-behavior: auto;}
+
+
+  </style>
+  <link rel="canonical" href="{{canonical_url}}">
+  {%- unless settings.header_font.system? and settings.body_font.system? -%}
+    <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+  {%- endunless -%}
+  {%- capture favicon -%}
+    {%- if settings.favicon != blank -%}
+      {{ settings.favicon | image_url: width: 32, height: 32 }}
+    {%- else -%}
+      {{- 'favicon.png' | asset_img_url: '32x32' -}}
+    {%- endif -%}
+  {%- endcapture -%}
+
+  <link rel="icon" type="image/png" href="{{ favicon }}">
+  <link rel="preconnect dns-prefetch" href="https://cdn.shopify.com">
+  <link rel="preconnect dns-prefetch" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect dns-prefetch" href="https://fonts.gstatic.com" crossorigin>
+
+  {%- capture seo_title -%}
+    {%- if request.page_type == 'search' and search.performed == true -%}
+      {{ 'search.general.heading' | t: count: search.results_count }}: {{ 'search.general.results_with_count_and_term' | t: terms: search.terms, count: search.results_count }}
+    {%- else -%}
+      {{ page_title }}
+    {%- endif -%}
+    {%- if current_tags -%}
+      {%- assign meta_tags = current_tags | join: ', ' -%} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags -}}
+    {%- endif -%}
+    {%- if current_page != 1 -%}
+      &ndash; {{ 'general.meta.page' | t: page: current_page }}
+    {%- endif -%}
+    {%- assign escaped_page_title = page_title | escape -%}
+    {%- unless escaped_page_title contains shop.name -%}
+      &ndash; {{ shop.name }}
+    {%- endunless -%}
+  {%- endcapture -%}
+  <title>{{ seo_title | strip }}</title>
+  {%- if page_description -%}<meta name="description" content="{{ page_description | escape }}"/>{%- endif -%}
+
+
+  {%- render 'social-meta-tags' -%}
+  {%- render 'theme-font' -%}
+  {%- render 'css-resources' -%}
+
+  {%- capture mainContent -%}{{ content_for_layout }}{%- endcapture -%}
+  {%- capture themeConfig -%}
+    {%- unless request.design_mode -%}
+      {%- section 'theme-config' -%}
+    {%- endunless -%}
+  {%- endcapture -%}
+
+
+  {%- render 'snippet-theme', type: 'splitContent', content: mainContent, key: 'preload', firstSection: true, output: 'value' -%}
+  {%- capture mainContent -%}{%- render 'snippet-theme', type: 'splitContent', content: mainContent, key: 'preload', firstSection: false, output: '' -%}{%- endcapture -%}
+  {%- render 'snippet-theme', type: 'splitContent', content: mainContent, key: 'css', firstSection: false, output: 'value' -%}
+  {%- capture mainContent -%}{%- render 'snippet-theme', type: 'splitContent', content: mainContent, key: 'css', firstSection: false, output: '' -%}{%- endcapture -%}
+
+  {%- render 'snippet-theme', type: 'splitContent', content: themeConfig, key: 'css', firstSection: false, output: 'value' -%}
+
+  {%- capture arenaWLCP -%}
+    {% render 'arn_wl_cp_settings' %}
+    {% render 'arn_wl_cp_styles' %}
+    {% if shop.metafields.arena.wl_cp_settings.general_settings.app_script == false %}
+    <script defer crossorigin="anonymous" src="{{ 'arn-wishlist-compare.js' | asset_url }}"></script>
+    {% endif %}
+  {%- endcapture -%}
+
+   {%- if shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_enable == true -%}
+    {%- unless arenaWLCP contains 'Liquid error' -%}{{arenaWLCP}}{%- endunless -%}
+  {%- endif -%}
+  {%- render 'js-resources' -%}
+  {{content_for_header }}
+</head>
+
+{%- capture body_class -%}
+|template{{- request.page_type | split: '/' | first | capitalize -}}
+{%- if request.page_type == 'page' -%}|page-{{- template.suffix -}}{%- endif -%}
+{%- endcapture -%}
+{%- assign body_class = body_class | strip_newlines | remove_first: '|' | strip | split: '|' | join: ' ' -%}
+
+<body class="{{body_class}}" dir="{{settings.theme_layout | default: 'ltr' | downcase}}">
+  {%- if shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_enable == true -%}
+    {%- unless arenaWLCP contains 'Liquid error' -%}{% render 'arn_icons_define' %}{%- endunless -%}
+  {%- endif -%}
+
+  {%- render 'snippet-theme', type: 'splitContent', content: themeConfig, key: '', firstSection: false, output: 'value' -%}
+
+  {%- if request.design_mode -%}
+    {%- section 'theme-config' -%}
+  {%- endif -%}
+
+  <header class="header-section trans02s">
+    {%- render 'snippet-theme', type: 'header' -%}
+  </header>
+
+  <main id="main-content" class="{% if request.page_type == 'cart' %}cart-layout layout-full container{% if cart.item_count == 0 %} cart-empty{% endif %}{% endif %}">
+
+    {%- render 'breadcrumb' -%}
+
+    {%- if request.page_type == 'cart' and cart.item_count > 0 -%}
+      <div class="page-header flex">
+        <h1 class="page-heading h2 fw600">{{ 'cart.general.page_title' | t }}</h1>
+        <small class="cart-count">(<span class="bubble-cart js-cart-count" data-cart-count="{{cart.item_count}}"></span>)</small>
+      </div>
+    {%- endif -%}
+
+    {%- render 'snippet-theme', type: 'splitContent', content: mainContent, key: '', firstSection: false, output: '' -%}
+
+  </main>
+
+  <footer>
+    {%- render 'snippet-theme', type: 'footer' -%}
+  </footer>
+
+  {%- if settings.enable_mobilebar -%}{%- section 'static-section-mobile-bar' -%}{%- endif -%}
+  {%- if settings.enable_fomo -%}{%- section 'static-section-fomo' -%}{%- endif -%}
+  {%- if settings.enable_newsletter_popup -%}
+    {%- section 'static-newsletter-popup' -%}
+    {%- if request.design_mode -%}{%- render 'snippet-section', type: 'css-file', minify: true, name: 'newsletter-popup' -%}{%- endif -%}
+  {%- endif -%}
+
+  {%- if shop.permanent_domain contains 'arenabase' and request.page_type == 'index' -%}
+    {% section 'our-demo' %}
+  {%- endif -%}
+
+  {%- if request.page_type != 'cart' and 'popup sidebar' contains settings.cart_styles -%}
+    <template id="miniCart">
+      {%- render 'cart-items', preload: true -%}
+    </template>
+  {%- endif -%}
+
+</body>
+</html>

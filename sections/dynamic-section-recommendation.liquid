@@ -1,0 +1,311 @@
+{%- capture content -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'tiny-slider' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-card' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-featured-collections' -%}
+<!--split-->
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+{%- liquid
+  assign sectionType = 'featured-collections'
+  assign sectionID = '.section-' | append: section.id
+  assign itemStyle = section.settings.item_style
+-%}
+
+{%- if itemStyle == 'list' -%}
+  {%- assign hideCart = false -%}
+  {%- assign showQuantity = true -%}
+  {%- assign cartBtnPosition = 'bottom' -%}
+{%- else -%}
+  {%- assign hideCart = false -%}
+{%- endif -%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|section-featured-collections
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    {%- comment -%}
+    -------------------------------
+    Section heading
+    -------------------------------
+    {%- endcomment-%}
+    {%- assign sectionHeading = section.settings.section_heading -%}
+    {%- unless sectionHeading == blank -%}
+      <div class="section-heading-wrapper">
+        <h3 class="section-heading">{{sectionHeading}}</h3>
+      </div>
+      {%- capture section_css -%}{{- section_css -}}
+        {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+      {%- endcapture -%}
+    {%- endunless -%}
+
+
+
+    {%- comment -%}
+    -------------------------------
+    Collection product list
+    -------------------------------
+    {%- endcomment-%}
+    <div class="featured-collections featured-collections--{{itemStyle}}">
+
+      {%- comment -%}
+      -------------------------------
+      Collection render list product
+      -------------------------------
+      {%- endcomment-%}
+      {%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+      {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+      {%- assign products = recommendations.products -%}
+      {%- assign listCartId = cart.items | map: 'product' | map: 'id' -%}
+
+
+      {%- capture productContent -%}
+        {%- case section.settings.sort_by -%}
+          {%- when 'title_ascending'    -%}{%- assign products = products | sort: 'title' -%}
+          {%- when 'title_descending'   -%}{%- assign products = products | sort: 'title' | reverse -%}
+          {%- when 'price_ascending'    -%}{%- assign products = products | sort: 'price' -%}
+          {%- when 'price_descending'   -%}{%- assign products = products | sort: 'price' | reverse -%}
+          {%- when 'created_ascending'  -%}{%- assign products = products | sort: 'published_at' -%}
+          {%- when 'created_descending' -%}{%- assign products = products | sort: 'published_at' | reverse -%}
+        {%- endcase -%}
+
+        {%- liquid
+          assign firstImageRatio  = products | map: 'featured_image' | first
+          assign firstImageRatio  = firstImageRatio.aspect_ratio | default: 1
+        -%}
+
+        {%- for product in products limit: section.settings.limit -%}
+          {%- capture class -%}{%- if listCartId contains product.id -%}remove{%- endif -%}{%- endcapture -%}
+
+          {%- render 'product-item',
+                                    product: product,
+                                    imageRatio: firstImageRatio,
+                                    hideCart: hideCart,
+                                    quantity: showQuantity,
+                                    cartBtnPosition: cartBtnPosition
+                                    class: class,
+                                    removeParams: true
+                                    -%}
+        {%- endfor -%}
+      {%- endcapture -%}
+
+
+      {%- if section.settings.enable_slide -%}
+
+        {%- assign slideID = '#slide-' | append: section.id-%}
+
+        <slider-component id="{{ slideID | remove: '#' }}">
+
+          <div id="{{ slideID | remove: '#' }}el" class="main-collection slider-list js-slider flex{{gridClass}}">{{productContent}}</div>
+
+          {%- render 'config-slide', id: slideID,
+                                      items: section.settings['items_resp'],
+                                      controls: section.settings['navs'],
+                                      loop: section.settings['loop'],
+                                      dots: section.settings['dots'],
+                                      lazyload: true,
+                                      autoPlay: section.settings['autoplay']
+          -%}
+        </slider-component>
+
+      {%- else -%}
+        <div class="flex{{gridClass}}">{{productContent}}</div>
+      {%- endif -%}
+
+    </div>
+  </div>
+</div>
+
+{%- capture section_css -%}{{- section_css -}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+{%- endcapture -%}
+{%- endcapture -%}
+
+{%- capture pageURL -%}{%- render 'page-url' -%}{%- endcapture -%}
+{%- if pageURL contains 'view=items' -%}
+  {{productContent}}
+
+{%- else -%}
+  <product-recommendations class="product-recommendations" data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit=4">
+    {%- if recommendations.performed and recommendations.products_count > 0 -%}
+      {{content | split: '<!--split-->' | first}}
+      {%- render 'snippet-section', type: 'css', value: section_css -%}
+      {{content | split: '<!--split-->' | last }}
+    {%- endif -%}
+  </product-recommendations>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product Recommendations",
+  "tag": "section",
+  "class": "shopify-section-recommendation",
+  "templates": [
+    "product"
+  ],
+  "presets": [
+    {
+      "name": "Product Recommendations"
+    }
+  ],
+  "settings": [
+    {
+      "type": "select",
+      "id": "sort_by",
+      "label": "Sort by",
+      "options": [
+        {
+          "value": "default",
+          "label": "Default"
+        },
+        {
+          "value": "title_ascending",
+          "label": "Alphabetically, A-Z"
+        },
+        {
+          "value": "title_descending",
+          "label": "Alphabetically, Z-A"
+        },
+        {
+          "value": "price_ascending",
+          "label": "Price, Low to High"
+        },
+        {
+          "value": "price_descending",
+          "label": "Price, High to Low"
+        },
+        {
+          "value": "created_ascending",
+          "label": "Date, Old to New"
+        },
+        {
+          "value": "created_descending",
+          "label": "Date, New to Old"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type":"radio",
+      "id":"item_style",
+      "label":"Item style",
+      "options":[
+        {
+          "value":"grid",
+          "label": "Grid"
+        },
+        {
+          "value":"list",
+          "label": "List"
+        }
+      ],
+      "default": "grid"
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": "Max number of item per row",
+      "default": "2,5",
+      "info": "E.g: 2,3,4,5. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "number",
+      "id": "limit",
+      "label": "Limit",
+      "default": 10
+    },
+    {
+       "type":"header",
+       "content":"Slider settings"
+    },
+    {
+      "type":"checkbox",
+      "id":"enable_slide",
+      "label":"Enable Slider"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Loop"
+    },
+    {
+      "type": "checkbox",
+      "id": "navs",
+      "label": "Show next/prev arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "dots",
+      "label": "Show dots",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "autoplay",
+      "label": "Auto play slide (in second)",
+      "info": "E.g: 5"
+    },
+    {
+      "type": "header",
+      "content": "Section heading"
+    },
+    {
+      "type": "text",
+      "id": "section_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "paragraph",
+      "content": "**Heading styles"
+    },
+    {
+      "type": "text",
+      "id": "section_heading_align",
+      "label": "Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_heading_margin",
+      "label": "Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_heading_fs",
+      "label": "Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "color",
+      "id": "section_heading_color",
+      "label": "Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": "Boxed layout",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_margin",
+      "label": "Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+  ]
+}
+{% endschema %}

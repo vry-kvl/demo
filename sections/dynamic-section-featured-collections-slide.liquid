@@ -1,0 +1,400 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'tiny-slider' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-card' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'section-featured-collections' -%}
+
+{%- capture content -%}
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+{%- liquid
+  assign sectionType = 'featured-collections'
+  assign sectionID = '.section-' | append: section.id
+  assign showBorder = section.settings.show_border
+-%}
+{%- comment -%}
+-------------------------------
+Empty list product
+-------------------------------
+{%- endcomment-%}
+{%- capture emptyCollection -%}
+  {%- capture slideID -%}#slide-{{section.id}}-{% cycle "1","2","3","4","5","6","7","8","9","10" %}{%- endcapture -%}
+
+  {%- capture gridClass -%}{%- render 'config-grid', value: '2.3,6' %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+  {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: '2.3,6', style: true, id: slideID -%}{%- endcapture -%}
+
+  <slider-component id="{{ slideID | remove: '#' }}">
+    <div id="{{ slideID | remove: '#' }}el" class="main-collection slider-list js-slider flex {{gridClass}}">
+      {%- render 'empty-content', type: 'product-card', limit: 8 -%}
+    </div>
+    {%- render 'config-slide', id: slideID,
+                                items: '2.3,6',
+                                controls: true,
+                                loop: false
+    -%}
+  </slider-component>
+{%- endcapture -%}
+
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|section-featured-collections
+{%- if showBorder -%}|has-border{%- endif -%}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+
+    {%- comment -%}
+    -------------------------------
+    Section heading
+    -------------------------------
+    {%- endcomment-%}
+    {%- assign sectionHeading = section.settings.section_heading -%}
+    {%- unless sectionHeading == blank -%}
+      <div class="section-heading-wrapper">
+        <h3 class="section-heading">{{sectionHeading}}</h3>
+      </div>
+      {%- capture section_css -%}{{- section_css -}}
+        {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+      {%- endcapture -%}
+    {%- endunless -%}
+
+
+    {%- comment -%}
+    -------------------------------
+    Collection product list
+    -------------------------------
+    {%- endcomment-%}
+    <ul class="list featured-collections-list">
+      {%- if section.blocks.size > 0 -%}
+        {%- for block in section.blocks -%}
+
+          <li class="featured-collections-item block-{{block.id}}"{{block.shopify_attributes}}>
+            {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+            {%- liquid
+              assign collection       = collections[block.settings['collection']]
+              assign collectionTitle  = block.settings.title
+            -%}
+
+            {%- if collection != blank and collection.products_count > 0 -%}
+
+              {%- comment -%}
+              -------------------------------
+              Collection title
+              -------------------------------
+              {%- endcomment-%}
+              {%- unless collectionTitle == blank -%}
+                <div class="block-heading-wrapper collection-align flex align-items-center">
+                  <h4 class="block-heading block-collection-title{% if section.settings['collection_title_fw'] > 0 %} fw{{section.settings['collection_title_fw']}}{% endif %}">{{collectionTitle}}</h4>
+                  {%- if block.settings.show_count -%}
+                    <div class="collection-count">
+                      <a href="{{collection.url}}" class="link highlight underline">{{- 'sections.product.view' | t: count: collection.all_products_count -}}</a>
+                    </div>
+                  {%- endif -%}
+                </div>
+              {%- endunless -%}
+
+
+              {%- comment -%}
+              -------------------------------
+              Collection render list product
+              -------------------------------
+              {%- endcomment-%}
+              {%- assign slideID = '#slide-' | append: block.id -%}
+              <slider-component id="{{ slideID | remove: '#' }}">
+                {%- capture gridClass -%}{%- render 'config-grid', value: block.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+                {%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: block.settings.items_resp, style: true, id: slideID -%}{%- endcapture -%}
+                <div id="{{ slideID | remove: '#' }}el" class="main-collection slider-list js-slider flex{{gridClass}}">
+
+                  {%- case block.settings.sort_by -%}
+                    {%- when 'title_ascending'    -%}{%- assign products = collection.products | sort: 'title' -%}
+                    {%- when 'title_descending'   -%}{%- assign products = collection.products | sort: 'title' | reverse -%}
+                    {%- when 'price_ascending'    -%}{%- assign products = collection.products | sort: 'price' -%}
+                    {%- when 'price_descending'   -%}{%- assign products = collection.products | sort: 'price' | reverse -%}
+                    {%- when 'created_ascending'  -%}{%- assign products = collection.products | sort: 'published_at' -%}
+                    {%- when 'created_descending' -%}{%- assign products = collection.products | sort: 'published_at' | reverse -%}
+                    {%- else -%}{%- assign products = collection.products -%}
+                  {%- endcase -%}
+
+                  {%- liquid
+                    assign firstImageRatio  = products | map: 'featured_image' | first
+                    assign firstImageRatio  = firstImageRatio.aspect_ratio | default: 1
+                    assign productPage = product
+                  -%}
+
+
+                  {%- for product in products limit: block.settings.limit -%}
+                    {%- if request.page_type == 'product' and product.handle == productPage.handle -%}
+                      {%- assign hasDuplicate = true -%}
+                      {%- continue -%}
+                    {%- endif -%}
+                    {%- render 'product-item', product: product, imageRatio: firstImageRatio -%}
+                  {%- endfor -%}
+
+
+                  {%- if hasDuplicate -%}
+                    {%- assign nextIndex = block.settings.limit | plus: 1 -%}
+                    {%- render 'product-item', product: products[nextIndex], imageRatio: firstImageRatio -%}                    
+                  {%- endif -%}
+                </div>
+
+                {%- render 'config-slide', id: slideID,
+                                            items: block.settings['items_resp'],
+                                            controls: block.settings['navs'],
+                                            loop: block.settings['loop'],
+                                            dots: block.settings['dots'],
+                                            lazyload: true,
+                                            autoPlay: block.settings['autoplay']
+                -%}
+              </slider-component>
+
+
+              {%- comment -%}
+              -------------------------------
+              Promotion
+              -------------------------------
+              {%- endcomment-%}
+              {%- liquid
+                assign promoContent = block.settings.promo_content
+                assign promoLink = block.settings.promo_link
+              -%}
+              {%- unless promoContent == blank -%}
+                <div class="promotion-applies highlight2">
+                  <div class="text-center">
+                    <a href="{{promoLink | default: 'javascript:void(0);'}}" class="inherit-color flex align-items-center">
+                      <span class="icon">{%- render 'svg', type: 'discount' -%}</span>
+                      <span class="text">{{promoContent}}</span>
+                    </a>
+                  </div>
+                </div>
+              {%- endunless -%}
+            {%- else -%}
+              {{emptyCollection}}
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+
+      {%- else -%}
+        <li class="empty-collection">{{emptyCollection}}</li>
+      {%- endif -%}
+    </ul>
+  </div>
+</div>
+
+
+{%- capture section_css -%}{{- section_css -}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .block-collection-title', css: 'font-size', value: section.settings['collection_title_fs'], important: true -%}
+{%- endcapture -%}
+{%- endcapture -%}
+
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{% schema %}
+{
+  "name": "Products Grid + Slide",
+  "tag": "section",
+  "class": "shopify-section-products-slide",
+  "presets": [
+    {
+      "name": "Products Grid + Slide"
+    }
+  ],
+  "settings": [
+    {
+       "type":"header",
+       "content":"Section heading"
+    },
+    {
+      "type":"text",
+      "id":"section_heading",
+      "label":"Heading"
+    },
+    {
+       "type":"paragraph",
+       "content":"**Heading styles"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_align",
+      "label":"Heading text alignment",
+      "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_margin",
+      "label":"Margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_heading_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_heading_color",
+      "label":"Heading color"
+    },
+    {
+       "type":"header",
+       "content":"Collection title"
+    },
+    {
+      "type":"text",
+      "id":"collection_title_fs",
+      "label":"Adjust font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"range",
+      "id":"collection_title_fw",
+      "label":"Adjust font weight",
+      "min":0,
+      "max":900,
+      "step":100,
+      "default": 500,
+      "info": "0 is auto"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"checkbox",
+      "id":"show_border",
+      "label":"Show border between collections",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"section_margin",
+      "label":"Section margin",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"text",
+      "id":"section_padding",
+      "label":"Section padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "Collection",
+      "settings": [
+        {
+          "type":"collection",
+          "id":"collection",
+          "label":"Select a collection"
+        },
+        {
+          "type":"select",
+          "id":"sort_by",
+          "label":"Sort by",
+          "options":[
+            {
+              "value":"default",
+              "label": "Default"
+            },
+            {
+              "value":"title_ascending",
+              "label": "Alphabetically, A-Z"
+            },
+            {
+              "value":"title_descending",
+              "label": "Alphabetically, Z-A"
+            },
+            {
+              "value":"price_ascending",
+              "label": "Price, Low to High"
+            },
+            {
+              "value":"price_descending",
+              "label": "Price, High to Low"
+            },
+            {
+              "value":"created_ascending",
+              "label": "Date, Old to New"
+            },
+            {
+              "value":"created_descending",
+              "label": "Date, New to Old"
+            }
+          ],
+          "default": "default"
+        },
+        {
+          "type":"text",
+          "id":"title",
+          "label":"Collection title",
+          "info": "Blank to hide"
+        },
+        {
+          "type":"checkbox",
+          "id":"show_count",
+          "label":"Show collection count",
+          "default": true
+        },
+        {
+           "type"  :"text",
+           "id"    :"items_resp",
+           "label":"Max number of item per row",
+           "default": "2,5",
+           "info": "E.g: 2,3,4,5. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"number",
+          "id":"limit",
+          "label": "Limit",
+          "default": 10
+        },
+        {
+           "type": "checkbox",
+           "id": "loop",
+           "label": "Loop"
+        },
+        {
+           "type": "checkbox",
+           "id": "navs",
+           "label": "Show next/prev arrows",
+           "default": true
+        },
+        {
+           "type": "checkbox",
+           "id": "dots",
+           "label": "Show dots",
+           "default": true
+        },
+        {
+           "type": "number",
+           "id": "autoplay",
+           "label": "Auto play slide (in second)",
+           "info": "E.g: 5"
+        },
+        {
+           "type":"header",
+           "content":"Promotion"
+        },
+        {
+          "type":"text",
+          "id":"promo_content",
+          "label":"Promotion content"
+        },
+        {
+          "type":"url",
+          "id":"promo_link",
+          "label":"Link to",
+          "info": "http:// is required for external links"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,178 @@
+{%- render 'snippet-section', type: 'css-file', minify: false, name: 'support' -%}
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- liquid
+  assign sectionType  = 'support-section'
+  assign sectionID    = '.section-' | append: section.id
+-%}
+
+{%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp %} {% render 'snippet-section', type: 'spacing' -%}{%- endcapture -%}
+{%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+
+{%- capture content -%}
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+{%- endcapture -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+    {%- comment -%}
+    -------------------------------
+    Section heading
+    -------------------------------
+    {%- endcomment-%}
+    {%- liquid
+      assign sectionHeading = section.settings.section_heading 
+      assign subtitle = section.settings.section_subtitle
+      assign buttonTitle = section.settings.button_title
+      assign buttonUrl = section.settings.button_link
+    -%}
+    {%- unless sectionHeading == blank -%}
+      <div class="section-heading-wrapper">
+        <div class="heading-content">
+          <h3 class="section-heading">{{sectionHeading}}</h3>
+          <div class="sub-heading">{{subtitle}}</div>
+        </div>
+        {% if buttonTitle != blank %}
+          <div class="heading-button">
+            <a href="{{buttonUrl}}" class="btn btn-1" target="_blank">{{buttonTitle}}</a>
+          </div>
+        {% endif %}
+      </div>
+      {%- capture section_css -%}{{- section_css -}}
+        {%- render 'snippet-section', type: 'heading_style', sectionID: sectionID -%}
+      {%- endcapture -%}
+    {%- endunless -%}
+
+    {%- if section.blocks.size == 0 -%}
+      <div class="flex flex-1 flex-lg-2 {% render 'snippet-section', type: 'spacing' %} align-items-center">
+        <div class="block-item block-image">
+          <div class="block-inner">
+            {%- render 'empty-content', type: 'once_image' -%}
+          </div>
+        </div>
+        <div class="block-item block-paragraph">
+          <div class="block-inner">
+            <h2>Talk about your brand</h2>
+            <p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>
+          </div>
+        </div>
+      </div>
+    {%- else -%}
+      {%- comment -%}
+      -------------------------------
+      SECTION CONTENT
+      -------------------------------
+      {%- endcomment-%}
+      <div class="section-flex flex flex-fill {% render 'snippet-section', type: 'spacing' %} flex{{gridClass}}">
+        {%- for block in section.blocks -%}
+          {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+          {%- capture blockClass -%}
+            |block-item
+            |block-{{block.type}}
+            |block-{{block.id}}
+            {%- if block.settings.show_item_border -%}|border{%- endif -%}
+          {%- endcapture -%}
+
+          {%- comment -%}
+          -------------------------------
+          BLOCK CONTENT
+          -------------------------------
+          {%- endcomment-%}
+          {%- assign menuList = linklists[block.settings.menu] -%}
+          <div class="{%- render 'snippet-section', type: 'class', class: blockClass, object: block -%}"{{block.shopify_attributes}}>
+            <div class="block-inner">
+              <div class="block-content">
+                <h4>{{block.settings.text}}</h4>
+                <ul class="list-menu">
+                  {%- if menuList.links.size > 0 -%}
+                    {% for item in menuList.links %}
+                      {%- render 'support-menu', link: item -%}
+                    {% endfor %}
+                  {%- endif -%}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {%- comment -%}
+          -------------------------------
+          BLOCK STYLE
+          -------------------------------
+          {%- endcomment-%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {%- render 'css-resp', class: sectionID, css: 'padding', value: section.settings['section_padding'] -%}
+  {%- render 'css-resp', class: sectionID, css: 'margin', value: section.settings['section_margin'] -%}
+  {%- render 'css-resp', class: sectionID, nextClass: ' .section-flex', css: 'grid-gap', value: section.settings['spacing'] -%}
+
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{% schema %}
+{
+  "name": "Support",
+  "tag": "section",
+  "settings": [
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_heading",
+      "label": "Heading"
+    },
+    {
+      "type": "richtext",
+      "id": "section_subtitle",
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "button_title",
+      "label": "Title button"
+    },
+    {
+      "type":"url",
+      "id":"button_link",
+      "label":"Link to",
+      "info": "http:// is required for external links"
+    },
+    {
+      "type":"text",
+      "id":"items_resp",
+      "label":"Max number of item per row",
+      "default": "1,3",
+      "info": "E.g: 1,3. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "menu",
+      "name": "Menu",
+      "settings": [
+        {
+          "type":"link_list",
+          "id":"menu",
+          "label":"Menu"
+        },
+        {
+          "type":"text",
+          "id":"text",
+          "label":"Heading"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

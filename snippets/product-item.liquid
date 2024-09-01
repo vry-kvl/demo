@@ -1,0 +1,115 @@
+{%- liquid
+    assign productSelect    = product.selected_or_first_available_variant
+	assign cardHover 		= settings.card_hover
+	assign cardTitleLength 	= settings.card_title_length
+	assign cardImageRatio 	= settings.card_image_ratio
+	assign cardImageCrop 	= settings.card_image_crop
+	assign showWishlistIcon	= settings.show_wishlist_icon
+	assign cartBtnPosition 	= cartBtnPosition | default: settings.cart_btn_position | split: ','
+-%}
+
+{%- if cartBtnPosition contains 'all' -%}
+	{%- assign cartBtnPosition = 'top,bottom' | split: ',' -%}
+{%- endif -%}
+
+{%- unless settings.show_wishlist -%}
+	{%- assign showWishlistIcon	= false -%}
+{%- endunless -%}
+
+{%- capture IMGCLASS %} object-fit--{% if cardImageCrop %}cover{% else %}contain{% endif %}{%- endcapture -%}
+{%- capture cardImageHeight -%}
+	{%- case cardImageRatio -%}
+		{%- when 'auto' 		-%}
+		{%- when 'customize' 	-%}{%- assign customizeRatio = settings.card_ratio_custom.aspect_ratio -%}
+		{%- when 'adapt' 		-%}{%- assign customizeRatio = imageRatio -%}
+		{%- else 				-%}{{- cardImageRatio -}}
+	{%- endcase -%}
+{%- endcapture -%}
+
+{%- capture productLink -%}{{product.url | within: collection }}{%- endcapture -%}
+{%- if removeParams -%}
+	{%- assign productLink = productLink | split: '?' | first -%}
+{%- endif -%}
+
+{%- comment -%}Overlay buttons{%- endcomment-%}
+{%- capture overlayButton -%}
+	{%- if hideCart != true and recentView != true and cartBtnPosition contains 'top' and product.available -%}
+		{%- render 'snippet-product-item', 	type: 'cart',
+											product: product,
+											removeParams: removeParams
+		-%}
+	{%- endif -%}
+
+	{%- if cartBtnPosition contains 'top' and showWishlistIcon -%}
+		{%- render 'arn_wlcp_custom', type: 'wishlist_add', product: product -%}
+	{%- endif -%}
+{%- endcapture -%}
+
+
+{%- capture CLASS -%}
+	{%- unless cardHover == 'normal' -%}|hover-{{cardHover}}{%- endunless -%}
+	{% if overlayButton contains 'quantity-input' %}|showing{% endif %}
+	|cart-{{settings.cart_btn_position}}
+{%- endcapture -%}
+
+<div class="card product-card {{class}}">
+	<product-card class="card-inner {% render 'snippet-section', type: 'class', class: CLASS %}">
+		<header class="pr">
+			<div class="card-image">
+				<a href="{{productLink}}" title="{{product.title}}">
+					{%- render 'image-style', image: product.media[0].preview_image, imgClass: IMGCLASS, height: cardImageHeight, imageRatio: customizeRatio, isProduct: true -%}
+					{%- if cardHover == 'back-fadeIn' and product.media.size > 1 -%}
+					{%- render 'image-style', image: product.media[1].preview_image, imgClass: IMGCLASS, height: cardImageHeight, imageRatio: customizeRatio, isProduct: true -%}
+					{%- endif -%}
+				</a>
+				{%- render 'snippet-product-item', type: 'label', product: product -%}
+
+				{%- unless overlayButton == blank -%}
+					<div class="absolute-item pa l0 b0 card-group">{{overlayButton}}</div>
+				{%- endunless -%}
+			</div>
+		</header>
+
+		<main>
+			<div class="main-card">
+				<h4 class="card-title{% unless cardTitleLength == 'disable' %} limit-{{cardTitleLength}}-line{% endunless %}">
+					<a href="{{productLink}}" title="{{product.title}}">{{product.title}}</a>
+				</h4>
+
+				{%- if settings.show_weight -%}
+					{%- render 'snippet-product-item', type: 'weight', product: product -%}
+				{%- endif -%}
+
+				<div class="product-reviews-badge">
+					{%- render 'review', product: product, type: 'badge' -%}
+				</div>
+
+				{%- render 'snippet-product-item', type: 'price', product: product, selectFirstVariant: selectFirstVariant -%}
+
+
+				{%- if bundleItem -%}{%- comment -%}If bundle card then show variants{%- endcomment-%}
+					{%- render 'snippet-product-item', type: 'variants', product: product, control: control -%}
+				{%- endif -%}
+
+				{%- capture content -%}
+					{%- if cartBtnPosition contains 'bottom' and hideCart != true -%}
+						{%- render 'snippet-product-item', 	type: 'cart',
+															product: product,
+															quantity: quantity,
+															removeParams: removeParams,
+															cartBtnPosition: cartBtnPosition
+															-%}
+					{%- endif -%}
+
+					{%- if cartBtnPosition contains 'bottom' and showWishlistIcon -%}
+						{%- render 'arn_wlcp_custom', type: 'wishlist_add', product: product -%}
+					{%- endif -%}
+				{%- endcapture -%}
+
+				{%- if content != blank and recentView != true -%}
+					<div class="card-group">{{content}}</div>
+				{%- endif -%}
+			</div>
+		</main>
+	</product-card>
+</div>

@@ -1,0 +1,107 @@
+{%- case type -%}
+	{%- when 'item' -%}
+		{%- liquid
+			assign itemURL = item.url | split: '?' | first
+			assign itemImage = item.media.first.preview_image | default: item.image
+		-%}
+
+		<li class="result-item item-type-{% if pageType == 'collection' %}product{% else %}{{item.object_type}}{% endif %}">
+			<a href="{{itemURL}}" class="flex flex-fill">
+				<div class="item-image-preview uppercase" style="max-width: 70px;">
+					{%- if item.object_type == 'page' -%}
+						<div class="image-preview page-preview">
+							<span class="text-overlay">{{- 'search.general.page' | t -}}</span>
+						</div>
+					{%- elsif itemImage!= blank -%}
+						{%- render 'image-style', image: itemImage, height: imageHeight, imgClass: 'object-fit--cover' -%}
+					{%- else -%}
+						<div class="image-preview no-image">
+							<span class="text-overlay">{{- 'search.general.no_image' | t -}}</span>
+						</div>
+					{%- endif -%}
+				</div>
+				<div class="item-detail">
+					<h3 class="h5 item-title">
+						<p>{{item.title | strip_html | truncate: 50 }}</p>
+
+						{%- if item.object_type == 'product' or pageType == 'collection' -%}
+							{%- render 'snippet-product-item', type: 'price', product: item -%}
+						{%- endif -%}
+					</h3>
+				</div>
+			</a>
+		</li>
+
+	{%- else -%}
+		{%- assign limit = settings.limit_suggest  -%}
+
+		{%- case request.page_type -%}
+			{%- when 'collection' -%}
+				{%- capture searchValue -%}{{- searchUrl | split: 'q=' | last | split: '&' | first | url_decode -}}{%- endcapture -%}
+				{%- assign resultsCount = collection.products_count -%}
+
+				{%- capture content -%}
+					{%- paginate collection.products by limit -%}
+						{%- for item in collection.products -%}
+							{%- render 'predictive-search', type: 'item', item: item, pageType: request.page_type -%}
+						{%- endfor -%}
+
+						{%- if paginate.pages > 1 -%}
+							{%- assign hasResult = true -%}
+						{%- endif -%}
+					{%- endpaginate -%}
+				{%- endcapture -%}
+
+			{%- else -%}
+				{%- assign searchValue = search.terms -%}
+				{%- assign resultsCount = search.results_count -%}
+
+				{%- capture content -%}
+					{%- paginate search.results by limit -%}
+						{%- for item in search.results -%}
+							{%- render 'predictive-search', type: 'item', item: item, pageType: request.page_type -%}
+						{%- endfor -%}
+
+						{%- if paginate.pages > 1 -%}
+							{%- assign hasResult = true -%}
+						{%- endif -%}
+					{%- endpaginate -%}
+				{%- endcapture -%}
+		{%- endcase -%}
+
+		{%- if searchUrl contains 'recommend=' -%}
+			{%- capture recommendWord -%}{{- searchUrl | split: 'recommend=' | last | split: '&' | first | url_decode -}}{%- endcapture -%}
+			{%- assign recommendCheck = recommendWord | handle -%}
+			{%- assign valueCheck = searchValue | handle -%}
+
+			{%- unless recommendCheck == valueCheck -%}
+				<p class="search-recommandation"><button type="button"><span>{{- 'search.suggest.recommandation' | t }}:</span> {{recommendWord | highlight: searchValue -}}</button></p>
+			{%- endunless -%}
+		{%- endif -%}
+
+		<ul class="search-result-list">
+			{%- if searchValue.size > 1 -%}
+				{%- if resultsCount > 0 -%}
+					{{content}}
+				{%- else -%}
+					{%- comment -%}No result found{%- endcomment-%}
+					<li class="no-result">
+						<p>{{- 'search.suggest.no_result' | t -}}</p>
+					</li>
+				{%- endif -%}
+
+			{%- else -%}
+				{%- comment -%}Not enough keyword for search{%- endcomment-%}
+				<li class="no-result">
+					<p>{{- 'search.suggest.not_enought_keyword' | t -}}</p>
+				</li>
+			{%- endif -%}
+		</ul>
+
+		{%- if searchValue.size > 1 and resultsCount > 0 and hasResult -%}
+			<div class="view-all-result text-center">
+				<a href="javascript:void(0);" class="highlight underline js-search-submit">{{- 'search.general.view_all' | t -}}</a>
+			</div>
+		{%- endif -%}
+
+{%- endcase -%}

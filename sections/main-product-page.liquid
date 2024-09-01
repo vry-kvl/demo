@@ -1,0 +1,645 @@
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+
+{%- liquid
+  assign sectionType    = 'product-page'
+  assign sectionID      = '.section-' | append: section.id
+  assign bundleList     = section.settings.bundle | append: '' | split: '|'
+  assign optionBlock    = section.blocks | where: 'type', 'options' | first | default: section
+-%}
+
+{%- if optionBlock.settings.disable_auto_selected != true or product.variants.size <= 1 -%}
+  {%- assign productSelect  = productSelect | default: product.selected_or_first_available_variant -%}
+{%- endif -%}
+
+{%- if bundleList.size > 0 -%}{%- render 'snippet-section', type: 'css-file', minify: true, name: 'product-bundle' -%}{%- endif -%}
+{%- capture pageURL -%}{%- render 'page-url', full: true -%}{%- endcapture -%}
+{%- capture productURL -%}{%- if pageURL contains '/collections/' -%}{{- product.url | within: collection -}}{%- else -%}  {{- product.url -}}{%- endif -%}{%- endcapture -%}
+
+{%- capture content -%}
+{%- capture CLASS -%}
+  |{{sectionID | remove: '.'}}
+  |layout-{{layout}}
+  |product-layout-default
+  {%- if bundleList.size > 0 -%}|product-layout-bundle{%- endif -%}
+  {%- if section.settings.gallery_sticky -%}|gallery-sticky{%- endif -%}
+  {%- if productSelect == blank or product.available != true -%}|variant-soldout{%- endif -%}
+{%- endcapture -%}
+
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}"
+data-section-type="{{sectionType}}"
+data-section-id="{{section.id}}"
+>
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+    <div class="md-flex {% render 'snippet-section', type: 'spacing' %}">
+
+      {%- comment -%}
+      -------------------------------
+      PRODUCT MEDIA
+      -------------------------------
+      {%- endcomment-%}
+      {%- capture productMedia -%}{%- render 'snippet-product-media' -%}{%- endcapture -%}
+      {%- assign productMedia = productMedia | split: '<!--|||-->' -%}
+      {{productMedia[0]}}
+
+
+      {%- comment -%}
+      -------------------------------
+      PRODUCT BLOCK CONTENT
+      -------------------------------
+      {%- endcomment-%}
+      {%- capture productBlocks -%}
+        {%- for block in section.blocks -%}
+
+          {%- capture productContent -%}{%- render 'snippet-product-details', type: block.type, block: block -%}{%- endcapture -%}
+
+          {%- if block.type == 'promotion' and block.settings.position == 'end' -%}
+            {%- capture endSection -%}{{- endSection | append: productContent -}}{%- endcapture -%}
+          {%- else -%}
+            {{productContent}}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endcapture -%}
+
+      {%- comment -%}If has metafield for bundle{%- endcomment-%}
+      {%- if bundleList.size > 0 -%}
+        {%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-card' -%}
+
+        <div class="main-product-info">
+          <div class="lg-flex">
+            <product-form class="product-info first-column" data-url="{{productURL}}">
+              <div class="product-info-inner">{{productBlocks}}</div>
+            </product-form>
+
+            <div class="product-info second-column">
+              <div class="product-info-inner">
+                {%- render 'product-bundle' -%}
+              </div>
+            </div>
+          </div>
+        </div>
+      {%- else -%}
+
+        <div class="main-product-info">
+          <product-form class="product-info" data-url="{{productURL}}">{{productBlocks}}</product-form>
+        </div>
+      {%- endif -%}
+    </div>
+
+    {{- endSection -}}
+  </div>
+
+
+  {%- render 'snippet-product-details', type: 'json' -%}
+  {%- render 'snippet-product-details', type: 'zoomTemplate' -%}
+  {%- render 'snippet-product-details', type: 'template' -%}
+
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}
+  {{- section_css -}}
+  {{- productMedia[1] -}}
+  {{- bundleContent[1] -}}
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{%- schema -%}
+{
+  "name": "Product page",
+  "tag": "section",
+  "settings": [
+    {
+      "type":"checkbox",
+      "id":"show_zoom",
+      "label":"Show Zoom image"
+    },
+    {
+      "type":"checkbox",
+      "id":"gallery_sticky",
+      "label":"Show Gallery sticky"
+    },
+    {
+      "type": "header",
+      "content": "Gallery settings"
+    },
+    {
+      "type": "select",
+      "id": "main_height",
+      "label": "Main image height",
+      "options": [
+        {
+          "value": "default",
+          "label": "Default"
+        },
+        {
+          "value": "manually",
+          "label": "Manually"
+        },
+        {
+          "value": "adapt",
+          "label": "Adapt to first image"
+        },
+        {
+          "value": "100%",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "150%",
+          "label": "Portrait (2:3)"
+        },
+        {
+          "value": "75%",
+          "label": "Landscape (4:3)"
+        },
+        {
+          "value": "56.25%",
+          "label": "Wide (16:9)"
+        }
+      ],
+      "default": "adapt"
+    },
+    {
+      "type":"text",
+      "id":"manual_height",
+      "label":"Main image manual height",
+      "info": "E.g: 700px, 300px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"checkbox",
+      "id":"image_crop",
+      "label":"Image cropped"
+    },
+    {
+      "type": "select",
+      "id": "gallery_position",
+      "label": "Thumbnail position",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        }
+      ],
+      "default": "bottom",
+      "info": "Available for Desktop"
+    },
+    {
+      "type": "range",
+      "id": "gallery_items",
+      "label": "How many thumbnail images to be show?",
+      "min": 3,
+      "max": 6,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "select",
+      "id": "thumb_height",
+      "label": "Thumbnail image height",
+      "options": [
+        {
+          "value": "default",
+          "label": "Default"
+        },
+        {
+          "value": "adapt",
+          "label": "Adapt to first image"
+        },
+        {
+          "value": "100%",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "150%",
+          "label": "Portrait (2:3)"
+        },
+        {
+          "value": "75%",
+          "label": "Landscape (4:3)"
+        },
+        {
+          "value": "56.25%",
+          "label": "Wide (16:9)"
+        }
+      ],
+      "default": "adapt"
+    },
+    {
+       "type":"header",
+       "content":"Bundle list"
+    },
+    {
+      "type":"text",
+      "id":"bundle",
+      "label":"Bundle list metafield",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": "Boxed layout",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "breadcrumb_layout",
+      "label": "Breadcrumb layout",
+      "options":[
+        {
+          "value":"boxed",
+          "label": "Boxed"
+        },
+        {
+          "value":"wide",
+          "label": "Wide"
+        }
+      ],
+      "default": "boxed"
+    }
+  ],
+  "blocks": [
+    {"type": "@app"},
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+           "type":"paragraph",
+           "content":"It's only show one option bellow."
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "type":"liquid",
+          "id":"liquid",
+          "label":"Liquid content"
+        }
+      ]
+    },
+    {
+      "type": "vendor",
+      "name": "Vendor + Social share",
+      "limit": 1,
+      "settings": [
+        {
+          "type":"checkbox",
+          "id":"show_social",
+          "label":"Show Social share"
+        }
+      ]
+    },
+    {
+      "type": "title",
+      "name": "Title",
+      "limit": 1
+    },
+    {
+      "type": "price",
+      "name": "Price",
+      "limit": 1,
+      "settings": [
+        {
+          "type":"radio",
+          "id":"sale_label",
+          "label":"Select a Sale label type",
+          "options":[
+            {
+              "value":"hide",
+              "label": "Hidden"
+            },
+            {
+              "value":"sale",
+              "label": "Sale label"
+            },
+            {
+              "value":"sale_percent",
+              "label": "Sale percent"
+            }
+          ],
+          "default": "sale"
+        }
+      ]
+    },
+    {
+      "type": "options",
+      "name": "Product options",
+      "limit": 1,
+      "settings": [
+        {
+          "type":"checkbox",
+          "id":"disable_auto_selected",
+          "label":"Disable auto selected variant when page loaded"
+        },
+        {
+          "type": "header",
+          "content": "Variation Swatches"
+        },
+        {
+          "type": "paragraph",
+          "content": "Input product [variants' option](https:\/\/help.shopify.com\/en\/manual\/products\/variants\/add-variants) and separate them by comma"
+        },
+        {
+          "type": "text",
+          "id": "swatch_button",
+          "label": "Button",
+          "info": "E.g: Color, Size, .."
+        },
+        {
+          "type": "text",
+          "id": "swatch_color",
+          "label": "Color",
+          "info": "E.g: Color, Size, .."
+        },
+        {
+          "type": "text",
+          "id": "swatch_image",
+          "label": "Variant Image",
+          "info": "E.g: Color, Size, .."
+        },
+        {
+           "type":"header",
+           "content":"Wishlist & Compare"
+        },
+        {
+          "type":"select",
+          "id":"wlcp_content",
+          "label":"Wishlist & Compare button display:",
+          "options":[
+            {
+              "value":"text",
+              "label": "Text"
+            },
+            {
+              "value":"icon",
+              "label": "Icon"
+            }
+          ],
+          "default": "text"
+        }
+      ]
+    },
+    {
+      "type": "buy_button",
+      "name": "Buy button",
+      "limit": 1,
+      "settings": [
+        {
+           "type":"checkbox",
+           "id":"enable_dynamic_checkout",
+           "label":"Show Dynamic Checkout button",
+           "info":"Lets customers check out directly using a familiar payment method. [Learn more](https://help.shopify.com/manual/using-themes/change-the-layout/dynamic-checkout)"
+        },
+        {
+          "type":"checkbox",
+          "id":"show_stock",
+          "label":"Show variant stock",
+          "default": true,
+          "info": "If variant's inventory is lower than 10, a message will be shown"
+        },
+        {
+          "type":"checkbox",
+          "id":"show_preorder_button",
+          "label":"Show Preorder button",
+          "info": "Allow customer preorder when variant has been sold out"
+        },
+        {
+          "type":"number",
+          "id":"cart_btn_style",
+          "label":"Cart button style",
+          "default": 1,
+          "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000255832#1.-Default-Button)"
+        }
+      ]
+    },
+    {
+      "type": "swatch_style",
+      "name": "Swatch style",
+      "limit": 3,
+      "settings": [
+        {
+          "type":"select",
+          "id":"type",
+          "label":"Swatch type",
+          "options":[
+            {
+              "value":"button",
+              "label": "Button"
+            },
+            {
+              "value":"color",
+              "label": "Color"
+            },
+            {
+              "value":"image",
+              "label": "Image"
+            }
+          ],
+          "default": "button"
+        },
+        {
+          "type":"text",
+          "id":"size",
+          "label":"Swatch size",
+          "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"text",
+          "id":"border_radius",
+          "label":"Border radius",
+          "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "tags",
+      "name": "Tags",
+      "limit": 1
+    },
+    {
+      "type": "sku",
+      "name": "Sku",
+      "limit": 1
+    },
+    {
+      "type": "review",
+      "name": "Review badge",
+      "limit": 1
+    },
+    {
+      "type": "store_availability",
+      "name": "Store availability",
+      "limit": 1,
+      "settings": [
+      ]
+    },
+    {
+      "type": "logo",
+      "name": "Logo",
+      "limit": 1,
+      "settings": [
+        {
+           "type":"paragraph",
+           "content":"You can get logo from metafield"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text"
+        },
+        {
+          "type":"image_picker",
+          "id":"logo",
+          "label":"Select a logo"
+        },
+        {
+          "type":"text",
+          "id":"max_width",
+          "label":"Max width",
+          "info": "E.g: 300px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "promotion",
+      "name": "Promotion",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "promo_content",
+          "label": "Promotion content"
+        },
+        {
+          "type": "url",
+          "id": "promo_link",
+          "label": "Link to",
+          "info": "http:// is required for external links"
+        },
+        {
+          "type":"radio",
+          "id":"position",
+          "label":"Position block",
+          "options":[
+            {
+              "value":"default",
+              "label": "Default"
+            },
+            {
+              "value":"end",
+              "label": "At end of section"
+            }
+          ],
+          "default": "default"
+        }
+      ]
+    },
+    {
+      "type": "share",
+      "name": "Social share",
+      "limit": 1
+    },
+    {
+      "type":"svg_content",
+      "name":"SVG + Content",
+      "settings": [
+        {
+           "type":"header",
+           "content":"Group 1"
+        },
+        {
+          "type":"radio",
+          "id":"style",
+          "label":"Style",
+          "options":[
+            {
+              "value":"horizontal",
+              "label": "Horizontal"
+            },
+            {
+              "value":"vertical",
+              "label": "Vertical"
+            }
+          ],
+          "default": "vertical"
+        },
+        {
+          "type":"textarea",
+          "id":"text_1",
+          "label":"Write your content here",
+          "default": "Lorem ipsum"
+        },
+        {
+          "type":"html",
+          "id":"svg_1",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        },
+        {
+           "type":"header",
+           "content":"Group 2"
+        },
+        {
+          "type":"textarea",
+          "id":"text_2",
+          "label":"Write your content here"
+        },
+        {
+          "type":"html",
+          "id":"svg_2",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        },
+        {
+           "type":"header",
+           "content":"Group 3"
+        },
+        {
+          "type":"textarea",
+          "id":"text_3",
+          "label":"Write your content here"
+        },
+        {
+          "type":"html",
+          "id":"svg_3",
+          "label":"SVG code",
+          "info": "Something like <svg....</svg>"
+        }
+      ]
+    },
+    {
+      "type": "border",
+      "name": "Border",
+      "limit": 5
+    },
+    {
+      "type":"countdown",
+      "name":"Countdown",
+      "settings":[
+        {
+          "type":"text",
+          "id":"text",
+          "label":"Date countdown",
+          "info": "Format: DD/MM/YYYY HH:MM"
+        },
+        {
+          "type":"checkbox",
+          "id":"show_label",
+          "label":"Show Date label",
+          "default": true
+        }
+      ]
+    }
+  ]
+}
+{%- endschema -%}

@@ -1,0 +1,15 @@
+{
+  "sections": {
+    "header": {
+      "wishlist": "Danh sách mong muốn của bạn",
+      "login_logout": "Đăng nhập\/Đăng xuất",
+      "cart": "Giỏ hàng của bạn",
+      "account": "Tài khoản của bạn",
+      "search_placeholder": "Tìm kiếm sản phẩm...",
+      "search": "Tìm kiếm"
+    },
+    "breadcrumb": {
+      "shopping_cart": ""
+    }
+  }
+}

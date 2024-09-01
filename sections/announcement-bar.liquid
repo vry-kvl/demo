@@ -1,0 +1,163 @@
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+{%- liquid
+  assign sectionType = 'announcement'
+  assign sectionID = '.section-' | append: section.id
+
+  assign sectionBackgroundColor = section.settings.section_background_color | remove: 'rgba(0,0,0,0)' | default: settings.secondary_color
+  capture defaultTextColor
+    render 'adaptive-color', type: 'background', color: sectionBackgroundColor
+  endcapture
+
+  assign sectionTextColor = section.settings.section_text_color | remove: 'rgba(0,0,0,0)' | default: defaultTextColor
+  assign sectionLinkColor = section.settings.section_link_color | remove: 'rgba(0,0,0,0)' | default: defaultTextColor
+-%}
+{%- capture gridClass -%}{%- render 'config-grid', value: section.settings.items_resp -%}{%- endcapture -%}
+{%- capture section_css -%}{{- section_css -}}{%- render 'config-grid', value: section.settings.items_resp, style: true -%}{%- endcapture -%}
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}} flex align-items-center
+{%- endcapture -%}
+
+
+{%- capture content -%}
+<div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  <div class="section-container{% if layout == 'boxed' %} container{% endif %}">
+    <div class="flex w100 align-items-center{{gridClass}}">
+      {%- for block in section.blocks -%}
+        {%- capture blockID -%}.block-{{block.id}}{%- endcapture -%}
+
+        <div class="block-item {{ blockID | remove: '.' }}"{{block.shopify_attributes}}>
+
+          {%- case block.type -%}
+            {%- when 'announcement' -%}{{- block.settings[block.settings.type] -}}
+              {%- capture section_css -%}{{section_css}}
+                {%- render 'css-resp', class: blockID, value: block.settings.text_align, css: 'text-align' -%}
+              {%- endcapture -%}
+
+
+          {%- endcase -%}
+        </div>
+
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+{%- endcapture -%}
+
+{%- capture section_css -%}{{section_css}}
+  {{sectionID}}{background: {{sectionBackgroundColor}}; color: {{sectionTextColor}}; }
+  {{sectionID}} a{color: {{sectionLinkColor}};}
+
+  {%- render 'css-resp', class: sectionID, value: section.settings.padding, css: 'padding' -%}
+  {%- render 'css-resp', class: sectionID, value: section.settings.text_fs, css: 'font-size' -%}
+{%- endcapture -%}
+
+
+{%- if section.blocks.size > 0 -%}
+{%- render 'snippet-section', type: 'css', value: section_css -%}
+{{content}}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "max_blocks": 12,
+  "tag": "section",
+  "settings": [
+    {
+       "type"  :"text",
+       "id"    :"items_resp",
+       "label":"Max number of item per row",
+       "default": "1",
+       "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+      "type":"color",
+      "id":"section_text_color",
+      "label":"Text color"
+    },
+    {
+      "type":"color",
+      "id":"section_link_color",
+      "label":"Link color"
+    },
+    {
+      "type":"color",
+      "id":"section_background_color",
+      "label":"Background color",
+      "info": "Default is Secondary color"
+    },
+    {
+      "type":"text",
+      "id":"text_fs",
+      "label":"Text font size",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    },
+    {
+       "type":"header",
+       "content":"Section styles"
+    },
+    {
+      "type":"checkbox",
+      "id":"boxed_layout",
+      "label":"Boxed layout",
+      "default": true
+    },
+    {
+      "type":"text",
+      "id":"padding",
+      "label":"Padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type":"select",
+          "id":"type",
+          "label":"Which content type do you use?",
+          "options":[
+            {
+              "value":"richtext",
+              "label": "Richtext"
+            },
+            {
+              "value":"liquid",
+              "label": "Liquid content"
+            }
+          ],
+          "default": "richtext"
+        },
+        {
+          "type":"richtext",
+          "id":"richtext",
+          "label":"Rich text content"
+        },
+        {
+          "type":"liquid",
+          "id":"liquid",
+          "label":"Liquid content"
+        },
+        {
+          "type":"text",
+          "id":"text_align",
+          "label":"Text alignment",
+          "default":"left, center",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    }
+  ],
+  "default": {
+    "blocks": [
+      {
+        "type": "announcement"
+      }
+    ]
+  }
+}
+{% endschema %}

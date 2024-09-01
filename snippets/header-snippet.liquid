@@ -1,0 +1,192 @@
+{%- case type -%}
+  {%- when 'icon_list' -%}
+    <ul class="header-icons-list flex">
+
+      {%- if section.settings.show_search -%}
+        <li class="header-icon-item header-icon--search{% if headerStyle == 1 %} lg-none{% endif %}">
+
+          <details class="mini-search" data-class="mini-search">
+            <summary class="header-search c-pointer" title="{{- 'sections.header.search' | t -}}">
+              {%- render 'svg', type: 'search' -%}
+              {%- render 'svg', type: 'close' -%}
+            </summary>
+
+            <div class="search-dropdown layer-dropdown pa l0 slideUp">
+              {%- render 'form', type: 'search', popup: true, focus: true -%}
+            </div>
+          </details>
+        </li>
+      {%- endif -%}
+
+      {%- if shop.customer_accounts_enabled and section.settings.show_account-%}
+        <li class="header-icon-item header-icon--account {{class}}">
+          <a href="{{routes.account_url}}" title="{% if customer %}{{- 'sections.header.account' | t -}}{% else %}{{- 'sections.header.login_logout' | t -}}{% endif %}">
+            {%- if customer -%}
+              {%- assign name = customer.first_name | default: customer.email | truncate: 15 -%}
+              <span>{{- 'sections.header.welcome' | t: name: name -}}</span>
+            {%- else -%}
+              {%- render 'svg', type: 'account' -%}
+            {%- endif -%}
+          </a>
+        </li>
+      {%- endif -%}
+
+      {%- if settings.show_wishlist and section.settings.show_wishlist -%}
+        <li class="header-icon-item {{class}}">
+          <div class="wishlist-target">
+            {% render 'arn_wlcp_custom', type: 'wishlist_show' %}
+          </div>
+        </li>
+      {%- endif -%}
+
+      {%- if settings.show_compare and section.settings.show_compare -%}
+        <li class="header-icon-item {{class}}">
+          <div class="compare-target">
+            {% render 'arn_wlcp_custom', type: 'compare_show' %}
+          </div>
+        </li>
+      {%- endif -%}
+
+      {%- if section.settings.show_cart -%}
+        {%- assign cartStyle = settings.cart_styles -%}
+
+        {%- capture cartClass -%}
+          js-mini-cart
+          {%- case cartStyle -%}
+            {%- when 'dropdown' -%}{% if request.page_type != 'cart' %} js-tload" data-tload="#miniCart{%- endif -%}
+            {%- when 'popup' or 'sidebar' -%}{% if request.page_type != 'cart' %} js-popup-toggle js-tload" data-tload="#miniCart" data-control="cart-{{cartStyle}}{%- endif -%}
+          {%- endcase -%}
+        {%- endcapture -%}
+
+        <li class="header-icon-item header-icon--cart {{class}}">
+
+          <a href="{{routes.cart_url}}" title="{{- 'sections.header.cart' | t -}}" class="{{ cartClass | strip_newlines }}" data-style="{{cartStyle}}">
+            {%- render 'svg', type: 'cart', useLink: false -%}
+            <span class="bubble-count bubble-cart js-cart-count" data-cart-count="{{cart.item_count}}"></span>
+          </a>
+
+          {%- if request.page_type != 'cart' and settings.cart_styles == 'dropdown' -%}
+            <template id="miniCart">
+              {%- render 'cart-items', preload: true -%}
+            </template>
+          {%- endif -%}
+        </li>
+      {%- endif -%}
+    </ul>
+
+  {%- when 'multi_shop' -%}
+    {%- capture content -%}
+      {%- comment -%}
+      -------------------------------
+      LANGUAGES
+      -------------------------------
+      {%- endcomment-%}
+      {%- if localization.available_languages.size > 1 -%}
+        <li class="multi-shop multi-shop--languages pr">
+          <details class="multi-shop--switcher">
+            <summary>
+              <div class="flex align-items-center">
+                <span class="uppercase js-multi-shop--value">{{localization.language.iso_code}}</span>
+                {%- render 'svg', type: 'caret', class: 'expand' -%}
+              </div>
+            </summary>
+
+            <div class="layer-dropdown pa l0 slideUp">
+              <ul class="currencies-list">
+                {%- for language in localization.available_languages -%}
+                  <li class="{% if language.iso_code == localization.language.iso_code %} active" aria-current="true{% endif %}">
+                    <button type="button" class="c-pointer uppercase highlight-hover js-languages-{{language.iso_code}} js-multi-shop" data-code="{{language.iso_code}}" title="{{language.endonym_name}}">{{language.endonym_name}}</button>
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          </details>
+        </li>
+      {%- endif -%}
+
+      {%- comment -%}
+      -------------------------------
+      CURRENCIES
+      -------------------------------
+      {%- endcomment-%}
+
+      {%- if settings.currency_type != 'false'  -%}
+        <li class="multi-shop multi-shop--currencies pr">
+          <details class="multi-shop--switcher">
+            <summary>
+              <div class="flex align-items-center">
+                <span class="uppercase js-multi-shop--value js-currencies-value">
+                  {%- render 'currencies', type: 'default' -%}
+                </span>
+                {%- render 'svg', type: 'caret', class: 'expand' -%}
+              </div>
+            </summary>
+
+            <div class="layer-dropdown pa l0 slideUp">
+              <ul class="currencies-list js-currencies-list">
+                {%- render 'currencies' -%}
+              </ul>
+            </div>
+          </details>
+        </li>
+      {%- endif -%}
+    {%- endcapture -%}
+
+    {%- unless inMobile -%}
+      {%- form 'localization', class: 'none', return_to: request.path -%}
+        <input type="hidden" name="country_code" value="{{localization.country.currency.iso_code}}">
+        <input type="hidden" name="language_code" value="{{localization.language.iso_code}}">
+        <input type="submit" value="Update">
+      {%- endform -%}
+    {%- endunless -%}
+
+    {%- if content == blank -%}{%- break -%}{%- endif -%}
+
+    <ul class="multi-shop-list flex">{{content}}</ul>
+
+  {%- when 'nav_layer' -%}
+    {%- if content == blank or id == blank -%}{%- break -%}{%- endif -%}
+
+    {%- capture CLASS -%}
+      |mobile-navigation-layer
+      |sub-main-layer {{class}}
+    {%- endcapture -%}
+
+    <section class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-layer="{{ id }}">
+      <div class="mobile-navigation-header">
+        <div class="layer-title">
+          <button type="button" class="flex js-nav-back">
+            {%- render 'svg', type: 'arrow_left' -%}
+            <span>{{ title }}</span>
+          </button>
+        </div>
+      </div>
+      <div class="mobile-navigation-body">{{content}}</div>
+    </section>
+
+  {%- when 'mobile_layer' -%}
+    {%- if link == blank or link.links.size == 0 -%}{%- break -%}{%- endif -%}
+
+    {%- capture layerID -%}{{ title | default: link.title | escape | sha1 }}{%- endcapture -%}
+    {%- capture layerTitle -%}{{ title | default: link.title }}{%- endcapture -%}
+    {%- capture layerContent -%}
+      <ul class="menu-mobile-list" role="navigation">
+        {%- for sublink in  link.links -%}
+
+          {%- capture subLayer -%}{%- render 'header-snippet', type: 'mobile_layer', link: sublink -%}{%- endcapture -%}
+          {%- capture mobileLayer -%}{{mobileLayer}}{{subLayer}}{%- endcapture -%}
+
+          <li class="list-item js-nav-counter">
+            <a href="{{sublink.url}}" class="list-item-link link" title="{{ sublink.title | escape }}"{% if enableMegaMenu or subLayer != blank %} data-layer-id="{{ sublink.title | escape | sha1 }}"{% endif %}>
+              {{- sublink.title -}}
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endcapture -%}
+
+    {%- render 'header-snippet', type: 'nav_layer', id: layerID, title: layerTitle, content: layerContent -%}
+
+    {{mobileLayer}}
+
+{%- endcase -%}

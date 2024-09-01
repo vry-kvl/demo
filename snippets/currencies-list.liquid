@@ -1,0 +1,29 @@
+{%- assign _flag_currency = settings.flag_currency -%}
+{%- case settings.currency_type -%}
+    {%- when 'shopify' -%}
+      {%- assign currenciesArray = shop.enabled_currencies -%}
+    {%- when 'arena' -%}
+      {%- assign codes = 'USD,EUR,GBP,CAD,AFN,ALL,DZD,AOA,ARS,AMD,AWG,AUD,BBD,AZN,BDT,BSD,BHD,BIF,BYR,BZD,BMD,BTN,BAM,BRL,BOB,BWP,BND,BGN,MMK,KHR,CVE,KYD,XAF,CLP,CNY,COP,KMF,CDF,CRC,HRK,CZK,DKK,DOP,XCD,EGP,ETB,XPF,FJD,GMD,GHS,GTQ,GYD,GEL,HTG,HN,HKD,HUF,ISK,INR,IDR,ILS,IQD,JMD,JPY,JEP,JOD,KZT,KES,KWD,KGS,LAK,LVL,LBP,LSL,LRD,MGA,MKD,MOP,MWK,MVR,MXN,MYR,MUR,MDL,MAD,MNT,MZN,NAD,NPR,ANG,NZD,NIO,NGN,NOK,OMR,PAB,PKR,PGK,PYG,PEN,PHP,PLN,QAR,RON,RUB,RWF,WST,SAR,STD,RD,SCR,SGD,SDG,SYP,ZAR,KRW,SSP,SBD,LKR,SRD,SZL,SEK,CHF,TWD,THB,TZS,TTD,TND,TRY,TMT,UGX,UAH,AED,UYU,UZS,VUV,VEF,VND,XOF,YER,ZMW' | split: ',' -%}
+      {%- assign currenciesArray = settings.supported_currencies | split: ' ' | uniq -%}
+{%- endcase -%}
+
+{%- if currenciesArray.size > 0 -%}
+
+  <ul class="currencies-list">
+    {%- for c in currenciesArray -%}
+      {%- if settings.currency_type == '1' -%}
+        {%- assign currency = c.iso_code -%}
+      {%- else -%}
+        {%- assign currency = c -%}
+        {%- unless codes contains currency -%}{%- continue -%}{%- endunless -%}
+      {%- endif -%}
+
+      <li>
+        <a href="javascript:void(0);" data-value="{{ currency }}" class="btn btn-currency{% if currency == cart.currency.iso_code %} active{% endif %}">
+          {%- if _flag_currency != 'none' -%}<span class="currency-flag currency-flag-{{ currency | downcase }}"></span>{%- endif -%}
+          <span class="currency-code">{{ currency }}</span>
+        </a>
+      </li>
+    {%- endfor -%}
+  </ul>
+{%- endif -%}

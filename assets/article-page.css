@@ -1,0 +1,203 @@
+.article-page .article-title {
+  max-width: 820px; }
+
+.article-page .article-title h1 {
+  font-weight: 600;
+  font-size: 36px;
+  color: var(--text-color); }
+
+@media (min-width: 1000px) {
+  .article-page .article-title h1 {
+    font-size: 55px; } }
+
+.article-page .article-info {
+  max-width: 820px;
+  color: var(--subtext-color);
+  font-size: 13px;
+  line-height: 1.4em; }
+
+.article-page .article-content {
+  margin-bottom: 50px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--miscellaneous-color); }
+
+.article-page .article-content .fs-16 {
+  font-size: 16px;
+  line-height: 1.6em; }
+
+.article-page .article-content .fs-17 {
+  font-size: 17px;
+  line-height: 1.7em; }
+
+.article-page .article-content .fs-18 {
+  font-size: 18px;
+  line-height: 1.8em;
+  font-weight: 500; }
+
+.article-page .article-content h2, .article-page .article-content h3, .article-page .article-content h4, .article-page .article-content h5, .article-page .article-content h6 {
+  max-width: 820px;
+  margin: 10px auto; }
+
+.article-page .article-content h2 a, .article-page .article-content h3 a, .article-page .article-content h4 a, .article-page .article-content h5 a, .article-page .article-content h6 a {
+  color: var(--text-color); }
+
+.article-page .article-content table {
+  margin-top: 20px;
+  margin-bottom: 20px; }
+
+.article-page .article-content p {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 820px;
+  line-height: 1.55em;
+  display: block; }
+
+.article-page .article-content img {
+  width: 100%; }
+
+.article-page .article-content .flex {
+  align-items: center; }
+
+.article-page .share-social {
+  max-width: 820px;
+  margin: 50px auto 60px;
+  display: flex; }
+
+.article-page .social-sharing {
+  display: none;
+  flex-wrap: wrap;
+  margin: 0 -4px;
+  transition: all .2s ease-in-out; }
+
+.article-page .social-sharing.active {
+  display: flex; }
+
+.article-page .social-sharing > li {
+  padding: 0 4px; }
+
+.article-page .social-sharing > li:last-child {
+  -webkit-margin-end: 8px;
+  margin-inline-end: 8px; }
+
+.article-page .social-sharing a {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius); }
+
+.article-page .social-sharing a svg {
+  width: 12px;
+  height: 12px; }
+
+.article-page .social-sharing a svg path {
+  fill: #fff; }
+
+.article-page .share-facebook {
+  background: #4267b2; }
+
+.article-page .share-twitter {
+  background: #55acee; }
+
+.article-page .share-pinterest {
+  background: #cb2027; }
+
+.article-page .share-list-btn {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #95d03a;
+  border-radius: var(--border-radius);
+  cursor: pointer; }
+
+.article-page .share-list-btn svg {
+  width: 12px;
+  height: 12px; }
+
+.article-page .share-list-btn svg path {
+  fill: #fff; }
+
+.article-page .section-container > .h4 {
+  font-size: 30px;
+  font-weight: 500;
+  margin-bottom: 30px; }
+
+.article-page .list-comments {
+  margin-bottom: 35px; }
+
+.article-page .comment-item {
+  background: #f5f5f5;
+  border: 1px solid var(--miscellaneous-color);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: var(--border-radius); }
+
+.article-page .comment-inner {
+  margin: 0; }
+
+.article-page .comment-inner > div {
+  padding: 0; }
+
+.article-page .comment-author {
+  flex: 0 0 32px;
+  max-width: 32px;
+  -webkit-margin-end: 15px;
+  margin-inline-end: 15px; }
+
+.article-page .comment-info {
+  margin-bottom: 10px; }
+
+.article-page .comment-info .comment-author {
+  -webkit-margin-end: 5px;
+  margin-inline-end: 5px;
+  font-size: 18px;
+  font-weight: 500; }
+
+.article-page .comment-create-at {
+  color: var(--subtext-color); }
+
+.article-page .comment-content {
+  line-height: 1.55em; }
+
+.article-page .comment-content p {
+  margin: 0; }
+
+.article-comment-form-wrapper {
+  margin-bottom: 60px;
+  margin-top: 50px; }
+
+.article-comment-form-wrapper h2 {
+  font-size: 30px;
+  margin-bottom: 30px;
+  font-weight: 500; }
+
+.article-comment-form-wrapper .form-status {
+  font-size: 15px;
+  margin-bottom: 20px; }
+
+.article-comment-form-wrapper input:not(.btn), .article-comment-form-wrapper textarea {
+  background: #f5f5f5;
+  border: 1px solid var(--miscellaneous-color);
+  border-radius: var(--border-radius);
+  font-size: 15px; }
+
+.article-comment-form-wrapper input.btn {
+  max-width: 200px; }
+
+.article-comment-form-wrapper .form-warning {
+  color: var(--primary-color); }
+
+.article-comment-form-wrapper .form-field {
+  margin-bottom: 20px; }
+
+.article-comment-form-wrapper .form__message {
+  font-size: 15px;
+  font-weight: 400;
+  color: #fd1414;
+  margin-top: 10px;
+  display: block; }

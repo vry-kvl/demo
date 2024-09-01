@@ -1,0 +1,79 @@
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'customer' -%}
+{%- render 'snippet-section', type: 'css-file', minify: true, name: 'component-pagination' -%}
+
+<div class="container">
+  <div class="main-page">
+    <h1 class="page-heading h2 fw600">{{ 'customer.account.title' | t }}</h1>
+
+    <div class="flex flex-1 flex-md-2 {% render 'snippet-section', type: 'spacing' %}">
+      <aside class="account-detail">
+        <div class="account-detail-inner">
+          <h2 class="h4">{{ 'customer.account.details' | t }}</h2>
+          <div class="account-name">{{customer.name}}</div>
+          <div class="account-email">{{customer.email}}</div>
+          <div class="account-orders active"><a href="{{routes.account_url}}" class="highlight">{{- 'customer.account.view_orders' | t -}}</a></div>
+          <div class="account-address"><a href="{{ routes.account_addresses_url }}">{{ 'customer.account.view_addresses' | t }}</a></div>
+          <div class="logout none md-block"><a href="{{ routes.account_logout_url }}">{{ 'customer.general.log_out' | t }}</a></div>
+        </div>
+      </aside>
+
+      <main class="main-account">
+        <div class="order-list">
+          <h2 class="h4">{{ 'customer.orders.title' | t }}</h2>
+
+          {%- paginate customer.orders by 20 -%}
+            {%- if customer.orders.size > 0 -%}
+              <table role="table" class="order-history table-field">
+
+                <thead role="rowgroup">
+                  <tr role="row" class="table-field-row table-field-header">
+                    <th scope="col" role="columnheader" id="ColumnOrder">{{ 'customer.orders.order_number' | t }}</th>
+                    <th scope="col" role="columnheader" id="ColumnDate">{{ 'customer.orders.date' | t }}</th>
+                    <th scope="col" role="columnheader" id="ColumnPayment">{{ 'customer.orders.payment_status' | t }}</th>
+                    <th scope="col" role="columnheader" id="ColumnFulfillment">{{ 'customer.orders.fulfillment_status' | t }}</th>
+                    <th scope="col" role="columnheader" id="ColumnTotal">{{ 'customer.orders.total' | t }}</th>
+                  </tr>
+                </thead>
+
+                <tbody role="rowgroup">
+                  {%- for order in customer.orders -%}
+                    <tr role="row" class="table-field-row table-field-body">
+                      <td id="RowOrder" role="cell" headers="ColumnOrder" data-label="{{ 'customer.orders.order_number' | t }}">
+                        <a href="{{ order.customer_url }}" aria-label="{{ 'customer.orders.order_number_link' | t: number: order.name }}" class="highlight">
+                          {{ order.name }}
+                        </a>
+                      </td>
+                      <td headers="RowOrder ColumnDate" role="cell" data-label="{{ 'customer.orders.date' | t }}">
+                        {{ order.created_at | time_tag: '%m/%d/%Y' }}
+                      </td>
+                      <td headers="RowOrder ColumnPayment" role="cell" data-label="{{ 'customer.orders.payment_status' | t }}">
+                        {{ order.financial_status_label }}
+                      </td>
+                      <td headers="RowOrder ColumnFulfillment" role="cell" data-label="{{ 'customer.orders.fulfillment_status' | t }}">
+                        {{ order.fulfillment_status_label }}
+                      </td>
+                      <td headers="RowOrder ColumnTotal" role="cell" data-label="{{ 'customer.orders.total' | t }}">
+                        {%- render 'money', value: order.total_price -%}
+                      </td>
+                    </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            {%- else -%}
+              <p>{{ 'customer.orders.none' | t }}</p>
+            {%- endif -%}
+
+            {%- if paginate.pages > 1 -%}
+              {%- render 'pagination', paginate: paginate -%}
+            {%- endif -%}
+          {%- endpaginate -%}
+        </div>
+      </main>
+
+
+      <div class="logout mobile-logout md-none">
+        <a href="{{ routes.account_logout_url }}" class="btn btn-2">{{ 'customer.general.log_out' | t }}</a>
+      </div>
+    </div>
+  </div>
+</div>

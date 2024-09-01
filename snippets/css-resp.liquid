@@ -1,0 +1,122 @@
+{%- case type -%}
+	{%- when 'value' -%}
+		{%- if value.size > 0 -%}
+			{%- if css_revert_value -%}{%- assign css_revert = '-'-%}{%- endif -%}
+
+			{%- liquid
+				if showFirst
+					assign splitBy = splitBy | default: ','
+					assign value = value | split: splitBy | first | strip
+				endif
+				if value_before != blank
+					assign value_before 	= value_before | append: '('
+					assign value_after  	= ')'
+				endif
+				assign value_out = value | strip | prepend: css_revert | prepend: value_before | append: value_after
+			-%}
+
+			{{css}}:{{- value_out -}}{% if important %}!important{% endif %};
+		{%- endif -%}
+
+	{%- when 'media' -%}
+
+		{%- capture __value -%}{{ value | remove: 'null' | strip }}{%- endcapture -%}
+		{%- if __value.size > 0 -%}
+
+			{%- if media_screen != blank -%}@media({{- media_screen -}}){ {%- endif -%}
+
+				{{- _classID -}}{ {%- render 'css-resp', type: 'value'
+														, important: important
+														, css: css
+														, css_revert_value: css_revert_value
+														, value_before: value_before
+														, value: __value
+								-%} }
+
+			{%- if media_screen != blank -%} }{%- endif -%}
+
+		{%- endif -%}
+
+	{%- when 'position' -%}
+		{%- if value == blank -%}{%- break -%}{%- endif -%}
+
+		{%- capture _classID -%}{{preClass}}{{class}}{{nextClass}}{%- endcapture -%}
+		{%- liquid
+			assign arrayValue = value | split: ','
+		-%}
+
+		{%- for value in arrayValue -%}
+			{%- assign temp = value | split: ':' -%}
+			{%- capture left -%}{{- left -}},{{temp.first | strip }}{%- endcapture -%}
+			{%- capture top -%}{{- top -}},{{temp.last | strip }}{%- endcapture -%}
+			{%- capture translate -%}{{- translate -}};-{{ temp.first | strip }},-{{ temp.last | strip }}{%- endcapture -%}
+		{%- endfor -%}
+
+		{%- liquid
+			assign themeLayout = settings.theme_layout | default: 'ltr' | downcase
+			assign left = left | remove_first: ','
+			assign top = top | remove_first: ','
+			assign translate = translate | remove_first: ';' | remove: '--'
+
+			if themeLayout == 'rtl'
+				render 'css-resp', class: _classID, css: 'right', value: left
+			else
+				render 'css-resp', class: _classID, css: 'left', value: left
+			endif
+			
+			render 'css-resp', class: _classID, css: 'top',  value: top
+			render 'css-resp', class: _classID, css: 'transform', value: translate, value_before: 'translate', splitBy: ';'
+		-%}
+
+	{%- else -%}
+		{%- capture _classID -%}{{preClass}}{{class}}{{nextClass}}{%- endcapture -%}
+
+		{%- unless value == blank -%}
+
+			{%- liquid
+				assign splitBy = splitBy | default: ','
+				if showFirst
+					assign value = value | split: splitBy | first | strip
+				endif
+				if showLast
+					assign f_value 	= value | split: splitBy | first | strip
+				 	assign value 	= value | replace_first: f_value, 'null'
+				endif
+				assign arr_value 	= value | split: splitBy
+				assign css 			= css | default: 'padding'
+				assign mediaScreen 	= '0|750px|1000px|1300px' | split: '|'
+			-%}
+
+
+			{%- for i in (1..arr_value.size) limit: mediaScreen.size -%}
+
+				{%- capture mediaValue -%}
+					{%- unless mediaScreen[forloop.index0] == '0' -%}min-width: {{ mediaScreen[forloop.index0] }}{%- endunless -%}
+				{%- endcapture -%}
+
+				{%- render 'css-resp' 	,type: 'media'
+										,_classID: _classID
+										,value: arr_value[forloop.index0]
+										,important: important
+										,css: css
+										,css_revert_value: css_revert_value
+										,value_before: value_before
+										,media_screen: mediaValue
+				-%}
+			{%- endfor -%}
+
+		{%- elsif values != blank -%}
+			{%- assign css_ar = values | strip_newlines | split: ';' -%}
+			{{- _classID -}}{
+				{%- for css_item in css_ar -%}
+					{%- liquid
+						assign _css_content  	= css_item | split: ':'
+						assign _css 			= _css_content[0] | strip
+						assign _value 	 		= _css_content[1] | strip
+					-%}
+					{%- if _value.size > 0 -%}{{_css}}:{{_value}};{%- endif -%}
+				{%- endfor -%}
+			}
+		{%- endunless -%}
+
+{%- endcase -%}

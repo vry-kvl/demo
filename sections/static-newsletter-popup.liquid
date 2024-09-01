@@ -1,0 +1,717 @@
+{%- if section.settings.boxed_layout -%}{%- assign layout = 'boxed' -%}{%- else -%}{%- assign layout = 'wide' -%}{%- endif -%}
+{%- capture pageURL -%}{%- render 'page-url' -%}{%- endcapture -%}
+{%- liquid
+  assign sectionType  = 'newsletter'
+  assign sectionID    = '.section-' | append: section.id
+  assign popupTrigger      = section.settings.popup_trigger
+  assign homepage          = section.settings.homepage
+  assign delayTime         = section.settings.delay_time
+  assign scrollPosition    = section.settings.scroll_position
+  assign expires           = section.settings.expires
+-%}
+
+{%- capture content -%}
+{%- capture CLASS -%}
+|{{sectionID | remove: '.'}}
+|layout-{{layout}}
+|section-{{sectionType}}
+|section-custom-content
+|popup-gl js-popup
+{%- endcapture -%}
+
+{%- if request.design_mode or pageURL contains 'section_id=' -%}
+  {%- render 'snippet-section', type: 'css-file', minify: true, name: 'custom-content' -%}
+  {%- unless request.design_mode -%}{%- render 'snippet-section', type: 'css-file', minify: true, name: 'newsletter-popup' -%}{%- endunless -%}
+  <div data-section-type="{{sectionType}}" data-section-id="{{section.id}}"{% if request.design_mode %} data-theme-editor{% endif %}>
+    <div class="{%- render 'snippet-section', type: 'class', class: CLASS -%}" data-control="newsletter-popup" id="newsletterPopup">
+      <div class="popup-layer js-popup-close"></div>
+
+      <div class="popup-inner section-container{% if layout == 'boxed' %} container{% endif %}">
+        <button type="button" class="btn btn-popup-close js-popup-close">
+          {%- render 'svg', type: 'close' -%}
+        </button>
+
+
+
+        {%- if section.blocks.size == 0 -%}
+          <div class="flex flex-1 flex-lg-2 {% render 'snippet-section', type: 'spacing' %} align-items-center">
+            <div class="block-item block-image">
+              <div class="block-inner">
+                {%- render 'empty-content', type: 'once_image' -%}
+              </div>
+            </div>
+            <div class="block-item block-paragraph">
+              <div class="block-inner">
+                <h2>Talk about your brand</h2>
+                <p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>
+              </div>
+            </div>
+          </div>
+        {%- else -%}
+          {%- comment -%}
+          -------------------------------
+          SECTION CONTENT
+          -------------------------------
+          {%- endcomment-%}
+            {%- for block in section.blocks -%}
+              {%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+              {%- capture blockClass -%}
+                |block-item
+                |block-{{block.type}}
+                |block-{{block.id}}
+              {%- endcapture -%}
+
+              {%- comment -%}
+              -------------------------------
+              BLOCK CONTENT
+              -------------------------------
+              {%- endcomment-%}
+              {%- capture blockItemContent -%}
+                <div class="{%- render 'snippet-section', type: 'class', class: blockClass, object: block -%}"{{block.shopify_attributes}}>
+                  <div class="block-inner">
+                    {%- capture blockContent -%}{%- render 'snippet-custom-content', block: block, blockID: blockID -%}{%- endcapture -%}
+                    {%- assign blockContent = blockContent | split: '<!--|||-->' -%}
+                    {{- blockContent[0] -}}
+                  </div>
+                </div>
+              {%- endcapture -%}
+
+              {%- case block.settings.position -%}
+                {%- when 'left'   -%}{%- assign leftContent     = leftContent | append: blockItemContent -%}
+                {%- when 'right'  -%}{%- assign rightContent    = rightContent | append: blockItemContent -%}
+                {%- when 'bottom' -%}{%- assign bottomContent   = bottomContent | append: blockItemContent -%}
+                {%- else          -%}{%- assign topContent      = topContent | append: blockItemContent -%}
+              {%- endcase -%}
+
+              {%- comment -%}
+              -------------------------------
+              BLOCK STYLE
+              -------------------------------
+              {%- endcomment-%}
+              {%- capture section_css -%}{{- section_css -}}
+                {%- comment -%} BLOCK WIDTH
+                {%- liquid
+                  assign width = block.settings.width
+                  unless width == blank
+                    assign width = width | replace: ',', ',0 0 ' | prepend: '0 0 '
+                  endunless
+                  render 'css-resp', class: blockID, css: 'flex', value: width
+                -%}
+                {%- endcomment-%}
+                {%- comment -%}-------------------------------{%- endcomment-%}
+
+                {%- render 'css-resp', class: blockID, nextClass: '>div', css: 'padding', value: block.settings['block_padding'] -%}
+                {%- render 'css-resp', class: blockID, nextClass: '>div', css: 'margin', value: block.settings['block_margin'] -%}
+                {{- blockContent[1] -}}
+              {%- endcapture -%}
+            {%- endfor -%}
+
+            <div class="section-blocks-content">
+              {%- unless topContent == blank -%}
+                <div class="top-blocks">{{topContent}}</div>
+              {%- endunless -%}
+
+              {%- unless leftContent == blank and rightContent == blank -%}
+                <div class="flex flex-1 flex-md-2 {% render 'snippet-section', type: 'spacing' %}">
+                {%- unless leftContent == blank -%}<div class="left-blocks">{{leftContent}}</div>{%- endunless -%}
+                {%- unless rightContent == blank -%}<div class="right-blocks">{{rightContent}}</div>{%- endunless -%}
+                </div>
+              {%- endunless -%}
+
+              {%- unless bottomContent == blank -%}
+                <div class="bottom-blocks">{{bottomContent}}</div>
+              {%- endunless -%}
+            </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+  
+  {%- capture section_css -%}{{section_css}}
+    {%- render 'css-resp', class: sectionID, nextClass: ' .section-blocks-content', css: 'padding', value: section.settings['section_padding'] -%}
+  {%- endcapture -%}
+
+{%- else -%}
+
+  <div data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+    <script type="application/json">
+      {
+        "popupTrigger": {{popupTrigger | json}},
+        "homepage": {{homepage | json}},
+        "delayTime": {{delayTime | json}},
+        "scrollPosition": {{scrollPosition | json}},
+        "expires": {{expires | json}},
+        "section": {{section.id | json}}
+      }
+    </script>
+  </div>
+{%- endif -%}
+
+{%- endcapture -%}
+
+{%- render 'snippet-section', type: 'css', value: section_css -%}{{content}}
+
+{% schema %}
+{
+  "name": "Newsletter popup",
+  "tag": "section",
+  "settings": [
+    {
+       "type":"select",
+       "id":"popup_trigger",
+       "label":"Style",
+       "options":[
+          {
+             "value":"delay",
+             "label":"Time on page"
+          },
+          {
+             "value":"exit-intent",
+             "label":"Exit Intent - Triggered Popups"
+          },
+          {
+             "value":"scroll",
+             "label":"Scroll-Triggered Popups"
+          }
+       ],
+       "default":"delay"
+    },
+    {
+       "type":"checkbox",
+       "id":"homepage",
+       "label":"Show only on home page"
+    },
+    {
+       "type":"range",
+       "id":"delay_time",
+       "label":"Delay time",
+       "default":10,
+       "min":1,
+       "max":10,
+       "unit":"Sec"
+    },
+    {
+       "type":"range",
+       "id":"scroll_position",
+       "label":"Scroll position",
+       "default":500,
+       "min":100,
+       "max":1000,
+       "step":10,
+       "unit":"px",
+       "info":"Calculated from top of site"
+    },
+    {
+       "type":"number",
+       "id":"expires",
+       "label":"Expires in hour(s)",
+       "default": 24,
+       "info": "Set 0 to show every time page loaded"
+    },
+    {
+       "type":"header",
+       "content":"Popup styles"
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Popup padding",
+      "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "paragraph",
+      "name": "Paragraph",
+      "settings": [
+        {
+           "type":"header",
+           "content":"First content"
+        },
+        {
+          "type":"richtext",
+          "id":"text_1",
+          "label":"Write your first content here",
+          "default": "<p>Talk about your brand</p>"
+        },
+        {
+          "type":"text",
+          "id":"text_fs_1",
+          "label":"Adjust first content font size",
+          "info": "E.g: 14px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"color",
+          "id":"text_cl_1",
+          "label":"Text color"
+        },
+        {
+           "type":"header",
+           "content":"Second content"
+        },
+        {
+          "type":"richtext",
+          "id":"text_2",
+          "label":"Write your second content here"
+        },
+        {
+          "type":"text",
+          "id":"text_fs_2",
+          "label":"Adjust second content font size",
+          "info": "E.g: 14px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"color",
+          "id":"text_cl_2",
+          "label":"Text color"
+        },
+        {
+          "type":"header",
+          "content":"General settings"
+        },
+        {
+          "type":"select",
+          "id":"position",
+          "label":"Block position",
+          "options":[
+            {
+              "value":"top",
+              "label": "Top"
+            },
+            {
+              "value":"left",
+              "label": "Left"
+            },
+            {
+              "value":"right",
+              "label": "Right"
+            },
+            {
+              "value":"bottom",
+              "label": "Bottom"
+            }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "content_align",
+          "label": "Content alignment",
+          "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_margin",
+          "label": "Block margin",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_padding",
+          "label": "Block padding",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "settings": [
+        {
+          "type":"text",
+          "id":"text",
+          "label":"Button text"
+        },
+        {
+          "type":"select",
+          "id":"quick_link",
+          "label":"Quick access",
+          "options":[
+            {
+              "value":"custom",
+              "label": "Custom"
+            },
+            {
+              "value":"list_collection",
+              "label": "List collections"
+            },
+            {
+              "value":"sign_in",
+              "label": "Sign in"
+            },
+            {
+              "value":"sign_up",
+              "label": "Sign up"
+            }
+          ],
+          "default": "list_collection"
+        },
+        {
+          "type":"url",
+          "id":"button_link",
+          "label":"Link to",
+          "info": "http:// is required for external links"
+        },
+        {
+          "type":"number",
+          "id":"btn_styles",
+          "label":"Button style",
+          "default": 1,
+          "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000255832#1.-Default-Button)"
+        },
+        {
+          "type":"header",
+          "content":"General settings"
+        },
+        {
+          "type":"select",
+          "id":"position",
+          "label":"Block position",
+          "options":[
+            {
+              "value":"top",
+              "label": "Top"
+            },
+            {
+              "value":"left",
+              "label": "Left"
+            },
+            {
+              "value":"right",
+              "label": "Right"
+            },
+            {
+              "value":"bottom",
+              "label": "Bottom"
+            }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "content_align",
+          "label": "Content alignment",
+          "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_margin",
+          "label": "Block margin",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_padding",
+          "label": "Block padding",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "name": "Banner",
+      "settings": [
+        {
+          "type":"header",
+          "content":"Banner"
+        },
+        {
+          "type":"image_picker",
+          "id":"banner_desktop",
+          "label":"Desktop: Select a banner"
+        },
+        {
+          "type":"image_picker",
+          "id":"banner_mobile",
+          "label":"Mobile: Select a banner"
+        },
+        {
+          "type":"paragraph",
+          "content":"**Styles"
+        },
+        {
+          "type": "select",
+          "id": "height_style",
+          "label": "Select image height style",
+          "options": [
+            {
+              "value": "auto",
+              "label": "Auto"
+            },
+            {
+              "value":"manually",
+              "label": "Manually"
+            },
+            {
+              "value": "100%",
+              "label": "Square (1:1)"
+            },
+            {
+              "value": "150%",
+              "label": "Portrait (2:3)"
+            },
+            {
+              "value": "75%",
+              "label": "Landscape (4:3)"
+            },
+            {
+              "value": "56.25%",
+              "label": "Wide (16:9)"
+            }
+          ],
+          "default": "auto"
+        },
+        {
+          "type":"text",
+          "id":"manual_height",
+          "label":"Manually height",
+          "info": "E.g: 300px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"text",
+          "id":"image_crop",
+          "label":"Crop position?",
+          "default": "center",
+          "info": "E.g: center left. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"header",
+          "content":"General settings"
+        },
+        {
+          "type":"select",
+          "id":"position",
+          "label":"Block position",
+          "options":[
+            {
+              "value":"top",
+              "label": "Top"
+            },
+            {
+              "value":"left",
+              "label": "Left"
+            },
+            {
+              "value":"right",
+              "label": "Right"
+            },
+            {
+              "value":"bottom",
+              "label": "Bottom"
+            }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "block_margin",
+          "label": "Block margin",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_padding",
+          "label": "Block padding",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "html",
+      "name": "HTML",
+      "settings": [
+        {
+          "type":"html",
+          "id":"html",
+          "label":"HTML",
+          "default": "<h2>Talk about your brand</h2><p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>"
+        },
+        {
+          "type":"header",
+          "content":"General settings"
+        },
+        {
+          "type":"select",
+          "id":"position",
+          "label":"Block position",
+          "options":[
+            {
+              "value":"top",
+              "label": "Top"
+            },
+            {
+              "value":"left",
+              "label": "Left"
+            },
+            {
+              "value":"right",
+              "label": "Right"
+            },
+            {
+              "value":"bottom",
+              "label": "Bottom"
+            }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "block_margin",
+          "label": "Block margin",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_padding",
+          "label": "Block padding",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "form",
+      "name": "Form",
+      "limit": 1,
+      "settings": [
+        {
+          "type":"header",
+          "content":"General settings"
+        },
+        {
+          "type":"number",
+          "id":"btn_styles",
+          "label":"Button style",
+          "default": 1,
+          "info": "[How to find the value?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000255832#1.-Default-Button)"
+        },
+        {
+          "type":"select",
+          "id":"position",
+          "label":"Block position",
+          "options":[
+            {
+              "value":"top",
+              "label": "Top"
+            },
+            {
+              "value":"left",
+              "label": "Left"
+            },
+            {
+              "value":"right",
+              "label": "Right"
+            },
+            {
+              "value":"bottom",
+              "label": "Bottom"
+            }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "block_margin",
+          "label": "Block margin",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_padding",
+          "label": "Block padding",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    },
+    {
+      "type": "countdown",
+      "name": "Countdown timer",
+      "settings": [
+        {
+          "type":"text",
+          "id":"expired",
+          "label":"Date countdown",
+          "info": "Format: DD/MM/YYYY HH:MM"
+        },
+        {
+          "type":"checkbox",
+          "id":"show_date_label",
+          "label":"Show Date label",
+          "default": true
+        },
+        {
+          "type":"text",
+          "id":"font_size",
+          "label":"Adjust font size",
+          "info": "E.g: 14px. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type":"range",
+          "id":"font_weight",
+          "label":"Adjust font weight",
+          "min":100,
+          "max":900,
+          "step":100,
+          "default": 300
+        },
+        {
+          "type":"header",
+          "content":"General settings"
+        },
+        {
+          "type":"select",
+          "id":"position",
+          "label":"Block position",
+          "options":[
+            {
+              "value":"top",
+              "label": "Top"
+            },
+            {
+              "value":"left",
+              "label": "Left"
+            },
+            {
+              "value":"right",
+              "label": "Right"
+            },
+            {
+              "value":"bottom",
+              "label": "Bottom"
+            }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "content_align",
+          "label": "Content alignment",
+          "info": "E.g: center, left [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_margin",
+          "label": "Block margin",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {
+          "type": "text",
+          "id": "block_padding",
+          "label": "Block padding",
+          "info": "[How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+{%- comment -%}
+
+        {
+          "type":"text",
+          "id":"width",
+          "label":"Block width",
+          "default": "100%, 50%",
+          "info": "E.g: 500px or 50%. [How to fill here?](https:\/\/support.arenacommerce.com\/a\/solutions\/articles\/6000256537)"
+        },
+        {%- endcomment-%}

@@ -1,0 +1,81 @@
+.section-gallery-slide .slider-container {
+  position: relative; }
+
+.section-gallery-slide .tns-nav {
+  position: relative;
+  bottom: 0;
+  margin-top: 20px; }
+
+.section-gallery-slide .block-content {
+  padding: 15px; }
+
+.section-gallery-slide div.product-title {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2em; }
+
+.section-gallery-slide .product-weight {
+  font-size: 20px;
+  font-weight: 500; }
+
+.section-gallery-slide .product-price {
+  margin: 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.15em;
+  color: inherit; }
+
+.section-gallery-slide price-item {
+  color: inherit; }
+
+.section-gallery-slide .price-compare {
+  font-size: 20px;
+  font-weight: 400;
+  position: relative;
+  top: 2px; }
+
+.section-gallery-slide form .btn {
+  font-size: 16px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  height: 36px; }
+
+.section-gallery-slide form .btn svg {
+  display: none; }
+
+.section-gallery-slide form .btn.loading {
+  position: relative; }
+
+.section-gallery-slide form .btn.loading .icon-loading {
+  display: block;
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-margin-start: -7.5px;
+  margin-inline-start: -7.5px;
+  margin-top: -7.5px; }
+
+.section-gallery-slide form .btn.loading .icon-loading path {
+  fill: #fff; }
+
+.section-gallery-slide form .btn.loading span {
+  opacity: 0;
+  visibility: hidden; }
+
+.section-gallery-slide .button-group a {
+  height: 36px;
+  font-size: 16px;
+  padding-top: 7px;
+  padding-bottom: 7px; }
+
+.section-gallery-slide .text {
+  font-weight: 500; }
+
+@media (min-width: 750px) {
+  .section-gallery-slide .block-content {
+    padding: 30px; }
+  .section-gallery-slide .product-price {
+    margin: 20px 0;
+    font-size: 25px; } }
